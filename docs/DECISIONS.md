@@ -647,11 +647,33 @@ Same number, earned. Two design constraints fall out of it, and both are load-be
 
 ## Evaluation
 
-### D-26 · Four suites, and B2 is mandatory — settled
-**A · Triage.** ~400 labeled messages at realistic class mix (`hype_noise` is 50–60% of
-real live chat). Headline is per-class precision/recall and a PR curve — never accuracy,
-which is trivially gamed by dropping everything. 70/30 split, thresholds tuned on train,
-reported on held-out test. Plus cluster compression ratio and purity.
+### D-26 · Five suites, and B2 is mandatory — settled, amended 2026-09-12
+**A · Triage.** ~400 labeled messages at realistic class mix. Headline is per-class
+precision/recall and a PR curve — never accuracy, which is trivially gamed by dropping
+everything. Thresholds tuned on train, reported on held-out test.
+
+> **Amended 2026-09-12 — Suite A now has an opponent, and that changes what it proves.**
+>
+> Whatnot highlights questions in its own UI. `evals/data/triage_test.jsonl` records that
+> per message, so the incumbent's score is computable from the dataset: **41% recall, 69%
+> precision, F1 51%** — a question-mark heuristic, measured rather than guessed.
+>
+> The suite's claim moves from *"here is a PR curve, here is why I chose this point"* to
+> **"here is us against the feature the platform already ships, on 161 real messages the
+> classifier never saw."** That is a far stronger artifact, and the cost-asymmetry argument
+> sharpens with it: the incumbent's 31% false-positive rate is the noise level sellers
+> already tolerate, so it is a defensible ceiling for ours rather than a number I picked.
+>
+> **Cluster compression is demoted from headline to footnote.** I designed it around "two
+> hundred people ask about shipping, one card says 200." In 161 real messages there were
+> **two** repeats — `Any Blaziken?` twice and the back-condition question twice. At
+> 0.15 msg/s clustering is barely exercised. The behaviour stays because it is correct; the
+> metric stops being a selling point, because the data does not support one.
+>
+> **Four classes cannot be scored at all.** `off_topic_abuse`, `shipping_returns_q`,
+> `buy_commit` and `authenticity_q` appear in train and never in test — twenty minutes of one
+> show did not contain them. No per-class number is quotable for those four. Sample-size
+> limit, not a modelling one.
 
 **B1 · Adversarial guardrails** (~80). Fabricated variant, shadowless on a modern set,
 unbacked comp, stock overclaim, invented policy, authenticity overclaim below threshold,
@@ -666,11 +688,53 @@ that proves the guardrail is calibrated rather than paranoid.
 **C · Grounding and abstention.** Ambiguous references. Two metrics: resolution accuracy,
 and abstention correctness — did it ask for clarification exactly when it should have.
 
+> **Amended 2026-09-12 — this was the thinnest suite and is now the best-seeded.** Field
+> observation produced **seventeen distinct ways exact matching fails**, all from twenty
+> minutes of one show, and every one is a test case rather than an invention:
+>
+> | failure mode | observed |
+> |---|---|
+> | misspelling | `dragonight` · `rakwaza` · `venasaur` · `entai` · `pokermuns` |
+> | nickname | `Zard` |
+> | descriptor that is not an attribute | `big boy gengar` · `bubble mew` |
+> | description instead of a name | `Japanese silver border` · `shining dragon` |
+> | word order scrambled | `gengar fire red` |
+> | set named as a card | `pokemon delta species` · `team rocket holos` |
+> | set name singularised | `lugia unseen force` |
+> | deixis | `the mew one` |
+> | pluralised | `psyducks` |
+> | **under-specified family** | **`mew`** — two Mews seeded in `catalog.json` precisely so the correct answer is *"which Mew?"* rather than a confident pick |
+>
+> Abstention is no longer a principle argued in prose; it has a dataset.
+
 **D · Unit + golden replay.** Units on claim extractor, each verifier, cluster keys,
-ranking, idempotency, ledger inverse ops, and the backpressure drop policy (never shed a
-message from a user with an open order). One scenario tape replayed against recorded LLM
-fixtures with an asserted event sequence — deterministic, runs in CI with no key, and the
-same mechanism powers no-key reviewer mode.
+ranking, idempotency, ledger inverse ops, and the bounded queue. One scenario tape replayed
+against recorded LLM fixtures with an asserted event sequence — deterministic, runs in CI with
+no key, and the same mechanism powers no-key reviewer mode.
+
+---
+
+### D-26b · Suite E — moment detection — added 2026-09-12
+**A fifth suite, because the observation created a feature that did not exist when D-26 was
+written.** Extension count and bid delta classify a live lot as `hot` / `stalled` / `normal`,
+and that classification is the trigger for the whole nudge layer.
+
+Scored against the ten labelled lots in `docs/research/observation-2026-09-12.md`, which carry
+real extension counts and real bid movement:
+
+| expected | lots |
+|---|---|
+| `hot` (≥5 extensions, price moving) | Flying Pikachu (24), Surfing Pikachu (15+), Birthday Pikachu (11), Armored Mewtwo (7), JP Pikachu (7), Special Delivery (6) |
+| `stalled` (≥2 extensions, delta 0) | FireRed Pikachu (3 ext, $111 → $111) |
+| `normal` | Dark Dragonite (3), Shibuya (2), restroom Pikachu (1 ext, delta 0 — an auction simply closing) |
+
+**Deliberately no model.** The rule is arithmetic on two numbers, so the suite tests threshold
+placement, not a classifier. Its value is that the labels are real bid data rather than
+annotation.
+
+**n=10, and one stall.** The stall branch rests on a single observed instance and the suite
+says so. This is the weakest-evidenced rule in the system, which is exactly why it is scored
+separately rather than folded into Suite A where the small n would be hidden by averaging.
 
 ---
 
