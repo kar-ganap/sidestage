@@ -68,7 +68,11 @@ class Settings:
 settings = Settings(
     anthropic_api_key=os.getenv("ANTHROPIC_API_KEY") or None,
     draft_model=os.getenv("SIDESTAGE_DRAFT_MODEL", "claude-sonnet-5"),
-    triage_model=os.getenv("SIDESTAGE_TRIAGE_MODEL", "claude-haiku-4-5"),
+    # Sonnet, not Haiku, and the reason is measured rather than assumed — see
+    # DECISIONS.md D-17. Haiku's minimum cacheable prefix sits above our triage
+    # prompt, so it pays full list price on every call while Sonnet pays 10% of
+    # a larger list. Measured: $0.00098/call vs $0.00273, and marginally faster.
+    triage_model=os.getenv("SIDESTAGE_TRIAGE_MODEL", "claude-sonnet-5"),
     llm_mode=os.getenv("SIDESTAGE_LLM_MODE", "auto"),
     budget_triage_fast_ms=_int("SIDESTAGE_BUDGET_TRIAGE_FAST_MS", 50),
     budget_triage_escalated_ms=_int("SIDESTAGE_BUDGET_TRIAGE_ESC_MS", 600),

@@ -450,7 +450,46 @@ and abstain if the reference stays ambiguous.
 
 ---
 
-### D-17 · Model tiering — provisional, pending measurement
+### D-17b · The cheap model was the expensive one — measured 2026-09-12
+**The tiering below was wrong, and the way it was wrong is the interesting part.**
+
+Haiku 4.5 was chosen for triage on price per token: $1/$5 against Sonnet's $2/$10.
+Measurement on the real triage prompt:
+
+| | median latency | cache_read | uncached input | $/call |
+|---|---:|---:|---:|---:|
+| `claude-haiku-4-5` | 1963 ms | **0** | 2566 | **$0.00273** |
+| `claude-sonnet-5` | **1841 ms** | 3375 | **11** | **$0.00098** |
+
+**Sonnet is 2.8× cheaper, marginally faster, and produced identical labels on all
+eight probes.** The mechanism: Haiku's **minimum cacheable prefix is above our
+2,229-token triage prompt**, so it is ineligible for prompt caching and pays full
+list on every call. Sonnet's floor is lower, so it pays **10% of a larger list**.
+
+> **Price per token was the wrong unit.** The right one is price per call *after*
+> cache eligibility, and eligibility is a **step function** — a prompt one token
+> under the floor costs 10× a prompt one token over it.
+
+**Consequences.**
+
+- Triage defaults to `claude-sonnet-5`. The `SIDESTAGE_TRIAGE_MODEL` flag stays,
+  so the comparison is reproducible rather than a claim.
+- **This decision must be re-run whenever prompt size changes materially**, in
+  either direction. A prompt that shrinks below a floor silently gets 10× more
+  expensive with no error and no log line.
+- Attempts to clear Haiku's floor by lengthening the prompt went 864 → 1,384 →
+  2,229 tokens and never cached, which brackets its floor above 2,229 (4,096 is
+  the likely value). That expansion was kept anyway — the added content is real
+  worked examples drawn from the labelled corpus, and classification improved on
+  the hard cases.
+
+**Honest limit.** Cost and latency here are solid. The *accuracy parity* is eight
+probes, which is anecdote, not evidence — Suite A against the held-out set is what
+settles that, and until it runs the parity claim stays provisional.
+
+---
+
+### D-17 · Model tiering — superseded in part by D-17b
 | Role | Model | Rationale |
 |---|---|---|
 | Triage escalation | `claude-haiku-4-5` | Short classification, `max_tokens: 256`, no thinking. (Haiku 4.5 uses `budget_tokens`, not adaptive thinking; `effort` errors on it.) |
