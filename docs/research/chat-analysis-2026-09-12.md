@@ -52,7 +52,25 @@ treated as a floor for those stretches.
 | Mean velocity is two orders of magnitude below the 30 msg/s design assumption | **Holds.** Even the method's absolute ceiling (0.67 msg/s) is 45× below it. |
 | There is no "deluge" in the mean | **Holds.** |
 | The actionable share is ~12% of traffic | **Holds** — a ratio, unaffected by censoring, provided misses are class-uniform. |
-| **No backpressure or drop policy is needed** | **Does NOT hold.** Peak rate was never measured. A mean of 0.2 msg/s with 5 msg/s bursts at lot close is a different engineering problem from a uniform 0.2. |
+| **No backpressure or drop policy is needed** | **Does NOT hold** — but not because bursts were found. See below. |
+
+### On burstiness: we can claim nothing in either direction
+
+No bursts appear in the sampled frames. **That is not evidence that none occurred.** A burst
+above the method's ceiling looks identical to a quiet interval: the panel turns over, ten
+messages are recorded, and whatever else arrived is gone. So "chat is not bursty" is exactly
+as unsupportable from this data as "chat is bursty" — the instrument cannot distinguish them.
+
+The only burstiness observation available is qualitative, from watching rather than counting:
+this mid-velocity show did not *feel* notably bursty; the 3–10 second rapid-fire formats may
+have been; and a luxury seller's pre-auction pitch drew what looked like a short cluster of
+euphoric replies. Impressions, recorded as impressions.
+
+**The engineering consequence is a cheap one.** Keep a bounded queue — it costs nothing and
+absorbs a burst if one happens. Do *not* build an elaborate drop policy, priority-shedding
+scheme or backpressure ladder, because the evidence that would justify that machinery does
+not exist. D-15 should say so plainly: the drop policy exists as insurance, not as a response
+to a measured peak.
 
 ### How to measure it properly
 
