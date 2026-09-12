@@ -439,7 +439,7 @@ class AnthropicClient:
         try:
             r = self._c.messages.parse(
                 model=settings.draft_model,
-                max_tokens=1024,          # replies are 1-2 sentences; claims are short
+                max_tokens=2048,          # 1024 truncated mid-JSON on long claim lists (B-12)
                 system=_system_blocks(DRAFT_SYSTEM),
                 messages=msgs,
                 output_format=DraftOutput,
