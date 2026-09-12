@@ -36,6 +36,16 @@ roughly 6–8 s resets the clock — **always to less than the original base** (
 | 6 | Pikachu (restroom break) | 4 min | 1 | $510 | $510 | $0 | 0% | — · **16 bids** |
 | 7 | Pikachu, Japanese (#328) | 15s | 7 | $135 | $200 | +$65 | 33% | $9 |
 | 8 | **Surfing Pikachu, Japanese** | 13s | **15+** | $6 | $266 | +$260 | **98%** | $17 |
+| 9 | Birthday Pikachu | — | 11 | $266 | $410 | +$144 | 35% | $13 |
+| 10 | Shibuya Pikachu, Japanese (#332) | 15s | 2 | $165 | $180 | +$15 | 8% | $8 |
+
+**Ten lots, $3,077.** Extension counts: 1, 2, 3, 3, 6, 7, 7, 11, 15+, 24 — a wide, strongly
+right-skewed distribution with a clear outlier at the top. A threshold at five flags lots 1,
+4, 5, 8 and 9 and leaves the rest alone.
+
+Lot 9's bid count is visible on screen: **22 bids against 11 extensions — 50% of bids landed
+late.** Compare lot 6: 16 bids, 1 extension, **6% late.** Similar demand, opposite endgames.
+Extension count isolates the contested close exactly as intended.
 
 ### 1a. Extension count measures the *endgame*, not total demand
 
@@ -82,7 +92,7 @@ extension 3 has three times the runway of extension 15.
 
 ## 2. What the seller actually said
 
-Complete inventory across eight lots and $2,487 of sales.
+Complete inventory across ten lots and $3,077 of sales.
 
 | Lot | Seller speech |
 |---|---|

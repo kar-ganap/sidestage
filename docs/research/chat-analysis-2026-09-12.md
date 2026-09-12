@@ -15,18 +15,54 @@ sampled. Frames 3 and 4 are byte-identical — **zero messages in fifteen second
 
 ---
 
-## 1. Velocity — the deluge premise is off by two orders of magnitude
+## 1. Velocity — a lower bound, not a measurement
 
 ```
 178 messages ÷ 1,215 seconds = 0.15 msg/s ≈ 8.8 messages per minute
 ```
 
-**One message every seven seconds.** D-15's cascade was designed to shed load at 30 msg/s.
-The real figure is **0.5% of that.**
+**This figure is censored by the method, and must be quoted as a lower bound.**
 
-This is the number that should have been measured before any triage architecture was
-designed. Nothing observed requires backpressure, drop policies, or load shedding. What it
-requires is finding roughly twenty actionable messages inside one hundred and seventy-eight.
+The chat panel shows ~10 messages. At 15-second sampling, the fastest rate this method can
+*detect* is 10 messages per frame gap:
+
+```
+ceiling at 15 s sampling = 10 msg / 15 s = 0.67 msg/s
+ceiling at 30 s sampling = 10 msg / 30 s = 0.33 msg/s
+```
+
+Anything above that scrolls past between frames and is recorded as 10. And even a complete
+turnover cannot distinguish ten messages spread evenly across fifteen seconds from ten
+arriving in one — **the sampling rate destroys burstiness entirely.**
+
+**What the data does support.** Across the seven intervals read at true 15-second granularity
+(frames 1→6, 47→49), new-message counts were **4, 4, 0, 2, 1, 4, 3** — mean 2.6 per 15 s, or
+**0.17 msg/s** — and *every one of those intervals retained overlap with the previous frame*.
+The method never saturated there, so for those stretches 0.17 msg/s is a real measurement
+rather than a floor. Frames 3 and 4 were identical: zero messages in fifteen seconds.
+
+**What it does not support.** Most of the log was read at 30-second gaps, where one interval
+showed ~9 new messages against a ceiling of ~10 — close enough to saturation that 178 must be
+treated as a floor for those stretches.
+
+### What survives, and what doesn't
+
+| Claim | Status |
+|---|---|
+| Mean velocity is two orders of magnitude below the 30 msg/s design assumption | **Holds.** Even the method's absolute ceiling (0.67 msg/s) is 45× below it. |
+| There is no "deluge" in the mean | **Holds.** |
+| The actionable share is ~12% of traffic | **Holds** — a ratio, unaffected by censoring, provided misses are class-uniform. |
+| **No backpressure or drop policy is needed** | **Does NOT hold.** Peak rate was never measured. A mean of 0.2 msg/s with 5 msg/s bursts at lot close is a different engineering problem from a uniform 0.2. |
+
+### How to measure it properly
+
+Re-extract a 60–90 second window around a lot close at **1-second intervals**. At that rate
+consecutive frames overlap almost completely, so only the newest message needs tracking and
+the count becomes exact. Lot closes are the right window because the burst is visible in the
+log already — `Ggs` / `GGs` / reaction clusters arrive together.
+
+Until that exists, the honest statement is: **mean velocity ≥ 0.15 msg/s and almost certainly
+under 0.7; peak unmeasured.**
 
 ---
 
