@@ -230,12 +230,35 @@ like a falsified cache design rather than one conditional layer.
   pre-empting a single question. A seller does not do that until answering it live has
   become untenable.
 
-  This is the strongest single piece of evidence for the wedge so far, and it cuts two ways.
-  It confirms the pain is real and that shipping is where it concentrates. It also shows
-  sellers have already built a crude version of the feature themselves — a static overlay is
-  an un-targeted, un-grounded, un-measurable auto-reply. The product's claim is that the
-  same job done *per-question, grounded in the actual order*, is worth more than a billboard.
-  Worth quoting in the PRD, and worth being honest that the incumbent solution is free.
+  This shows sellers have already built a crude version of the feature themselves — a static
+  overlay is an un-targeted, un-grounded, un-measurable auto-reply. Worth quoting in the PRD,
+  and worth being honest that the incumbent solution is free.
+
+  > ### ⚠ Contradicted by our own data `[O, 2026-09-12]`
+  >
+  > **"Asked on nearly every lot" is inherited domain lore, and 477 messages of real chat do
+  > not support it.** `shipping_returns_q` appears **zero times** across all three transcribed
+  > segments — before, middle and after — of a full auction show.
+  >
+  > The "after" segment was transcribed specifically to test the obvious explanation, that
+  > shipping questions cluster at end-of-show when invoices go out. They did not appear there
+  > either. That leaves two live hypotheses:
+  >
+  > 1. **Sellers pre-empt it so effectively that the question stops being asked.** The overlay
+  >    above, and this show's `NO CANCEL` listing titles plus a spoken policy statement between
+  >    lots, are all suppression. On that reading the pain is real and already solved — badly,
+  >    but solved — and the overlay is evidence *against* the wedge rather than for it.
+  > 2. **It happens in DMs.** We already know chat is not the whole channel: the consignment
+  >    remark answered something with no visible trigger.
+  >
+  > **Consequence for D-22.** The automation ladder promotes `shipping_returns_q` first on the
+  > grounds that it is highest-volume and lowest-risk. The low-risk half holds. The
+  > high-volume half is now unevidenced, so the promotion order has to be re-argued from data
+  > rather than from this paragraph. On observed volume, `request` (5.9%) and
+  > `availability_q` (2.3%) are the classes that actually occur.
+  >
+  > Kept rather than deleted, because the gap between what the domain "knows" and what the
+  > data shows is exactly the sort of thing a reviewer should be able to see us catch.
 - **eBay Authenticity Guarantee** `[M]` — eBay authenticates eligible trading cards above a
   value threshold (modeled here as $250 US). **eBay Vault** `[F]` is eBay's storage and
   authentication service. Treat the threshold as modeled; the *mechanism* — a policy claim

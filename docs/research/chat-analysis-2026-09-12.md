@@ -116,21 +116,47 @@ Whatnot highlights some messages in orange. Every highlighted message in the log
 question mark, and no message without one is highlighted, so the heuristic is almost
 certainly punctuation-based.
 
-**Computed from `evals/data/triage_test.jsonl`**, which labels every message with both its
-class and whether the platform highlighted it — so this is derived from a file, not estimated
-by hand. 161 labelled messages, 27 seller-directed (16.8% of traffic), 16 highlighted.
+**Computed from the labelled datasets**, which record both the class and whether the platform
+highlighted each message — so this is derived from files, not estimated by hand. Three
+segments of the same show were transcribed: `triage_extra_batch0.jsonl` (before),
+`triage_test.jsonl` (middle), `triage_extra_batch2.jsonl` (after).
 
-| | |
+| segment | msgs | seller-directed | highlighted | recall | precision | F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| batch0 · before | 75 | 10 | 5 | 40.0% | 80.0% | 53.3% |
+| batch1 · middle | 161 | 27 | 16 | 40.7% | 68.8% | 51.2% |
+| batch2 · after | 241 | 32 | 25 | **68.8%** | **88.0%** | 77.2% |
+| **POOLED** | **477** | **69** | **46** | **53.6%** | **80.4%** | **64.3%** |
+
+> **Correction, and it matters.** Earlier drafts quoted **41% / 69%** as *the* baseline. That
+> was one segment. Across 477 messages the incumbent scores **53.6% recall, 80.4% precision**,
+> which is a materially harder bar. Quote the pooled figure, or quote the range — never the
+> middle segment alone.
+>
+> **The variance is itself the finding.** Recall swings 40% → 41% → 69% between segments while
+> precision stays in a 69–88% band. The heuristic's recall depends entirely on what fraction
+> of that segment's requests happened to be phrased with a question mark, which is not a
+> property of the detector at all. A classifier that reads intent rather than punctuation
+> should be *stable* across segments, and segment-wise variance is therefore a metric worth
+> reporting alongside the mean.
+
+### Two minimal pairs prove the signal is punctuation and nothing else
+
+The corpus contains two natural experiments — the same person asking the same thing twice:
+
+| caught | missed |
 |---|---|
-| Correctly highlighted | 11 |
-| **Recall** | **11/27 = 41%** |
-| **Precision** | **11/16 = 69%** |
-| **F1** | **51%** |
+| `Back again plz ?? Sorry` | `Back again plz` |
+| `What are these silver boarders out of ??` | `what set is that pikachu silver border from` |
 
-> An earlier draft quoted 50% recall against a hand-count of 22 seller-directed messages.
-> Careful labelling found 27. The figure is **41%**, and it comes out of the dataset rather
-> than off the back of an envelope — reproduce it by reading the file and grouping on
-> `seller_directed` × `highlighted`.
+Same user, same request, opposite detection outcome. Confirmed structurally too: across all 477
+messages, **every** highlighted row contains `?` and **no** unhighlighted row does.
+
+### A small inter-rater check
+
+Batch 0's final frames overlap batch 1's first frame by eight messages, labelled independently.
+**All eight labels matched exactly.** Not a substitute for a proper agreement study, but it is
+better than the "no inter-rater check" this analysis previously had to concede.
 
 ### What it misses (no question mark, high intent)
 
