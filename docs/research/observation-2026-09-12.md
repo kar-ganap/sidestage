@@ -1,7 +1,7 @@
 # Field observation — 2026-09-12 · `saw_tcg` / ScythersTCG
 
 Lot-by-lot observation of one Whatnot Pokémon singles auction, from a ~45 minute
-recording plus live watching. **Eight lots logged, $2,487 of sales.**
+recording plus live watching. **Ten lots logged, $3,077 of sales.**
 
 This is the primary evidence base for the PRD. Unlike
 [`observation-2026-09-11.md`](observation-2026-09-11.md), which was cursory survey work,
@@ -104,11 +104,19 @@ Complete inventory across ten lots and $3,077 of sales.
 | 6 Pikachu — 4 min absence, 6 questions waiting | showed off an alcohol bottle, talked about getting drunk on Friday |
 | 7 Japanese Pikachu | consignment explanation · "they are all prebid" |
 | 8 Surfing Pikachu (+$260, 15+ ext) | **lightly talking the card up during the auction** |
+| 9 Birthday Pikachu (+$144, 11 ext) | **"the prices are a steal for this card" — repeatedly** |
+| 10 Shibuya Pikachu | **a joke: "you rarely have pokemon committing a crime, but in this one they are committing vandalism"** |
 | between lots | *"all auction sales are final. if you didn't see the back of the card, that's not my problem"* · *"you have to bid responsibly"* |
 
-**Not one verifiable fact was stated about any card.** Two lots got promotion; both were
-evaluative ("this one's fire") rather than factual ("pop 412, 38 higher, last three sold
-$380–420"). The seller's longest and most deliberate speech was a liability disclaimer.
+**Not one verifiable fact was stated about any card.** Four lots got promotion; **all four
+were evaluative** ("this one's fire", "it's a steal") rather than factual ("pop 412, 38
+higher, last three sold $380–420"). The seller's longest and most deliberate speech was a
+liability disclaimer.
+
+Lot 9 is the sharpest instance. *"The prices are a steal for this card"*, said repeatedly, is
+a value argument made with an adjective because the speaker has no numbers to hand. Silence
+was ambiguous — it could have meant no need. **A value argument attempted without evidence is
+not ambiguous.** He has the intent and lacks the ammunition, three times in one lot.
 
 ### 2a. The causal direction is ambiguous, and it matters
 
@@ -144,7 +152,7 @@ Everything seller-directed captured across the session:
 | "Any blazikens?" **(asked twice)** | catalog | ✅ | ❌ |
 | "is the back clean?" / "back was clean yeah?" | current lot | ❌ observational | ❌ |
 | "Swirl?" | current lot | ❌ observational | ❌ |
-| "base set?" | current lot | ✅ | **by other viewers** |
+| ~~"base set?"~~ | — | — | **Reclassified `cross_user`.** Frame analysis shows `mtheory44` tagged `@selladoncitygamecorner` about a Charizard *that viewer* owns. Never a question to the seller — and the platform highlighted it anyway. See [`chat-analysis-2026-09-12.md`](chat-analysis-2026-09-12.md). |
 | "how much did gengar red fire go for?" | closed lot | ✅ | ❌ |
 | "just came in what did pokemon delta species sell for?" | closed lot | ✅ | ❌ |
 | "is the dark dragonite clean?" | closed lot | ❌ observational | ❌ |
