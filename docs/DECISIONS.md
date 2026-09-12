@@ -144,6 +144,37 @@ Everything in memory (fast, but the ledger loses ordering guarantees and queryab
 
 ---
 
+### D-34 · Queue lookahead pre-fetch — settled 2026-09-11, gated behind a green core
+**Decision.** Assemble `Evidence` for the next **N upcoming lots** before they go live, and
+serve queue and inventory questions from that pre-built snapshot. Refresh when the queue
+changes; on fast shows this snapshot takes the second cache breakpoint that D-19's per-lot
+layer no longer earns.
+
+**Why — it inverts the latency problem.** Field observation showed lots running 3–10 seconds,
+where questions about the current lot are unanswerable by anyone and the real traffic is
+*"is X coming up later"* and *"any more Ys"*. The saving grace is that **the lot queue is
+known in advance.** Nothing about an upcoming lot has to be fetched at question time.
+
+So *"is the Umbreon coming up?"* answers off a warm snapshot in tens of milliseconds rather
+than the ~1500 ms draft budget. **The format that looked like it would break the latency
+budget is the one where pre-fetch wins** — the opposite of what the pre-observation design
+predicted, and worth saying out loud because it is a genuinely counter-intuitive result.
+
+**Bounded cost.** N lots × evidence assembly, recomputed only on queue mutation, not per
+message. The queue is short and changes rarely; this is cheap in exactly the regime where the
+per-message path is expensive.
+
+**Gating.** Same rule as D-05 — nothing starts here until the demo path, verifier, triage eval
+and bench are green. The primary demo remains a moderate-pace show, because that is what
+exercises the brief's mandatory behaviours and what the Champion's Path block needs.
+
+**Honest note.** This decision rests on one 45-minute observation whose structured tally has
+not yet been run. If the scrub shows queue questions are rare, the lookahead is an
+optimisation for traffic that does not exist — and the gating is what keeps that cheap to
+discover.
+
+---
+
 ### D-09 · `Evidence` / `Fact`, assembled before generation — settled
 **Decision.** Before any draft is generated, we fetch an `Evidence` snapshot: a list of
 `Fact` records, each with `id`, `kind`, `subject`, `value`, `authority`, `source`, `as_of`,
@@ -241,6 +272,29 @@ surfaces them; the eval carries a **tail-coverage metric**. Working assumption i
 non-noise questions land in `unknown`. If it comes back at 25%, the taxonomy is wrong and
 we will know.
 
+**Amended 2026-09-11 after first field observation.** Watching real chat surfaced classes the
+armchair taxonomy missed, and two of them are not user messages at all:
+
+- **`system_event`** — platform-generated: "X won", joins, unlocks. Never a question, never
+  replied to, but genuinely *signal*: a win is a purchase event and feeds the engagement
+  layer.
+- **`cross_user`** — viewers addressing each other rather than the seller. These carry
+  question marks while not being questions *to us*. Surfacing one is a false positive, and a
+  particularly bad-looking one.
+
+Two refinements to existing classes:
+
+- **`hype_noise` includes bare emoji, and emoji are not waste.** 🔥 is noise for the reply
+  queue and *signal* for the strategy-nudge and top-moment layer — a burst is the room
+  reacting to a specific card at a specific second. Same stream, second use.
+- **Buying intent often arrives as a bare noun.** Observed: a viewer typing just **"mew"**.
+  No verb, no question mark, no subject — and among the most commercially valuable traffic
+  in the room. Any classifier keyed on interrogative syntax drops all of it. See D-15.
+
+That takes the taxonomy to twelve plus `unknown`, from ten, after 45 minutes of watching.
+Worth stating plainly in the PRD: the cost of designing a taxonomy without looking was two
+missing classes and one wrong assumption about how intent gets expressed.
+
 ---
 
 ### D-14 · Abstention beats a confident guess — settled
@@ -264,17 +318,64 @@ intent × recency × asker value.
 a message was dropped. A linear model on interpretable features does both. An embedding
 similarity score does neither, and adds a heavy dependency that slows reviewer install.
 
+**Amended 2026-09-11 — the cheap arm gains a catalog-entity trie.** Observation showed buying
+intent arriving as a bare noun: a viewer types **"mew"**, meaning *"do you have a Mew"*, with
+no verb, no question mark and no subject. A scorer built on interrogative syntax drops every
+one of these, and they are the traffic with the highest commercial value in the room.
+
+The fix keeps the arm deterministic and fast: **a trie over card names, Pokémon names and set
+names**, matched in sub-millisecond time, where a bare catalog-entity mention scores as high
+intent independent of syntax. The catalog becomes part of the classifier. It also keeps "why
+was this surfaced" answerable in one sentence — *because it named something you are selling* —
+which is the property an embedding score cannot give.
+
+Two cheaper filters run ahead of it, both from the same observation: a **length filter** (the
+single-character spam seen in real chat is droppable before any scoring) and a **sender-type
+filter** (platform `system_event` messages never enter the scorer at all).
+
 **Rejected.** Sentence-transformers kNN (torch dependency, slow install, opaque decisions).
 
 ---
 
-### D-16 · BM25 + pinned-lot prior, no vector DB — settled
-**Why.** N ≈ 300 lots. During a live, the overwhelming majority of questions refer to the
-lot currently on screen, so a strong pinned-lot prior plus exact attribute matching beats
-embedding-only retrieval on exactly the cases that matter — ambiguous references. A vector
-store at this N is ceremony.
+### D-16 · BM25 retrieval with a **pace-aware** referent prior — revised 2026-09-11
+**Decision.** Hybrid retrieval over ~300 lots: BM25 plus exact attribute matching, with a
+prior on which lot a question probably refers to. **That prior is a function of lot velocity,
+not a constant.**
 
-**Revisit if.** The retrieval eval (Suite C) shows the prior failing on multi-lot showcases.
+**Why no vector store.** At N ≈ 300, exact attribute matching plus a good prior beats
+embedding-only retrieval on the cases that actually matter — ambiguous references — and a
+vector store at this scale is ceremony. Rejected sentence-transformers kNN specifically:
+torch dependency, slow reviewer install, opaque decisions.
+
+**Why the prior became pace-aware — this was falsified by observation.** The original wording
+asserted that "the overwhelming majority of questions refer to the lot currently on screen."
+Field observation (`docs/research/observation-2026-09-11.md`) shows that holds only when lots
+are slow:
+
+- **Slow lots (1–10 min).** Questions about the item on screen are answerable and common.
+  The pinned-lot prior is correct.
+- **Fast lots (3–10 s — observed on a Whatnot rapid-fire slab auction).** Questions about the
+  item on screen are impossible *for anyone*: a viewer needs 3–5 seconds to type, by which
+  time the lot is gone. The observed traffic is *"is X coming up later"* and *"any more Ys"* —
+  **the queue and the catalog**, not the active lot.
+
+So the prior shifts mass from the active lot toward the upcoming queue and the wider catalog
+as lot velocity rises. The mechanism never changes — resolve entity, assemble evidence,
+verify claims — only the default referent does.
+
+**Two observed failure cases the prior must survive**, both seeded into Suite C:
+
+- **Background inventory.** Active lot #021, a viewer asks *"How much for ohtani 👀"* about a
+  framed jersey visible *behind the seller*. Sellers keep stock physically in frame and
+  buyers ask about what they can see. High buying intent; a naive prior misresolves or drops
+  it.
+- **Family-level reference.** A bare *"mew"* names a family, not a card — Mew appears across
+  dozens of sets and is one keystroke from Mewtwo. Resolution must **abstain** per D-14 and
+  ask *"which Mew?"* rather than confidently pick one.
+
+**Consequence.** The prior needs an explicit escape, not merely a weight: when a message names
+an entity that does not match the active lot, widen to the full catalog before falling back,
+and abstain if the reference stays ambiguous.
 
 ---
 
@@ -325,10 +426,24 @@ workflow, not from a template:
            evidence block + question                               VOLATILE
 ```
 
-Breakpoint 2 is the interesting one: the pinned lot doesn't change for minutes while dozens
-of questions arrive about it, so when the seller advances a lot only that layer invalidates
-and the ~2,300-token system prefix survives. The cache hierarchy mirrors the selling
-workflow.
+Breakpoint 2 is the interesting one *on a slow show*: the pinned lot doesn't change for
+minutes while questions arrive about it, so when the seller advances a lot only that layer
+invalidates and the ~2,300-token system prefix survives. The cache hierarchy mirrors the
+selling workflow.
+
+**Corrected 2026-09-11 — breakpoint 2 is pace-conditional.** Field observation found lots
+running **3 to 10 seconds** on a rapid-fire slab auction, against an assumption of 2–10
+minutes. At that pace a per-lot cached prefix never amortises: you get perhaps one question
+per lot, so the layer costs a breakpoint and earns nothing.
+
+The system-prefix layer (breakpoint 1) is unaffected and still carries the bulk of the
+saving. Breakpoint 2 is therefore enabled only when measured lot dwell exceeds a threshold,
+and on fast shows the second breakpoint is spent on the **lookahead queue snapshot** instead
+(D-34) — which is where the reusable context actually lives at that pace.
+
+This is the exact measurement trap the observation worksheet warned about: dwell is
+format-dependent, and a number read without its format attached would have looked like the
+whole cache design was wrong rather than one layer being conditional.
 
 **Answer cache** eliminates calls entirely, keyed on `(intent, sku, price_version,
 policy_version, stock_bucket)`. Bucketed stock, not exact — the cache survives small

@@ -5,10 +5,10 @@ what SideStage grounds its answers in. It doubles as the specification for the c
 verifier — the table in §7 *is* the verifier registry.
 
 **Honesty marker.** Facts below are marked `[F]` (well-established, safe to assert),
-`[C]` (collector terminology — real, but not an official record), or `[M]` (modeled for
-this prototype — plausible, but verify before citing externally). The seeded catalog in
-`data/` is modeled from public collector references. It is not licensed eBay or TCGplayer
-data, and the repo says so.
+`[C]` (collector terminology — real, but not an official record), `[M]` (modeled for this
+prototype — plausible, but verify before citing externally), or `[O]` (observed in the
+field, with the date). The seeded catalog in `data/` is modeled from public collector
+references. It is not licensed eBay or TCGplayer data, and the repo says so.
 
 ---
 
@@ -146,7 +146,22 @@ a set, a "random"), and whatever is pulled goes to the slot holder. The chat isn
 questions at all — it's slot claims and reactions to pulls. Different economics, different
 rhythm, different product. **Out of scope for v1**, and the PRD says so.
 
-Most real shows are **mixed**: auctions for the good material, BIN for volume.
+**Mystery / gamified auction** `[O, 2026-09-11]`. Observed on eBay Live: "$1 START PSA 10
+MYSTERY SLABS — win the auction, spin the wheel, land on a slab." The lot is a *concealed*
+item; the buyer bids on a slot and a wheel decides which card they receive. Mechanically an
+auction (proxy "Max bid", countdown, high-bidder trophy) but economically a cousin of a
+break.
+
+**Out of scope, and for a sharper reason than breaks:** there is no listing record to ground
+against, because concealment *is* the product. Nobody asks "is that 1st edition?" — they
+cannot see the card. Observed chat on such a stream was odds talk ("that's gambling for
+you"), not product questions. A grounded-reply copilot has nothing to do here. Naming this
+segment as deliberately unserved belongs in the PRD: it shows the wedge was chosen rather
+than stumbled into.
+
+Most real shows are **mixed**: auctions for the good material, BIN for volume. For
+observation purposes, what matters is that the lots are *identified* — the card is visible,
+the lot title names a specific card and grade, and chat asks about that card.
 
 ### 6.2 Why the format distinction drives the build
 
@@ -156,10 +171,38 @@ Most real shows are **mixed**: auctions for the good material, BIN for volume.
 | Dominant chat noise | bid chatter — "I'm in at 40", "who sniped me" | "is it still available?" |
 | Misclassification risk | bid chatter reads as `buy_commit` | — |
 | Legal write actions | none in v1 (see D-03) | markdown, quantity adjust |
-| Typical lot dwell | 2–3 min | ~30 s |
+| Typical lot dwell | 1–10 min, **but see below** | ~30 s |
 | Q&A density | higher — people ask more before bidding than before clicking buy | lower |
 
-Four consequences, each already reflected in a decision:
+### 6.2a Pace is a third axis, and it was badly underestimated `[O, 2026-09-11]`
+
+The table above treats dwell as a property of format. Field observation shows **pace varies
+far more within a format than between formats.** A Whatnot Pokémon slab auction ran lots at
+**3 to 10 seconds each** — nothing stayed on screen longer.
+
+At that pace something structural happens: **per-lot Q&A becomes impossible for anyone.** A
+viewer needs 3–5 seconds to type. By the time any question about the current lot arrives, the
+lot is gone. This is not a latency problem to optimise — it is a target that no longer exists.
+
+So the observed traffic on a fast show is not about the item on screen at all. It is
+*"is X coming up later"* and *"any more Ys"* — **the queue and the catalog.** Three regimes:
+
+| Pace | Lot dwell | What questions refer to |
+|---|---|---|
+| Slow | 1–10 min | the item on screen; classic grounding |
+| Moderate | 30 s – 1 min | mixed; the item, plus recently-passed lots |
+| **Rapid fire** | **3–10 s** | **the upcoming queue and general inventory** |
+
+The mechanism is identical across all three — resolve the entity, assemble evidence, verify
+the claims. Only the **default referent** moves, which is why D-16's prior became pace-aware
+rather than being thrown away. And because the lot queue is known in advance, the fast regime
+is the one where evidence can be assembled *before* a lot goes live: rapid fire makes latency
+easier, not harder (D-34).
+
+**Always read a dwell number next to its format and pace.** Read alone, "40 seconds" looks
+like a falsified cache design rather than one conditional layer.
+
+### 6.2b Four consequences, each already reflected in a decision
 
 1. **Chat mix is format-dependent.** Which intent classes dominate depends on what's being
    run, which is why the observation worksheet records format alongside the tallies.
@@ -180,6 +223,19 @@ Four consequences, each already reflected in a decision:
 - **Combined shipping** is asked on nearly every lot. Highest-volume policy question in the
   domain, and therefore the first intent class that earns promotion up the automation
   ladder (D-22).
+
+  **Field evidence** `[O, 2026-09-11]`: a seller with 75k positive feedback was running a
+  permanent on-screen overlay reading `SHIPPING $5.99 THEN $0.50c ALL RECURRING ORDERS!!`.
+  That is scarce screen real estate — the same pixels that could show the card — spent
+  pre-empting a single question. A seller does not do that until answering it live has
+  become untenable.
+
+  This is the strongest single piece of evidence for the wedge so far, and it cuts two ways.
+  It confirms the pain is real and that shipping is where it concentrates. It also shows
+  sellers have already built a crude version of the feature themselves — a static overlay is
+  an un-targeted, un-grounded, un-measurable auto-reply. The product's claim is that the
+  same job done *per-question, grounded in the actual order*, is worth more than a billboard.
+  Worth quoting in the PRD, and worth being honest that the incumbent solution is free.
 - **eBay Authenticity Guarantee** `[M]` — eBay authenticates eligible trading cards above a
   value threshold (modeled here as $250 US). **eBay Vault** `[F]` is eBay's storage and
   authentication service. Treat the threshold as modeled; the *mechanism* — a policy claim
@@ -212,6 +268,11 @@ You will read a lot of synthetic chat. This is the vocabulary.
 
 | Term | Meaning |
 |---|---|
+| **singles** | individual cards sold one at a time — the format this product requires, because each lot is identified |
+| **sealed** | unopened product: boxes, packs, ETBs. A chance, not a known card |
+| **lot / bundle** | many cards sold together ("lot of 50 commons") |
+| **rip** | to open sealed product on stream |
+| **memorabilia** | eBay's umbrella category — jerseys, autographs, balls; cards are a subset of it, not a synonym |
 | gem / gem mint | PSA 10 |
 | slab | a graded card in its sealed plastic case |
 | raw | ungraded |
