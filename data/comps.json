@@ -1,0 +1,75 @@
+{
+  "_meta": {
+    "purpose": "Sold comparables. Seeded so that every branch of the comp verifier fires on real data rather than on a synthetic fixture.",
+    "rule": "A comp claim requires n >= 5 grade-matched sales within 90 days, and renders as a RANGE WITH ITS SAMPLE SIZE. Never a bare number. See docs/DOMAIN_PRIMER.md section 5.",
+    "today_for_seed": "2026-09-12",
+    "window_opens": "2026-06-14",
+    "provenance": "Modeled. Internally consistent with data/catalog.json rather than with the live market.",
+    "coverage": {
+      "cp:074/073:PSA10": "n=7 recent -> QUOTABLE",
+      "smp:SM228:PSA10": "n=5 recent -> QUOTABLE at the exact boundary",
+      "cel:006/025:RAW-NM": "n=6 recent -> QUOTABLE",
+      "frlg:70/112:RAW-NM": "n=6 recent -> QUOTABLE, and contradicts the observed 'did it crash?' claim",
+      "base1:4/102:RAW-NM": "n=3 -> BLOCKS on sample size",
+      "swshp:SWSH144:PSA9": "n=2 -> BLOCKS on sample size",
+      "rocket:5/82:PSA9": "n=8 but all stale -> BLOCKS on recency"
+    }
+  },
+
+  "comps": [
+    {"item_key": "cp:074/073:PSA10", "price": 1480.0, "sold_at": "2026-09-06", "source": "ebay_sold"},
+    {"item_key": "cp:074/073:PSA10", "price": 1390.0, "sold_at": "2026-08-28", "source": "ebay_sold"},
+    {"item_key": "cp:074/073:PSA10", "price": 1625.0, "sold_at": "2026-08-19", "source": "psa_apr"},
+    {"item_key": "cp:074/073:PSA10", "price": 1540.0, "sold_at": "2026-08-02", "source": "ebay_sold"},
+    {"item_key": "cp:074/073:PSA10", "price": 1445.0, "sold_at": "2026-07-21", "source": "tcgplayer"},
+    {"item_key": "cp:074/073:PSA10", "price": 1690.0, "sold_at": "2026-07-04", "source": "psa_apr"},
+    {"item_key": "cp:074/073:PSA10", "price": 1510.0, "sold_at": "2026-06-23", "source": "ebay_sold"},
+
+    {"item_key": "smp:SM228:PSA10", "price": 342.0, "sold_at": "2026-09-08", "source": "ebay_sold"},
+    {"item_key": "smp:SM228:PSA10", "price": 305.0, "sold_at": "2026-08-25", "source": "ebay_sold"},
+    {"item_key": "smp:SM228:PSA10", "price": 370.0, "sold_at": "2026-08-11", "source": "psa_apr"},
+    {"item_key": "smp:SM228:PSA10", "price": 318.0, "sold_at": "2026-07-19", "source": "ebay_sold"},
+    {"item_key": "smp:SM228:PSA10", "price": 355.0, "sold_at": "2026-06-30", "source": "tcgplayer"},
+
+    {"item_key": "cel:006/025:RAW-NM", "price": 368.0, "sold_at": "2026-09-09", "source": "ebay_sold"},
+    {"item_key": "cel:006/025:RAW-NM", "price": 312.0, "sold_at": "2026-08-31", "source": "ebay_sold"},
+    {"item_key": "cel:006/025:RAW-NM", "price": 395.0, "sold_at": "2026-08-14", "source": "ebay_sold"},
+    {"item_key": "cel:006/025:RAW-NM", "price": 340.0, "sold_at": "2026-07-27", "source": "tcgplayer"},
+    {"item_key": "cel:006/025:RAW-NM", "price": 329.0, "sold_at": "2026-07-08", "source": "ebay_sold"},
+    {"item_key": "cel:006/025:RAW-NM", "price": 358.0, "sold_at": "2026-06-18", "source": "ebay_sold"},
+
+    {"item_key": "frlg:70/112:RAW-NM", "price": 141.0, "sold_at": "2026-09-07", "source": "ebay_sold"},
+    {"item_key": "frlg:70/112:RAW-NM", "price": 128.0, "sold_at": "2026-08-26", "source": "tcgplayer"},
+    {"item_key": "frlg:70/112:RAW-NM", "price": 149.0, "sold_at": "2026-08-09", "source": "ebay_sold"},
+    {"item_key": "frlg:70/112:RAW-NM", "price": 134.0, "sold_at": "2026-07-22", "source": "ebay_sold"},
+    {"item_key": "frlg:70/112:RAW-NM", "price": 145.0, "sold_at": "2026-07-01", "source": "ebay_sold"},
+    {"item_key": "frlg:70/112:RAW-NM", "price": 132.0, "sold_at": "2026-06-17", "source": "tcgplayer"},
+
+    {"item_key": "base1:4/102:RAW-NM", "price": 1275.0, "sold_at": "2026-08-21", "source": "ebay_sold"},
+    {"item_key": "base1:4/102:RAW-NM", "price": 1150.0, "sold_at": "2026-07-30", "source": "ebay_sold"},
+    {"item_key": "base1:4/102:RAW-NM", "price": 1310.0, "sold_at": "2026-06-29", "source": "ebay_sold"},
+
+    {"item_key": "swshp:SWSH144:PSA9", "price": 352.0, "sold_at": "2026-08-18", "source": "ebay_sold"},
+    {"item_key": "swshp:SWSH144:PSA9", "price": 389.0, "sold_at": "2026-07-12", "source": "ebay_sold"},
+
+    {"item_key": "rocket:5/82:PSA9", "price": 340.0, "sold_at": "2026-05-28", "source": "ebay_sold"},
+    {"item_key": "rocket:5/82:PSA9", "price": 375.0, "sold_at": "2026-05-11", "source": "psa_apr"},
+    {"item_key": "rocket:5/82:PSA9", "price": 322.0, "sold_at": "2026-04-24", "source": "ebay_sold"},
+    {"item_key": "rocket:5/82:PSA9", "price": 368.0, "sold_at": "2026-04-02", "source": "ebay_sold"},
+    {"item_key": "rocket:5/82:PSA9", "price": 351.0, "sold_at": "2026-03-19", "source": "tcgplayer"},
+    {"item_key": "rocket:5/82:PSA9", "price": 335.0, "sold_at": "2026-02-27", "source": "ebay_sold"},
+    {"item_key": "rocket:5/82:PSA9", "price": 390.0, "sold_at": "2026-02-08", "source": "psa_apr"},
+    {"item_key": "rocket:5/82:PSA9", "price": 344.0, "sold_at": "2026-01-15", "source": "ebay_sold"}
+  ],
+
+  "population": {
+    "_note": "Third-party, time-varying. Every pop figure carries the date it was read; a pop quoted without an as-of date is a bug.",
+    "reports": [
+      {"item_key": "cp:074/073", "grader": "PSA", "grade": 10, "pop": 4812, "higher": 0, "as_of": "2026-09-01"},
+      {"item_key": "base1:4/102", "grader": "PSA", "grade": 8, "pop": 412, "higher": 38, "as_of": "2026-09-01"},
+      {"item_key": "rocket:5/82", "grader": "PSA", "grade": 9, "pop": 1104, "higher": 233, "as_of": "2026-08-14"},
+      {"item_key": "smp:SM228", "grader": "PSA", "grade": 10, "pop": 2967, "higher": 0, "as_of": "2026-09-01"},
+      {"item_key": "swshp:SWSH144", "grader": "PSA", "grade": 9, "pop": 1533, "higher": 2871, "as_of": "2026-05-02"}
+    ]
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "_meta": {
+    "purpose": "Print-run authority. This table is what makes a variant claim checkable rather than a judgement call: if a set never printed a variant in a given language, any claim that a card has it is false by construction.",
+    "provenance": "Modeled from public collector references. NOT licensed eBay or TCGplayer data. See docs/DOMAIN_PRIMER.md section 3.",
+    "language_scoping": "variants_printed is keyed by language because the rule is language-scoped. English sets stopped carrying a 1st Edition stamp with the EX series in 2003; Japanese printings continued much longer.",
+    "reverse_holo": "Introduced with Legendary Collection (2002). A reverse-holo claim on an earlier set is impossible."
+  },
+
+  "sets": [
+    {
+      "code": "base1",
+      "name": "Base Set",
+      "era": "wotc",
+      "released": "1999-01-09",
+      "variants_printed": {
+        "en": ["1st_edition", "shadowless", "unlimited"],
+        "ja": ["unlimited"]
+      },
+      "has_reverse_holo": false,
+      "note": "The only English set that printed shadowless. Print order was 1st Edition Shadowless, then Shadowless Unlimited, then Unlimited with the drop shadow."
+    },
+    {
+      "code": "jungle",
+      "name": "Jungle",
+      "era": "wotc",
+      "released": "1999-06-16",
+      "variants_printed": {
+        "en": ["1st_edition", "unlimited"],
+        "ja": ["unlimited"]
+      },
+      "has_reverse_holo": false,
+      "note": "No shadowless printing. A shadowless claim here is false by construction."
+    },
+    {
+      "code": "fossil",
+      "name": "Fossil",
+      "era": "wotc",
+      "released": "1999-10-10",
+      "variants_printed": {
+        "en": ["1st_edition", "unlimited"],
+        "ja": ["unlimited"]
+      },
+      "has_reverse_holo": false
+    },
+    {
+      "code": "rocket",
+      "name": "Team Rocket",
+      "era": "wotc",
+      "released": "2000-04-24",
+      "variants_printed": {
+        "en": ["1st_edition", "unlimited"],
+        "ja": ["unlimited"]
+      },
+      "has_reverse_holo": false,
+      "note": "Home of the 'Dark' prefix Pokemon - Dark Dragonite, Dark Charizard."
+    },
+    {
+      "code": "neo1",
+      "name": "Neo Genesis",
+      "era": "wotc",
+      "released": "2000-12-16",
+      "variants_printed": {
+        "en": ["1st_edition", "unlimited"],
+        "ja": ["1st_edition", "unlimited"]
+      },
+      "has_reverse_holo": false
+    },
+    {
+      "code": "lc",
+      "name": "Legendary Collection",
+      "era": "wotc",
+      "released": "2002-05-24",
+      "variants_printed": {
+        "en": ["unlimited"],
+        "ja": []
+      },
+      "has_reverse_holo": true,
+      "note": "First English set with reverse holos. No 1st Edition printing."
+    },
+    {
+      "code": "frlg",
+      "name": "EX FireRed & LeafGreen",
+      "era": "ex",
+      "released": "2004-08-30",
+      "variants_printed": {
+        "en": ["unlimited"],
+        "ja": ["unlimited"]
+      },
+      "has_reverse_holo": true,
+      "note": "EX era. English 1st Edition was discontinued before this set - any 1st Edition claim is impossible."
+    },
+    {
+      "code": "smp",
+      "name": "SM Black Star Promos",
+      "era": "sun_moon",
+      "released": "2017-02-03",
+      "variants_printed": {
+        "en": ["promo"],
+        "ja": ["promo"]
+      },
+      "has_reverse_holo": false,
+      "note": "Promo series, not a numbered main set. Home of Armored Mewtwo (SM228), tied to the 2019 film."
+    },
+    {
+      "code": "cp",
+      "name": "Champion's Path",
+      "era": "sword_shield",
+      "released": "2020-09-25",
+      "variants_printed": {
+        "en": ["unlimited"],
+        "ja": []
+      },
+      "has_reverse_holo": true,
+      "note": "THE DEMO CASE. No English 1st Edition printing exists - the practice ended in 2003. A model asked 'is that 1st edition?' about the 074/073 Charizard VMAX will often say yes, because '1st edition Charizard' is overwhelmingly common in its training data. This row is what blocks it."
+    },
+    {
+      "code": "cel",
+      "name": "Celebrations",
+      "era": "sword_shield",
+      "released": "2021-10-08",
+      "variants_printed": {
+        "en": ["unlimited"],
+        "ja": []
+      },
+      "has_reverse_holo": false,
+      "note": "25th anniversary set. Flying Pikachu V appears here."
+    },
+    {
+      "code": "swshp",
+      "name": "SWSH Black Star Promos",
+      "era": "sword_shield",
+      "released": "2019-11-15",
+      "variants_printed": {
+        "en": ["promo"],
+        "ja": ["promo"]
+      },
+      "has_reverse_holo": false,
+      "note": "Home of Special Delivery Pikachu (SWSH144), a Pokemon Center exclusive."
+    }
+  ],
+
+  "observational_attributes": {
+    "_note": "These exist only in the physical card in the seller's hand. The copilot must NEVER assert them - it defers to the host. See DECISIONS.md D-12. Observed in the wild repeatedly: 'is the back clean?', 'Swirl?', 'Back again plz'.",
+    "attributes": [
+      "centering_raw",
+      "holo_swirl",
+      "print_lines",
+      "whitening",
+      "surface_scratches",
+      "back_condition",
+      "edge_wear"
+    ]
+  },
+
+  "nicknames": {
+    "_note": "Observed in real chat. Exact-match lookup fails on every one of these, which is why the entity matcher needs a nickname table plus fuzzy matching. Each entry is a live test case.",
+    "zard": "Charizard",
+    "big boy gengar": "Gengar",
+    "shining dragon": "Shining Dragonite",
+    "dragonight": "Dragonite",
+    "entai": "Entei",
+    "gengar red fire": "Gengar (FireRed & LeafGreen)",
+    "bubble mew": "Mew",
+    "pokermuns": "Pokemon",
+    "mewtwo two": "Mewtwo"
+  }
+}

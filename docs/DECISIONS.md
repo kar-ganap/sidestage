@@ -64,10 +64,25 @@ irreversibility case we have.
 
 ---
 
-### D-04 · Four write actions — settled
+### D-04 · Four write actions — settled, amended 2026-09-12
 Push lot to showcase · reorder/swap showcase · markdown a BIN lot (floor-price guard) ·
 adjust quantity (oversell guard). These map the brief's "push, swap, markdown, stock
 adjustment" onto eBay Live semantics.
+
+**Amendment: consigned stock has a second, harder floor.** Observed live —
+
+> *"They are not mine. I can't take an offer like that when they are not mine. I have been
+> instructed to consign them and that is what I am doing."*
+
+A large share of live-sold inventory is **consigned**: the seller does not own it and cannot
+price below what the consignor permits. The markdown action assumed the seller controls the
+price. On consigned stock they do not, and breaching that floor is a breach of agreement
+rather than a bad trade — a categorically different failure from selling below margin.
+
+So lots carry `consigned: bool` and `consignor_floor`, and the markdown precondition treats
+the consignor floor as **absolute**: not a warning the operator can override, unlike
+`floor_price`. Two floors with different force is exactly the kind of domain rule that has to
+come from observation; I would not have invented it.
 
 ---
 
@@ -168,10 +183,22 @@ per-message path is expensive.
 and bench are green. The primary demo remains a moderate-pace show, because that is what
 exercises the brief's mandatory behaviours and what the Champion's Path block needs.
 
-**Honest note.** This decision rests on one 45-minute observation whose structured tally has
-not yet been run. If the scrub shows queue questions are rare, the lookahead is an
-optimisation for traffic that does not exist — and the gating is what keeps that cheap to
-discover.
+**Upgraded 2026-09-12 — pre-bidding makes the queue signal observed rather than inferred.**
+Observed: *"they are all prebid, you can prebid on any of them."* Buyers can bid on lots
+**before they go live**, so interest in the queue is measurable in advance. The lookahead
+stops being only a latency optimisation and becomes a demand signal:
+
+> **Lot 331 has 6 pre-bids and nothing above it does — pull it forward.**
+
+That is a `push_lot` proposal backed by real bids rather than by chat inference, and it is
+the strongest version of this feature. It also pairs with the observed request traffic ("run
+the shining dragon", "you will run the stack after the shining?") — the same action,
+justified two independent ways.
+
+**Honest note, now partly resolved.** This began resting on a single unscrubbed session. The
+2026-09-12 lot log supports it: only ~22% of seller-directed messages referred to the item on
+screen; the rest were closed lots, the queue, or the wider catalog. The gating stays, but the
+traffic is no longer hypothetical.
 
 ---
 
@@ -553,6 +580,30 @@ how this goes wrong.
 | Question card → verified draft on screen | p95 ≤ 1500 ms |
 | On-demand research query → answer | p95 ≤ 2000 ms *(the brief's stated target)* |
 | Answer-cache hit, end to end | ≤ 80 ms |
+
+**Derived, not asserted — 2026-09-12.** The sub-2-second figure was originally taken from the
+brief and justified as "fast is good." Field observation supplies a real derivation.
+
+Auction timers **always reset to less than the base timer**, so the intervention window
+*shrinks* as a lot becomes more valuable: roughly 8 s at extension 3, 5 s at extension 15,
+with bids landing at 2–3 s. Within one reset window the seller has to read the nudge and
+begin speaking:
+
+```
+one reset window                    ≈ 5.0 s
+human reads it and starts speaking  ≈ 3.0 s
+────────────────────────────────────────────
+system budget                       ≈ 1.5–2.0 s
+```
+
+Same number, earned. Two design constraints fall out of it, and both are load-bearing:
+
+- **The nudge must be glanceable, not readable.** One line absorbed at a glance and spoken
+  aloud — `pop 412 · 38 higher` — never a sentence. The auction mechanic dictates the UI
+  format.
+- **Early detection is mechanically necessary, not merely preferable.** Extension 3 carries
+  three times the runway of extension 15, so the detection threshold must be low and the
+  pipeline must not eat the window.
 
 ---
 

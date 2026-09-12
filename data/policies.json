@@ -1,0 +1,106 @@
+{
+  "_meta": {
+    "purpose": "The citable policy corpus. Every policy claim in a draft must point at a clause id here. A policy the model invents has no id and is blocked by D-11's default deny.",
+    "provenance": "Modeled on publicly documented marketplace practice. NOT a reproduction of eBay or Whatnot policy. Thresholds in particular are illustrative.",
+    "critical": "A SELLER'S VERBAL CLAIM IS NOT AN AUTHORITY. Observed 2026-09-12: a seller announced 'all auction sales are final' on stream. That may conflict with platform buyer protection. Replies ground in THIS corpus, never in what the host said - repeating an unenforceable disclaimer would manufacture liability for the user. See DECISIONS.md D-12."
+  },
+
+  "policies": [
+    {
+      "id": "shipping#1",
+      "topic": "shipping",
+      "text": "Orders ship within 2 business days of payment clearing.",
+      "min_item_value": null
+    },
+    {
+      "id": "shipping#2",
+      "topic": "combined_shipping",
+      "text": "Wins from the same live show combine into one shipment at no extra cost. Combined orders ship once the show ends.",
+      "min_item_value": null,
+      "note": "Highest-volume policy question in the domain. One observed seller burned permanent on-screen real estate on a shipping overlay rather than answer it live - see docs/research/observation-2026-09-11.md finding 5. First class to earn promotion up the automation ladder (D-22)."
+    },
+    {
+      "id": "shipping#3",
+      "topic": "shipping",
+      "text": "Cards over $400 ship signature-required and fully insured at no extra charge.",
+      "min_item_value": 400.0
+    },
+    {
+      "id": "returns#1",
+      "topic": "returns",
+      "text": "Buy It Now purchases may be returned within 30 days if the item does not match its listing description.",
+      "min_item_value": null
+    },
+    {
+      "id": "returns#2",
+      "topic": "returns",
+      "text": "Auction wins are final except where the item materially differs from its listing description, in which case platform buyer protection applies.",
+      "min_item_value": null,
+      "note": "Deliberately NOT the absolute 'all auction sales are final' a seller was observed announcing on stream. The carve-out is the part that matters and the part a verbal disclaimer omits."
+    },
+    {
+      "id": "returns#3",
+      "topic": "returns",
+      "text": "Condition of a raw card is assessed from the listing photographs. Ask the host to show a card on camera before bidding.",
+      "min_item_value": null,
+      "note": "The honest answer to the recurring unanswerable. 'Is the back clean?' cannot be answered by the copilot - back condition is observational (D-12). What the copilot can do is prompt the host to show it."
+    },
+    {
+      "id": "authenticity#1",
+      "topic": "authenticity",
+      "text": "Trading cards sold at or above $250 are routed through marketplace authentication before delivery.",
+      "min_item_value": 250.0,
+      "note": "Value-gated. An authenticity claim on a sub-threshold item is false even though the policy text is real - which is why min_item_value is a field the verifier reads rather than prose the model paraphrases."
+    },
+    {
+      "id": "authenticity#2",
+      "topic": "authenticity",
+      "text": "Graded slabs are sold in their original sealed holder. Cracking a slab voids authentication coverage.",
+      "min_item_value": null
+    },
+    {
+      "id": "grading#1",
+      "topic": "grading",
+      "text": "Grades and cert numbers are transcribed from the grader's label. Population figures come from the grader's public report and carry the date they were read.",
+      "min_item_value": null,
+      "note": "Pop counts are third-party and time-varying. A pop quoted without an as-of date is a bug (primer section 4)."
+    },
+    {
+      "id": "payment#1",
+      "topic": "payment",
+      "text": "Invoices are issued at the end of the show and are payable within 24 hours.",
+      "min_item_value": null
+    }
+  ],
+
+  "banned_claims": {
+    "_note": "Deterministic lexical guardrails, checked regardless of whether a claim cites a fact. These are the classes where being wrong is unrecoverable rather than merely inaccurate.",
+    "rules": [
+      {
+        "code": "investment_advice",
+        "pattern": "guaranteed to (go up|appreciate)|will be worth|safe investment|can't lose",
+        "message": "Predicting future value is an investment claim and is never supported by evidence."
+      },
+      {
+        "code": "unbounded_quantifier",
+        "pattern": "plenty (left|in stock)|tons of|loads of|as many as you want",
+        "message": "Unbounded quantity language is unverifiable below the stock threshold. State the number."
+      },
+      {
+        "code": "bare_comp",
+        "pattern": "(goes|going|sells|sell) for (about|around|roughly)? ?\\$",
+        "message": "A comp must render as a range with its sample size, never a bare number (primer section 5)."
+      },
+      {
+        "code": "authenticity_overclaim",
+        "pattern": "(guaranteed|100%) (real|authentic|legit)",
+        "message": "Authenticity is policy-gated on item value and is never asserted absolutely."
+      },
+      {
+        "code": "observational_assertion",
+        "pattern": "(back|surface|centering|edges) (is|looks) (clean|perfect|mint|flawless)",
+        "message": "Condition of a physical card is observational. Defer to the host - offer to prompt them to show it."
+      }
+    ]
+  }
+}

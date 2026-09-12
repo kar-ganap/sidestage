@@ -1,0 +1,218 @@
+{
+  "_meta": {
+    "purpose": "Items and the lots that sell them. Seeded to exercise every verifier rule and every entity-resolution case observed in the field.",
+    "provenance": "Modeled from public collector references. NOT licensed marketplace data.",
+    "lot_status": {
+      "sold": "closed. Answers 'how much did X go for?' - an observed question class.",
+      "live": "on camera now",
+      "queued": "upcoming. Answers 'is X coming up later?' and feeds the lookahead pre-fetch (D-34).",
+      "shop": "available in the shop but not in the show queue. Answers 'do you have X on the back wall in your shop?' - observed 2026-09-12, and on eBay Live as the Ohtani case."
+    }
+  },
+
+  "session": {
+    "id": "show_2026_09_12",
+    "seller": "demo_tcg",
+    "platform": "whatnot",
+    "started_at": "2026-09-12T19:00:00Z",
+    "base_timer_s": 15,
+    "extension_threshold_s": 8
+  },
+
+  "items": [
+    {
+      "id": "itm_cp_charizard_vmax",
+      "game": "pokemon", "set_code": "cp", "number": "074/073",
+      "name": "Charizard VMAX", "language": "en", "finish": "secret_rare",
+      "variants": [], "grade": {"grader": "PSA", "value": 10, "cert": "84120677"},
+      "notes": "Demo case. Champion's Path printed no English 1st Edition, so any 1st-edition claim about this card is false by construction."
+    },
+    {
+      "id": "itm_base_charizard_raw",
+      "game": "pokemon", "set_code": "base1", "number": "4/102",
+      "name": "Charizard", "language": "en", "finish": "holo",
+      "variants": ["shadowless"], "grade": {"grader": "RAW"}, "condition": "NM",
+      "notes": "Raw shadowless. Condition questions here are observational - the copilot defers."
+    },
+    {
+      "id": "itm_base_blastoise",
+      "game": "pokemon", "set_code": "base1", "number": "2/102",
+      "name": "Blastoise", "language": "en", "finish": "holo",
+      "variants": ["1st_edition", "shadowless"],
+      "grade": {"grader": "PSA", "value": 8, "cert": "71004412"}
+    },
+    {
+      "id": "itm_rocket_dark_dragonite",
+      "game": "pokemon", "set_code": "rocket", "number": "5/82",
+      "name": "Dark Dragonite", "language": "en", "finish": "holo",
+      "variants": ["1st_edition"],
+      "grade": {"grader": "PSA", "value": 9, "cert": "62881903"}
+    },
+    {
+      "id": "itm_smp_armored_mewtwo",
+      "game": "pokemon", "set_code": "smp", "number": "SM228",
+      "name": "Armored Mewtwo", "language": "en", "finish": "promo",
+      "variants": ["promo"],
+      "grade": {"grader": "PSA", "value": 10, "cert": "79553001"}
+    },
+    {
+      "id": "itm_swshp_special_delivery_pikachu",
+      "game": "pokemon", "set_code": "swshp", "number": "SWSH144",
+      "name": "Special Delivery Pikachu", "language": "en", "finish": "promo",
+      "variants": ["promo"],
+      "grade": {"grader": "PSA", "value": 9, "cert": "88201455"}
+    },
+    {
+      "id": "itm_cel_flying_pikachu",
+      "game": "pokemon", "set_code": "cel", "number": "006/025",
+      "name": "Flying Pikachu V", "language": "en", "finish": "holo",
+      "variants": [], "grade": {"grader": "RAW"}, "condition": "NM"
+    },
+    {
+      "id": "itm_frlg_pikachu",
+      "game": "pokemon", "set_code": "frlg", "number": "70/112",
+      "name": "Pikachu", "language": "en", "finish": "reverse_holo",
+      "variants": [], "grade": {"grader": "RAW"}, "condition": "NM",
+      "notes": "The 'base set?' case. A viewer asked whether a Pikachu was Base Set; chat answered 'fire red leaf' among themselves. Answerable from this record in milliseconds."
+    },
+    {
+      "id": "itm_frlg_gengar",
+      "game": "pokemon", "set_code": "frlg", "number": "8/112",
+      "name": "Gengar", "language": "en", "finish": "holo",
+      "variants": [], "grade": {"grader": "PSA", "value": 9, "cert": "55120388"},
+      "notes": "Resolves the observed reference 'gengar red fire' - word order scrambled."
+    },
+    {
+      "id": "itm_frlg_blaziken_ex",
+      "game": "pokemon", "set_code": "frlg", "number": "108/112",
+      "name": "Blaziken ex", "language": "en", "finish": "ultra_rare",
+      "variants": [], "grade": {"grader": "PSA", "value": 8, "cert": "64127790"},
+      "notes": "'Any blazikens?' was asked TWICE and never answered. This exists so the correct reply is yes, with a position in the queue."
+    },
+    {
+      "id": "itm_cel_mew",
+      "game": "pokemon", "set_code": "cel", "number": "011/025",
+      "name": "Mew", "language": "en", "finish": "holo",
+      "variants": [], "grade": {"grader": "RAW"}, "condition": "NM"
+    },
+    {
+      "id": "itm_frlg_mew",
+      "game": "pokemon", "set_code": "frlg", "number": "107/112",
+      "name": "Mew ex", "language": "en", "finish": "ultra_rare",
+      "variants": [], "grade": {"grader": "PSA", "value": 9, "cert": "70223481"},
+      "notes": "Two Mews in the catalog is deliberate. A bare 'mew' must ABSTAIN and ask which, not pick one (D-14)."
+    },
+    {
+      "id": "itm_neo_shining_dragonite",
+      "game": "pokemon", "set_code": "neo1", "number": "107/105",
+      "name": "Shining Dragonite", "language": "en", "finish": "shining",
+      "variants": ["unlimited"], "grade": {"grader": "RAW"}, "condition": "LP",
+      "notes": "Resolves 'run the shining dragon' and the misspelling 'dragonight'."
+    },
+    {
+      "id": "itm_apparel_denim_jacket",
+      "game": "apparel", "set_code": "", "number": "",
+      "name": "Vintage Levi's Type III Trucker Jacket", "language": "en", "finish": "",
+      "variants": [], "grade": {"grader": "RAW"},
+      "attributes": {"size": "M", "measured_pit_to_pit_in": 21.0, "era": "1970s", "fabric": "100% cotton denim"},
+      "notes": "Fashion slice. Note how few attributes are record-backed: size and measurements are, but fit, drape and true-to-size are observational. This is where D-12's authority model does visible work (D-02)."
+    },
+    {
+      "id": "itm_apparel_wool_coat",
+      "game": "apparel", "set_code": "", "number": "",
+      "name": "Harris Tweed Overcoat", "language": "en", "finish": "",
+      "variants": [], "grade": {"grader": "RAW"},
+      "attributes": {"size": "42R", "measured_chest_in": 44.0, "fabric": "100% wool"}
+    }
+  ],
+
+  "lots": [
+    {
+      "id": "lot_001", "listing_id": "L-90001", "item_id": "itm_smp_armored_mewtwo",
+      "title": "Armored Mewtwo SM228 PSA 10", "format": "auction", "status": "sold",
+      "position": 1, "starting_bid": 1.0, "current_bid": 330.0, "reserve": null,
+      "extensions": 7, "bid_at_first_extension": 195.0
+    },
+    {
+      "id": "lot_002", "listing_id": "L-90002", "item_id": "itm_rocket_dark_dragonite",
+      "title": "Dark Dragonite 1st Ed PSA 9", "format": "auction", "status": "sold",
+      "position": 2, "starting_bid": 1.0, "current_bid": 360.0, "reserve": null,
+      "extensions": 3, "bid_at_first_extension": 320.0
+    },
+    {
+      "id": "lot_003", "listing_id": "L-90003", "item_id": "itm_frlg_pikachu",
+      "title": "Pikachu FireRed & LeafGreen 70/112 raw", "format": "auction", "status": "sold",
+      "position": 3, "starting_bid": 1.0, "current_bid": 111.0, "reserve": null,
+      "extensions": 3, "bid_at_first_extension": 111.0,
+      "note": "The stall. Three extensions, zero movement, and the only market commentary in the room was a mod asking whether the market had crashed."
+    },
+    {
+      "id": "lot_004", "listing_id": "L-90004", "item_id": "itm_cel_flying_pikachu",
+      "title": "Flying Pikachu V Celebrations raw NM", "format": "auction", "status": "sold",
+      "position": 4, "starting_bid": 1.0, "current_bid": 350.0, "reserve": null,
+      "extensions": 24, "bid_at_first_extension": 27.0,
+      "note": "92% of the final price was made during extensions. The seller made small talk throughout."
+    },
+    {
+      "id": "lot_005", "listing_id": "L-90005", "item_id": "itm_swshp_special_delivery_pikachu",
+      "title": "Special Delivery Pikachu SWSH144 PSA 9", "format": "auction", "status": "sold",
+      "position": 5, "starting_bid": 1.0, "current_bid": 360.0, "reserve": null,
+      "extensions": 6, "bid_at_first_extension": 252.0,
+      "note": "The only lot the seller talked up - in slang, not facts. Strongest opening run of the session."
+    },
+
+    {
+      "id": "lot_006", "listing_id": "L-90006", "item_id": "itm_base_charizard_raw",
+      "title": "Base Set Charizard SHADOWLESS raw NM", "format": "auction", "status": "live",
+      "position": 6, "starting_bid": 250.0, "current_bid": 890.0, "reserve": 1100.0,
+      "ends_at": "2026-09-12T19:42:00Z", "extensions": 2, "bid_at_first_extension": 860.0
+    },
+
+    {
+      "id": "lot_007", "listing_id": "L-90007", "item_id": "itm_cp_charizard_vmax",
+      "title": "Charizard VMAX Champion's Path 074/073 PSA 10", "format": "auction",
+      "status": "queued", "position": 7, "starting_bid": 400.0, "reserve": 1600.0
+    },
+    {
+      "id": "lot_008", "listing_id": "L-90008", "item_id": "itm_frlg_blaziken_ex",
+      "title": "Blaziken ex FireRed & LeafGreen PSA 8", "format": "auction",
+      "status": "queued", "position": 8, "starting_bid": 60.0, "reserve": null
+    },
+    {
+      "id": "lot_009", "listing_id": "L-90009", "item_id": "itm_neo_shining_dragonite",
+      "title": "Shining Dragonite Neo Destiny raw LP", "format": "auction",
+      "status": "queued", "position": 9, "starting_bid": 120.0, "reserve": null
+    },
+    {
+      "id": "lot_010", "listing_id": "L-90010", "item_id": "itm_base_blastoise",
+      "title": "Base Set Blastoise 1st Edition PSA 8", "format": "auction",
+      "status": "queued", "position": 10, "starting_bid": 900.0, "reserve": 2200.0
+    },
+
+    {
+      "id": "lot_s01", "listing_id": "L-95001", "item_id": "itm_frlg_gengar",
+      "title": "Gengar FireRed & LeafGreen PSA 9", "format": "bin", "status": "shop",
+      "price": 185.0, "quantity": 1, "floor_price": 150.0, "cost_basis": 96.0
+    },
+    {
+      "id": "lot_s02", "listing_id": "L-95002", "item_id": "itm_cel_mew",
+      "title": "Mew Celebrations 011/025 raw NM", "format": "bin", "status": "shop",
+      "price": 24.0, "quantity": 3, "floor_price": 18.0, "cost_basis": 11.0
+    },
+    {
+      "id": "lot_s03", "listing_id": "L-95003", "item_id": "itm_frlg_mew",
+      "title": "Mew ex FireRed & LeafGreen PSA 9", "format": "bin", "status": "shop",
+      "price": 240.0, "quantity": 1, "floor_price": 195.0, "cost_basis": 130.0
+    },
+    {
+      "id": "lot_s04", "listing_id": "L-95004", "item_id": "itm_apparel_denim_jacket",
+      "title": "Vintage 1970s Levi's Type III Trucker - M", "format": "bin", "status": "shop",
+      "price": 210.0, "quantity": 1, "floor_price": 165.0, "cost_basis": 85.0
+    },
+    {
+      "id": "lot_s05", "listing_id": "L-95005", "item_id": "itm_apparel_wool_coat",
+      "title": "Harris Tweed Overcoat 42R", "format": "bin", "status": "shop",
+      "price": 145.0, "quantity": 2, "floor_price": 110.0, "cost_basis": 60.0
+    }
+  ]
+}

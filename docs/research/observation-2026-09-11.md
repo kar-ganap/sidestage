@@ -16,12 +16,33 @@ down as settled, and those corrections should not wait for the tally.
 |---|---|---|---|---|
 | eBay Live | "$1 START PSA 10 MYSTERY SLABS" | 130 | auction, **mystery** | skipped — concealed item |
 | eBay Live | "Friday Night Memorabilia" | 182 | auction, **mystery**, memorabilia | skipped — concealed + not cards |
-| Whatnot | Pokémon slab auction, rapid fire | ~1,000 | auction, singles | **45 min recorded** |
+| Whatnot | `tcgarett` | 184 | Buy Now, **shop catalog** | chat sampled |
+| Whatnot | `saw_tcg` | **~200** | auction, singles | **45 min recorded** |
+| eBay Live | Base Set Charizard show | — | auction, raw vintage | chat log captured |
 
-**Availability finding.** Pokémon singles shows above 100 concurrent viewers were hard to
-find on eBay Live on a Friday evening; Whatnot was markedly busier. Two of two eBay Live
-shows sampled were mystery/gamified formats. n is far too small to conclude anything about
-the share of eBay Live that is concealed-format, but it is worth counting deliberately.
+> **Corrected.** The recorded `saw_tcg` show was logged at ~1,000 in an earlier draft. That
+> figure belonged to a different "rapid fire slabs" stream that was spotted but never
+> watched. The recorded show is **~200**.
+
+**Audience finding — live card streams are small.** Every show sampled across two platforms
+and four formats sat between **130 and 200 concurrent viewers.** ~200 is not the bottom of a
+range; on this evidence it is *typical*. The design assumption in D-01 was ~800 peak
+concurrent.
+
+Three consequences:
+
+1. **The deluge premise is dead.** At 200 viewers chat is not a flood — the 24-message log in
+   Finding 3a is low-velocity and overwhelmingly social. Nothing observed requires shedding
+   load at 30 msgs/sec.
+2. **Spike 2 needs re-justifying, and survives in a harder form.** It was "intent triage under
+   deluge." There is no deluge. What there is: 5 actionable messages inside 24, where 19 are
+   banter. A **low base rate makes the classification problem harder, not easier** — at a ~4%
+   genuine-question rate, even a precise classifier produces mostly false positives, and the
+   PR curve and cost-asymmetry threshold matter *more* than they would at high volume. The
+   empirical work is unchanged; the motivation becomes signal extraction from a sparse social
+   stream rather than load shedding.
+3. **The persona shrinks.** A seller at 200 concurrent is a smaller operation than D-01
+   assumed. Revisit the pilot sizing and the GMV maths accordingly.
 
 ---
 
