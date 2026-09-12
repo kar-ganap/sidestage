@@ -106,15 +106,49 @@ listings, TCGplayer, PSA APR, 130point `[F]`.
 
 Three things make comps statistically dangerous, and all three become verifier rules:
 
-1. **Grade-matching.** A PSA 9 comp tells you almost nothing about a PSA 10 price.
-2. **Sample size.** Two sales is not a market. One of them may have been a shill bid, a
-   bundled lot, or a friend.
-3. **Recency.** Card prices move fast. A six-month-old comp is a historical note.
+1. **Grade-matching** `[F]`. A PSA 9 comp tells you almost nothing about a PSA 10 price.
+   This is how the market actually works, not a convention we adopted — and the field data
+   confirms it: every price quoted in observed chat carries a grade (`8 is 3 k`,
+   `13.5k in a 10`, `A 9 would be $1740`). A price without a grade is not a price.
+2. **Sample size** `[F]` that two sales is not a market — one may be a shill bid, a bundled
+   lot or a friend. **`[M]` that the threshold is five.**
+3. **Recency** `[F]` that card prices move fast. **`[M]` that the window is 90 days.**
 
 > **The rule: never quote a bare comp.** The model will want to write "these go for about
 > $400." It gets blocked. The permitted form is a range with its sample size and window:
 > *"last 7 sold between $380 and $420, past 90 days."* Minimum `n ≥ 5` within 90 days,
 > grade-matched, or the claim does not ship.
+
+### 5a. Where these rules actually came from — read before quoting them
+
+**Grade-matching is domain truth. The two thresholds are mine, and the rendering rule is a
+product decision that the observed data actively contradicts.** Separating those matters,
+because presenting a design choice as domain lore is precisely the error §6.3 already
+records in the shipping-volume claim.
+
+- **`n ≥ 5`** — there is no industry standard. Collectors eyeball recent sold listings on
+  eBay, TCGplayer, PSA APR or 130point and form a judgement; nobody enforces a minimum.
+  Five is where a median stops being hostage to one outlier, which is a defensible reason
+  and not a measured one.
+- **`90 days`** — likewise chosen, not derived. A quarter is a plausible horizon for a market
+  that moves this fast; it is not a figure anyone in the domain would recognise as a rule.
+- Both live in `config.py` as `comp_min_samples` and `comp_max_age_days` specifically so they
+  are visible and tunable rather than buried in a verifier.
+
+**How to validate them:** sweep both against the guardrail eval and plot the over-block rate
+(Suite B2) against adversarial recall (B1). If `n ≥ 3` blocks nothing extra and catches the
+same adversarial cases, five is needlessly strict; if `n ≥ 8` is needed to stop the model
+quoting thin data, five is too loose. That experiment is cheap and has not been run, so the
+numbers stand as assumptions until it is.
+
+**On "never a bare number", which is the one I would defend hardest.** Observed chat quotes
+bare numbers relentlessly — `8 is 3 k`, `Went for 1800 the other night`, `450-470 card raw`
+— with no sample size and no date, in 60 instances across 477 messages. So the rule is not a
+description of domain practice; it is a deliberate departure from it:
+
+> A person saying *"8 is 3k"* carries implicit uncertainty the whole room understands. A
+> system saying it carries false authority. Different speaker, different standard — and the
+> seller is about to repeat it aloud to two hundred people in his own voice.
 
 ## 6. How an eBay Live card show actually runs
 
