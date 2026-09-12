@@ -1,0 +1,30 @@
+# Fly deploy config. See docs/DECISIONS.md D-25 and D-31.
+#
+# `fly launch --no-deploy` may rename the app if "sidestage" is taken; that is
+# fine, just keep the name it picks.
+
+app = "sidestage"
+primary_region = "sjc"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # D-25: a reviewer opens this URL cold, exactly once. Fly's default is to
+  # auto-stop idle machines, which would hand them a cold start and read as
+  # "broken". Keeping one machine warm is the entire reason this is here.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  processes = ["app"]
+
+# D-31: no [[mounts]] block. The database is ephemeral and reseeded from
+# data/*.json at boot, so every reviewer gets identical deterministic state.
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

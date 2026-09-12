@@ -1,0 +1,22 @@
+# The Dockerfile COPYs specific directories, so nothing here can reach the image.
+# This file is about the BUILD CONTEXT — everything not excluded gets uploaded to
+# the builder on every deploy. .venv alone is hundreds of megabytes.
+.venv/
+venv/
+.git/
+.github/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Never let a credential into the build context, even though it isn't COPYed.
+.env
+*.db
+*.db-journal
+
+# Not needed at runtime.
+docs/
+tests/
+evals/
+.DS_Store

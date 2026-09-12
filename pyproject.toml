@@ -1,0 +1,26 @@
+[project]
+name = "sidestage"
+version = "0.1.0"
+description = "A real-time seller copilot for eBay Live card sellers"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "anthropic>=1.5",
+    "python-dotenv>=1.0",
+    "rank-bm25>=0.2.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.uv]
+package = false
