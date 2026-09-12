@@ -287,13 +287,14 @@ Two refinements to existing classes:
 - **`hype_noise` includes bare emoji, and emoji are not waste.** 🔥 is noise for the reply
   queue and *signal* for the strategy-nudge and top-moment layer — a burst is the room
   reacting to a specific card at a specific second. Same stream, second use.
-- **Buying intent often arrives as a bare noun.** Observed: a viewer typing just **"mew"**.
-  No verb, no question mark, no subject — and among the most commercially valuable traffic
-  in the room. Any classifier keyed on interrogative syntax drops all of it. See D-15.
+- **The entity carries the intent, not the sentence form.** Viewers name cards informally
+  inside ordinary sentences — "mew" used mid-sentence. What determines which evidence to
+  assemble is the card name, not whether the message is phrased as a question. A message
+  naming something currently for sale is high-intent regardless of phrasing. See D-15.
 
 That takes the taxonomy to twelve plus `unknown`, from ten, after 45 minutes of watching.
 Worth stating plainly in the PRD: the cost of designing a taxonomy without looking was two
-missing classes and one wrong assumption about how intent gets expressed.
+missing classes that are not even user messages.
 
 ---
 
@@ -318,16 +319,21 @@ intent × recency × asker value.
 a message was dropped. A linear model on interpretable features does both. An embedding
 similarity score does neither, and adds a heavy dependency that slows reviewer install.
 
-**Amended 2026-09-11 — the cheap arm gains a catalog-entity trie.** Observation showed buying
-intent arriving as a bare noun: a viewer types **"mew"**, meaning *"do you have a Mew"*, with
-no verb, no question mark and no subject. A scorer built on interrogative syntax drops every
-one of these, and they are the traffic with the highest commercial value in the room.
+**Amended 2026-09-11 — the cheap arm gains a catalog-entity trie.** Observation showed viewers
+naming cards informally inside ordinary sentences ("mew" used mid-sentence). Two things follow,
+and the first is the load-bearing one.
 
-The fix keeps the arm deterministic and fast: **a trie over card names, Pokémon names and set
-names**, matched in sub-millisecond time, where a bare catalog-entity mention scores as high
-intent independent of syntax. The catalog becomes part of the classifier. It also keeps "why
-was this surfaced" answerable in one sentence — *because it named something you are selling* —
-which is the property an embedding score cannot give.
+**Entity matching is required for grounding regardless.** Whatever the sentence looks like, the
+card name is what decides which evidence to assemble — so **a trie over card names, Pokémon
+names and set names** has to exist anyway. Building it into the cheap arm costs nothing extra
+and yields the intent signal for free: a message naming something currently for sale is
+high-intent independent of phrasing. Sub-millisecond, deterministic, and it keeps "why was this
+surfaced" answerable in one sentence — *because it named something you are selling* — which is
+the property an embedding score cannot give.
+
+*(An earlier version of this amendment argued the trie was needed to rescue bare-noun messages
+that syntax-keyed scoring would drop. That rested on a misreading of the observation and is
+withdrawn; the grounding argument above is the one that holds.)*
 
 Two cheaper filters run ahead of it, both from the same observation: a **length filter** (the
 single-character spam seen in real chat is droppable before any scoring) and a **sender-type

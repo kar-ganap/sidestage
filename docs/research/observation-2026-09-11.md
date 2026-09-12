@@ -67,19 +67,28 @@ were in the taxonomy:
 | **Bare-noun entity mentions** ("mew") | See finding 4. |
 | Genuine questions | Present, and of the queue/inventory kind above. |
 
-## Finding 4 — buying intent arrives as a bare noun
+## Finding 4 — the entity carries the intent, and the entity is under-specified
 
-Viewers typed things like **"mew"** — no verb, no question mark, no subject. It almost
-certainly means *"do you have a Mew"* or *"I want the Mew"*, and it is among the most
-commercially valuable traffic in the room.
+Viewers referenced cards by informal names **embedded in ordinary sentences** — e.g. "mew"
+used inside a sentence, not as a bare exclamation. Two separate consequences.
 
-**This breaks the obvious classifier.** Any cheap heuristic keyed on question marks or
-interrogative words drops every one of these.
+**The entity, not the syntax, determines what to fetch.** Whatever shape the sentence takes,
+it is the card name that says which evidence to assemble. So a catalog-entity matcher belongs
+in the **grounding** path by necessity — and the intent signal comes free with it: a message
+naming something the seller is currently selling is high-intent regardless of phrasing. That
+is cheaper and steadier than reading sentence form, and it stays explainable — *surfaced
+because it named something you are selling.*
 
-**And the entity itself is unresolvable.** Mew appears across dozens of sets over 25 years —
-Mew ex, Mew VMAX, the Celebrations reprint, the 151 set, numerous promos — and is one
-keystroke from Mewtwo. A bare "mew" names a family, not a card. The correct reply is often
-*"which Mew?"*, and a system that confidently picks one is worse than one that asks.
+**And the name is under-specified.** Mew appears across dozens of sets over 25 years — Mew ex,
+Mew VMAX, the Celebrations reprint, the 151 set, numerous promos — and is one keystroke from
+Mewtwo. "mew" names a family, not a card. The correct reply is frequently *"which Mew?"*, and
+a system that confidently picks one is worse than one that asks.
+
+> **Correction, same day.** An earlier version of this finding claimed intent arrives as a
+> *bare noun* with no verb or question mark, and concluded that syntax-keyed scoring would
+> drop it. That was a misreading of the observation — the usage was inside normal sentences.
+> The entity-matching conclusion survives on the grounding argument above; the claim that
+> syntax heuristics fail does not, and is withdrawn.
 
 ## Finding 5 — a seller hard-coding an answer into their own stream
 
