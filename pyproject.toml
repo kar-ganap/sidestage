@@ -21,6 +21,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# The project is not installed (package = false), so the repo root has to be on
+# sys.path for `import app` to resolve from tests/.
+pythonpath = ["."]
 
 [tool.uv]
 package = false

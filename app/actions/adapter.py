@@ -58,8 +58,8 @@ from __future__ import annotations
 
 import random
 import time
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from typing import Any, Protocol, runtime_checkable
 
 from app.models import ActionType, Lot, LotFormat
@@ -142,7 +142,9 @@ class FormatNotWritable(PreconditionFailed):
     bid, and quantity is meaningless on a single-card auction lot."""
 
     def __init__(self, lot_id: str, lot_format: LotFormat, action: ActionType) -> None:
-        super().__init__(f"{action.value} is not legal on a {lot_format.value} lot ({lot_id})")
+        super().__init__(
+            f"{action.value} is not legal on a {lot_format.value} lot ({lot_id})"
+        )
         self.lot_id = lot_id
         self.format = lot_format
         self.action = action
@@ -166,7 +168,9 @@ class InvalidPrice(PreconditionFailed):
     preconditions — and it is not one of D-04's four.
     """
 
-    def __init__(self, lot_id: str, requested: float, current: float | None, why: str) -> None:
+    def __init__(
+        self, lot_id: str, requested: float, current: float | None, why: str
+    ) -> None:
         super().__init__(f"price {requested} refused on {lot_id}: {why}")
         self.lot_id = lot_id
         self.requested = requested
@@ -269,7 +273,7 @@ class LotRecord:
     consigned: bool = False
     consignor_floor: float | None = None  # absolute (D-04)
     committed: int = 0                   # units already promised; the oversell guard
-    version: int = 1                     # bumps on every applied write; the read-back handle
+    version: int = 1                     # bumps on every write; the read-back handle
 
     @classmethod
     def from_lot(
@@ -279,7 +283,7 @@ class LotRecord:
         consigned: bool = False,
         consignor_floor: float | None = None,
         committed: int = 0,
-    ) -> "LotRecord":
+    ) -> LotRecord:
         """Seed a row from the catalog's `Lot`, plus the consignment fields that
         live outside it."""
         return cls(
@@ -297,7 +301,7 @@ class LotRecord:
         )
 
     @classmethod
-    def from_dict(cls, raw: Mapping[str, Any]) -> "LotRecord":
+    def from_dict(cls, raw: Mapping[str, Any]) -> LotRecord:
         """Seed a row straight from a `data/catalog.json` lot, which may carry
         `consigned` and `consignor_floor` keys the `Lot` dataclass does not."""
         return cls(
@@ -566,7 +570,11 @@ class MockMarketplaceAdapter:
             if target.status in ("sold", "ended"):
                 raise LotStateConflict(lot_id, target.status, "a lot that can still run")
             was_live = next(
-                (r for r in self._lots.values() if r.status == "live" and r.lot_id != lot_id),
+                (
+                    r
+                    for r in self._lots.values()
+                    if r.status == "live" and r.lot_id != lot_id
+                ),
                 None,
             )
             previous = {
@@ -753,8 +761,6 @@ class MockMarketplaceAdapter:
         for i, (visible_at, _) in enumerate(versions):
             if visible_at <= now:
                 idx = i
-            else:
-                break
         # Fault mode 5b: a read served by a replica exactly one version behind,
         # even after the consistency window closed. Models a load balancer
         # routing a read to a lagging follower.
@@ -776,7 +782,7 @@ class MockMarketplaceAdapter:
         lot_id: str,
         idempotency_key: str,
         params: Mapping[str, Any],
-        handler: Any,
+        handler: Callable[[], tuple[dict[str, Any], dict[str, Any], list[LotRecord]]],
     ) -> WriteResult:
         dice = self._roll()
         latency = self._latency(dice)
@@ -836,6 +842,8 @@ class MockMarketplaceAdapter:
         return result
 
 
-def adapter_from_catalog(raw_lots: Sequence[Mapping[str, Any]], **kwargs: Any) -> MockMarketplaceAdapter:
+def adapter_from_catalog(
+    raw_lots: Sequence[Mapping[str, Any]], **kwargs: Any
+) -> MockMarketplaceAdapter:
     """Build a mock seeded from `data/catalog.json`'s `lots` array."""
     return MockMarketplaceAdapter([LotRecord.from_dict(r) for r in raw_lots], **kwargs)

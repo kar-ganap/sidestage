@@ -84,6 +84,44 @@ the consignor floor as **absolute**: not a warning the operator can override, un
 `floor_price`. Two floors with different force is exactly the kind of domain rule that has to
 come from observation; I would not have invented it.
 
+**Implementation note.** `ConsignorFloorViolation` is a **sibling** of `FloorPriceViolation`,
+not a subclass — if it inherited, `except FloorPriceViolation` would silently catch it and the
+override path written for the ordinary floor would apply to a floor that must never be
+overridden. Both carry `overridable` (True/False) as a machine-readable handle. The check also
+keys off `consignor_floor is not None` rather than the `consigned` flag, so a row carrying a
+floor without the flag fails closed instead of being priced through.
+
+---
+
+### D-04b · `push_lot` is consequential; `swap_showcase` is reversible — settled 2026-09-12
+**Decision.** The two showcase actions sit at different rungs of the ladder.
+
+- **`swap_showcase`** reorders the *queue*. Nothing has happened to any lot; reordering back
+  restores the prior state exactly. **Reversible → L3-eligible.**
+- **`push_lot`** makes a lot *live*. On a real show the outgoing lot then ends — it sold or it
+  didn't, and neither can be undone. **Consequential → capped at L1/L2 with confirmation.**
+
+**Why this needed deciding.** The mock adapter initially demoted the outgoing lot to `queued`
+rather than `ended`, which makes `push_lot` look reversible and therefore L3-eligible. That is
+a modelling convenience, not reality, and building the ladder on it would put a consequential
+action behind a tier that assumes it can be undone.
+
+The real answer is better anyway: **`swap_showcase` is the L3 case**, and D-34's pre-bid
+signal ("lot 331 has 6 pre-bids — pull it forward") is usually a *reorder* rather than an
+immediate push; you move it up the queue, you don't interrupt a running lot. So the tier that
+had nothing in it now holds the action the field observation most directly motivates.
+
+**Stated divergence for the TDD:** the mock leaves the outgoing lot recoverable so the demo
+can reset. A real adapter would end it.
+
+---
+
+### D-04c · Both showcase actions are legal on auction lots — settled 2026-09-12
+D-03 scopes **price and stock** writes to BIN lots. Pushing or reordering does not touch bid
+state, and D-34's headline case is pulling an *auction* lot forward on pre-bid demand — so
+reading D-03 as "no writes at all on auctions" would forbid the one action the observation
+most clearly motivates.
+
 ---
 
 ### D-05 · eBay-interest layer is gated — settled
