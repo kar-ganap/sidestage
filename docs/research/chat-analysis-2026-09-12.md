@@ -88,17 +88,25 @@ under 0.7; peak unmeasured.**
 
 Classification is my judgement on the message text; treat the boundaries as approximate.
 
+Counts below are from `evals/data/triage_test.jsonl` (161 labelled messages).
+
 | Class | n | share |
 |---|---|---|
-| Social / banter / hype | ~103 | 58% |
-| Cross-user (replies, @-mentions between viewers) | ~30 | 17% |
-| **Seller-directed requests & questions** | **22** | **12%** |
-| **Market commentary** (viewers supplying comps) | **15** | **8%** |
-| System events (`Unlocked Bronze` ×7, `Raiding` ×1) | 8 | 5% |
+| `social` — banter, hype, reactions | 66 | 41.0% |
+| `cross_user` — viewers talking to each other | 39 | 24.2% |
+| **`market_comment`** — viewers supplying comps and pop figures | **22** | **13.7%** |
+| `request` — run X, show the back, go quicker, check comps | 10 | 6.2% |
+| `system_event` — Unlocked Bronze ×7, Raiding ×1 | 8 | 5.0% |
+| `avail_q` | 7 | 4.3% |
+| `grade_q` · `price_q` · `attribute_q` · `negotiation` · `unknown` | 9 | 5.6% |
 
-The actionable slice is **12%** — roughly one message every fifty seconds. That is not a
-firehose. It is a needle-in-haystack problem at low volume, which makes precision harder,
-not easier.
+**Seller-directed total: 27 of 161 — 16.8%.** Roughly one actionable message every 45
+seconds. Not a firehose: a needle-in-haystack problem at low volume, which makes precision
+*harder* than it would be at high throughput.
+
+The single largest non-social class is **`market_comment` at 13.7%** — viewers supplying the
+exact data the seller never states. That is the demand signal, and it outnumbers every
+category of question they ask.
 
 ---
 
@@ -108,14 +116,21 @@ Whatnot highlights some messages in orange. Every highlighted message in the log
 question mark, and no message without one is highlighted, so the heuristic is almost
 certainly punctuation-based.
 
-**Measured against the 22 seller-directed messages:**
+**Computed from `evals/data/triage_test.jsonl`**, which labels every message with both its
+class and whether the platform highlighted it — so this is derived from a file, not estimated
+by hand. 161 labelled messages, 27 seller-directed (16.8% of traffic), 16 highlighted.
 
 | | |
 |---|---|
 | Correctly highlighted | 11 |
-| **Recall** | **11/22 = 50%** |
-| Highlighted but not seller-directed | 5 |
+| **Recall** | **11/27 = 41%** |
 | **Precision** | **11/16 = 69%** |
+| **F1** | **51%** |
+
+> An earlier draft quoted 50% recall against a hand-count of 22 seller-directed messages.
+> Careful labelling found 27. The figure is **41%**, and it comes out of the dataset rather
+> than off the back of an envelope — reproduce it by reading the file and grouping on
+> `seller_directed` × `highlighted`.
 
 ### What it misses (no question mark, high intent)
 
@@ -225,7 +240,7 @@ Seventeen distinct failure modes for exact lookup, from twenty minutes of one sh
 | | |
 |---|---|
 | **D-15** | The cascade's justification moves from load-shedding to precision at low volume. 0.15 msg/s needs no backpressure. Keep the interpretable scorer; drop the throughput framing. |
-| **Spike 2** | Now has a measured incumbent to beat: **50% recall, 69% precision** from a punctuation heuristic. That is the baseline any classifier must exceed, and it is a far better empirical target than a synthetic PR curve. |
+| **Spike 2** | Now has a measured incumbent to beat: **41% recall, 69% precision** from a punctuation heuristic. That is the baseline any classifier must exceed, and it is a far better empirical target than a synthetic PR curve. |
 | **Spike 1** | Strengthened. Detection is solved and unhelpful; the answer is the gap. 15 instances of viewers supplying comps is the demand, stated. |
 | **D-13** | `market_comment` is 8% of traffic and was not in the taxonomy. Add it. |
 | **D-16** | Referents skew hard to catalog, closed lots and the shop — confirmed at larger n. |
