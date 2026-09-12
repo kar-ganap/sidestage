@@ -202,66 +202,66 @@
 {"text": "you're ripping people off", "intent": "off_topic_abuse", "referent": "none", "seller_directed": false, "source": "synthetic"}
 {"text": "buy crypto instead of cardboard", "intent": "off_topic_abuse", "referent": "none", "seller_directed": false, "source": "synthetic"}
 {"text": "stop begging for follows", "intent": "off_topic_abuse", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "base set?", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@mtheory44 base set?", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@selladoncitygamecorner is yours shadowless?", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@jaybird what did you pay for yours?", "intent": "price_value_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@kdot how many of those do you have?", "intent": "availability_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@tcgmike did you ever get yours graded?", "intent": "grade_condition_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "bro is that the same one you showed me?", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "wait you own that one too?", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@ripcity is that a 9 or a 10?", "intent": "grade_condition_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "did you win the last one?", "intent": "price_value_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "you still chasing the zard?", "intent": "availability_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "whos the guy at 400?", "intent": "unknown", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "who sniped me?", "intent": "unknown", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "@dex you in on this one?", "intent": "unknown", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "anyone know if he does japanese usually?", "intent": "availability_q", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
-{"text": "does anybody here know what silver border means?", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "what does OC stand for?", "intent": "grade_condition_q", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "whats a prime?", "intent": "attribute_q", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "is 130point free?", "intent": "unknown", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "do you believe in grading pop control?", "intent": "unknown", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "Or fire red leaf", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "fire red", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "thats call of legends", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "It was the Japanese silver border", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "Unseen", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "nah thats the ex era one", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "@mtheory44 its 70/112", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "thats not base set its fire red leaf green", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "no shadowless outside base set bud", "intent": "attribute_q", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
-{"text": "english stopped doing 1st ed in 2003", "intent": "attribute_q", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "reverse holos didnt exist until legendary collection", "intent": "attribute_q", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "Not the one in the hand", "intent": "unknown", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "he means the one behind him", "intent": "unknown", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
-{"text": "its the one on the right", "intent": "unknown", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "she asked about the back not the front", "intent": "unknown", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "scroll up he answered that", "intent": "unknown", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "it already sold like 20 lots ago", "intent": "availability_q", "referent": "closed_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "that was lot 3", "intent": "unknown", "referent": "closed_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "the blaziken is later in the queue i think", "intent": "availability_q", "referent": "upcoming_queue", "seller_directed": false, "source": "synthetic"}
-{"text": "pretty sure the mew is in the shop not the show", "intent": "availability_q", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
-{"text": "@jaybird nice win man", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "congrats @dex 🔥", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@ripcity you always outbid me", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@kdot stop bidding against me lol", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@tcgmike we meet again", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@dex enjoy that one", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@hoopster99 welcome back", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@mtheory44 told you", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@saw_tcg_fan you were right", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@jaybird that was brutal", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "yall are ruthless tonight", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@dex what time is it there", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@kdot how was the trip", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@ripcity did you get the raid notification", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "raiders welcome 🫡", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@tcgmike your pfp is elite", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@hoopster99 congrats on bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@dex lmaooo", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "@jaybird i'm out, all yours", "intent": "hype_noise", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "@kdot i'll let you have this one", "intent": "hype_noise", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "base set?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@mtheory44 base set?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@selladoncitygamecorner is yours shadowless?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@jaybird what did you pay for yours?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@kdot how many of those do you have?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@tcgmike did you ever get yours graded?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "bro is that the same one you showed me?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "wait you own that one too?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@ripcity is that a 9 or a 10?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "did you win the last one?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "you still chasing the zard?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "whos the guy at 400?", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "who sniped me?", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "@dex you in on this one?", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "anyone know if he does japanese usually?", "intent": "cross_user", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
+{"text": "does anybody here know what silver border means?", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "what does OC stand for?", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "whats a prime?", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "is 130point free?", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "do you believe in grading pop control?", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "Or fire red leaf", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "fire red", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "thats call of legends", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "It was the Japanese silver border", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "Unseen", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "nah thats the ex era one", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "@mtheory44 its 70/112", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "thats not base set its fire red leaf green", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "no shadowless outside base set bud", "intent": "cross_user", "referent": "ambiguous", "seller_directed": false, "source": "synthetic"}
+{"text": "english stopped doing 1st ed in 2003", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "reverse holos didnt exist until legendary collection", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "Not the one in the hand", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "he means the one behind him", "intent": "cross_user", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
+{"text": "its the one on the right", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "she asked about the back not the front", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "scroll up he answered that", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "it already sold like 20 lots ago", "intent": "cross_user", "referent": "closed_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "that was lot 3", "intent": "cross_user", "referent": "closed_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "the blaziken is later in the queue i think", "intent": "cross_user", "referent": "upcoming_queue", "seller_directed": false, "source": "synthetic"}
+{"text": "pretty sure the mew is in the shop not the show", "intent": "cross_user", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
+{"text": "@jaybird nice win man", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "congrats @dex 🔥", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@ripcity you always outbid me", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@kdot stop bidding against me lol", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@tcgmike we meet again", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@dex enjoy that one", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@hoopster99 welcome back", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@mtheory44 told you", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@saw_tcg_fan you were right", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@jaybird that was brutal", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "yall are ruthless tonight", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@dex what time is it there", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@kdot how was the trip", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@ripcity did you get the raid notification", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "raiders welcome 🫡", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@tcgmike your pfp is elite", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@hoopster99 congrats on bronze", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@dex lmaooo", "intent": "cross_user", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "@jaybird i'm out, all yours", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "@kdot i'll let you have this one", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
 {"text": "lugia next!", "intent": "request", "referent": "upcoming_queue", "seller_directed": true, "source": "synthetic"}
 {"text": "Go quicker", "intent": "request", "referent": "none", "seller_directed": true, "source": "synthetic"}
 {"text": "no breaks!", "intent": "request", "referent": "none", "seller_directed": true, "source": "synthetic"}
@@ -332,21 +332,21 @@
 {"text": "i paid 180 for mine last month", "intent": "market_comment", "referent": "catalog", "seller_directed": false, "source": "synthetic"}
 {"text": "these dipped hard after the reprint", "intent": "market_comment", "referent": "none", "seller_directed": false, "source": "synthetic"}
 {"text": "raw nm ones have been 130 to 150 all summer", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
-{"text": "hoopster99 Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "jaybird Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "dex_cards Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "kdot_slabs Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "tcgmike Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "ripcity99 Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "mtheory44 Unlocked Bronze", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "saw_tcg_fan Unlocked Silver", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "kdot_slabs is raiding with a party of 32", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "holo_hunter is raiding with a party of 11", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "dex_cards joined the show", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "ripcity99 joined the show", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "jaybird shared the show", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "tcgmike is now following demo_tcg", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "Giveaway is starting now", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "Giveaway winner: hoopster99", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "mtheory44 is now a moderator", "intent": "hype_noise", "referent": "none", "seller_directed": false, "source": "synthetic"}
-{"text": "Auction extended", "intent": "hype_noise", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}
+{"text": "hoopster99 Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "jaybird Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "dex_cards Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "kdot_slabs Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "tcgmike Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "ripcity99 Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "mtheory44 Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "saw_tcg_fan Unlocked Silver", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "kdot_slabs is raiding with a party of 32", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "holo_hunter is raiding with a party of 11", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "dex_cards joined the show", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "ripcity99 joined the show", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "jaybird shared the show", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "tcgmike is now following demo_tcg", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "Giveaway is starting now", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "Giveaway winner: hoopster99", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "mtheory44 is now a moderator", "intent": "system_event", "referent": "none", "seller_directed": false, "source": "synthetic"}
+{"text": "Auction extended", "intent": "system_event", "referent": "current_lot", "seller_directed": false, "source": "synthetic"}

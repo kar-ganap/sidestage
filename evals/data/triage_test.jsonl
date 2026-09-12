@@ -1,36 +1,36 @@
 {"_meta": "HELD-OUT TEST SET. Real observed chat, saw_tcg / ScythersTCG, Whatnot, 2026-09-12, ~190 concurrent viewers. Reconstructed from 105 screen frames sampled at 15s, deduped against each frame's tail. NEVER tune against this file. `highlighted` records whether Whatnot's own UI marked the message in orange, which lets the incumbent baseline (recall/precision of a question-mark heuristic) be computed directly from this data. See docs/research/chat-analysis-2026-09-12.md."}
-{"text": "wtf lmaoooo", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "mod": true, "source": "observed"}
+{"text": "wtf lmaoooo", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "mod": true, "source": "observed"}
 {"text": "My names been SawZilla.", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
 {"text": "2016 lmao", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
 {"text": "My insta and gamertag", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
 {"text": "That's why I fw this channel tho, a fellow saw man", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
-{"text": "778", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
-{"text": "Gg", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
+{"text": "778", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
+{"text": "Gg", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
 {"text": "Steal", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 1, "source": "observed"}
-{"text": "Sheesh", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
-{"text": "Very", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
-{"text": "People have crazy collections", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
-{"text": "Oh shit thank you!!", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
-{"text": "Impressive collector whomever this is from", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 3, "source": "observed"}
+{"text": "Sheesh", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
+{"text": "Very", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
+{"text": "People have crazy collections", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
+{"text": "Oh shit thank you!!", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 2, "source": "observed"}
+{"text": "Impressive collector whomever this is from", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 3, "source": "observed"}
 {"text": "I wanna see theory collection!", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 3, "source": "observed", "note": "asking another VIEWER (mtheory44) to show their collection, not the seller"}
 {"text": "Any Blaziken?", "intent": "request", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 3, "source": "observed"}
-{"text": "A minoooorrr", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 5, "source": "observed"}
+{"text": "A minoooorrr", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 5, "source": "observed"}
 {"text": "never seen a fire red leaf green blastoise like that dude", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 5, "source": "observed"}
 {"text": "Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 6, "source": "observed"}
-{"text": "Whaat", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 8, "source": "observed"}
+{"text": "Whaat", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 8, "source": "observed"}
 {"text": "Any Blazikens ?", "intent": "request", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 8, "source": "observed", "note": "same user, second ask, still unanswered"}
 {"text": "All of saw should just come hang and party open invite", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 8, "source": "observed"}
 {"text": "Big boy gengar", "intent": "request", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 8, "source": "observed", "note": "bare entity + descriptor, no question mark"}
-{"text": "Thanks", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 10, "source": "observed"}
+{"text": "Thanks", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 10, "source": "observed"}
 {"text": "What's up bro", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 10, "source": "observed"}
 {"text": "320 for gare plz", "intent": "negotiation", "referent": "current_lot", "seller_directed": true, "highlighted": false, "frame": 10, "source": "observed", "note": "a named bid/offer, no question mark"}
 {"text": "Open invite lmao", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 10, "source": "observed"}
 {"text": "across country..maybe someday!!", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 10, "source": "observed"}
 {"text": "what's up bro", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
 {"text": "Yes yes you're all invited!", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
-{"text": "Big card", "intent": "social", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
+{"text": "Big card", "intent": "hype_noise", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
 {"text": "no breaks!", "intent": "request", "referent": "upcoming_queue", "seller_directed": true, "highlighted": false, "frame": 12, "source": "observed"}
-{"text": "Yes", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
+{"text": "Yes", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
 {"text": "have Charizard in an 8", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 12, "source": "observed"}
 {"text": "lugia next!", "intent": "request", "referent": "upcoming_queue", "seller_directed": true, "highlighted": false, "frame": 12, "source": "observed"}
 {"text": "Go quicker", "intent": "request", "referent": "none", "seller_directed": true, "highlighted": false, "frame": 12, "source": "observed", "note": "pace feedback to the seller"}
@@ -39,124 +39,124 @@
 {"text": "Or fire red leaf", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 14, "source": "observed"}
 {"text": "fire red", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 14, "source": "observed", "note": "viewers resolving an identification between themselves"}
 {"text": "Wow cheap", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 14, "mod": true, "source": "observed"}
-{"text": "Damn gG", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 14, "source": "observed"}
-{"text": "Dang", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 14, "source": "observed"}
+{"text": "Damn gG", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 14, "source": "observed"}
+{"text": "Dang", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 14, "source": "observed"}
 {"text": "Did it crash? It was $100 sealed last year", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": true, "frame": 16, "mod": true, "source": "observed", "note": "FALSE POSITIVE for the incumbent: commentary, not a question to the seller. Also the moment a comp would have countered a public crash narrative."}
 {"text": "damn man that's a sick card I don't have Charizard. Have a worse blastoise than what you just got", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 16, "source": "observed"}
 {"text": "Not the one in the hand", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 16, "source": "observed", "note": "a viewer manually disambiguating the referent"}
-{"text": "Put the goose down", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
-{"text": "Ain't ready for this Lugia", "intent": "social", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
-{"text": "Tooo sexy cards", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
-{"text": "Shining go crazy", "intent": "social", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
-{"text": "Love the Shining line up", "intent": "social", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
-{"text": "And whatnot", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 20, "source": "observed"}
-{"text": "Some guy as before", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 20, "source": "observed"}
+{"text": "Put the goose down", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
+{"text": "Ain't ready for this Lugia", "intent": "hype_noise", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
+{"text": "Tooo sexy cards", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
+{"text": "Shining go crazy", "intent": "hype_noise", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
+{"text": "Love the Shining line up", "intent": "hype_noise", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 18, "source": "observed"}
+{"text": "And whatnot", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 20, "source": "observed"}
+{"text": "Some guy as before", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 20, "source": "observed"}
 {"text": "gotta off the lesser quality to have room for the better", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 20, "source": "observed"}
 {"text": "not wrong sir", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 22, "source": "observed"}
 {"text": "Oh I meant for this card", "intent": "cross_user", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 22, "source": "observed"}
-{"text": "I just take shots of oregano", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 22, "source": "observed"}
-{"text": "Only Grails Only the best of the best", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 22, "mod": true, "source": "observed"}
+{"text": "I just take shots of oregano", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 22, "source": "observed"}
+{"text": "Only Grails Only the best of the best", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 22, "mod": true, "source": "observed"}
 {"text": "Unseen 2500", "intent": "market_comment", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 22, "source": "observed"}
 {"text": "Monster not last year", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 24, "source": "observed"}
 {"text": "1.5 in a 7, 1.3 in a 6", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 24, "source": "observed", "note": "comps by grade, supplied by a viewer"}
 {"text": "8 is 3 k", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 24, "source": "observed"}
 {"text": "Went for 1800 the other night", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 24, "source": "observed"}
 {"text": "Half off", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 26, "source": "observed"}
-{"text": "Insane", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 26, "source": "observed"}
-{"text": "half off? we trollin", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": true, "frame": 26, "source": "observed", "note": "FALSE POSITIVE for the incumbent: banter that happens to contain a question mark"}
+{"text": "Insane", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 26, "source": "observed"}
+{"text": "half off? we trollin", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": true, "frame": 26, "source": "observed", "note": "FALSE POSITIVE for the incumbent: banter that happens to contain a question mark"}
 {"text": "Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 26, "source": "observed"}
-{"text": "Ggggg", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 28, "mod": true, "source": "observed"}
+{"text": "Ggggg", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 28, "mod": true, "source": "observed"}
 {"text": "That was 2500 raw damn gg", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 28, "source": "observed"}
 {"text": "Glaceon lvx is big", "intent": "market_comment", "referent": "catalog", "seller_directed": false, "highlighted": false, "frame": 28, "source": "observed"}
 {"text": "Check comps", "intent": "request", "referent": "current_lot", "seller_directed": true, "highlighted": false, "frame": 30, "source": "observed", "note": "a viewer instructing the seller to do the thing this product does"}
 {"text": "Psa10 77k my goodness", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 30, "source": "observed", "note": "population figure supplied by a viewer"}
 {"text": "Better than english card", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 30, "source": "observed"}
-{"text": "The Lugia of course", "intent": "social", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 32, "source": "observed"}
-{"text": "He said peep the dookie....", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 34, "source": "observed"}
+{"text": "The Lugia of course", "intent": "hype_noise", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 32, "source": "observed"}
+{"text": "He said peep the dookie....", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 34, "source": "observed"}
 {"text": "Not mine", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 34, "mod": true, "source": "observed"}
 {"text": "from the old school", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 36, "source": "observed"}
 {"text": "How are you brotha", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 36, "source": "observed"}
 {"text": "1/3rd", "intent": "market_comment", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 38, "source": "observed"}
-{"text": "Gary rumble", "intent": "social", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 38, "source": "observed"}
-{"text": "Yooo, atmosphere?? Song?", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": true, "frame": 38, "source": "observed", "note": "FALSE POSITIVE for the incumbent: about the background music"}
+{"text": "Gary rumble", "intent": "hype_noise", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 38, "source": "observed"}
+{"text": "Yooo, atmosphere?? Song?", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": true, "frame": 38, "source": "observed", "note": "FALSE POSITIVE for the incumbent: about the background music"}
 {"text": "I think you need bag tbh you'd be greater", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 40, "source": "observed"}
 {"text": "Back wall stamp", "intent": "market_comment", "referent": "catalog", "seller_directed": false, "highlighted": false, "frame": 40, "source": "observed"}
 {"text": "86k psa 10", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 40, "source": "observed"}
-{"text": "im hungry", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 42, "source": "observed"}
+{"text": "im hungry", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 42, "source": "observed"}
 {"text": "I'm with youuu", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 42, "source": "observed"}
-{"text": "How much did gengar fire red go for?", "intent": "price_q", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 42, "source": "observed"}
-{"text": "Prolly best song on album", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 42, "source": "observed"}
+{"text": "How much did gengar fire red go for?", "intent": "price_value_q", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 42, "source": "observed"}
+{"text": "Prolly best song on album", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 42, "source": "observed"}
 {"text": "what set is that pikachu silver border from", "intent": "attribute_q", "referent": "current_lot", "seller_directed": true, "highlighted": false, "frame": 42, "source": "observed", "note": "MISSED by the incumbent: genuine identity question, no question mark"}
 {"text": "What the heck is rakwaza", "intent": "attribute_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 42, "source": "observed", "note": "Rayquaza, misspelled"}
-{"text": "Back is clean ?", "intent": "grade_q", "referent": "current_lot", "seller_directed": true, "highlighted": true, "frame": 42, "source": "observed", "note": "OBSERVATIONAL - unanswerable by the copilot; correct response is a presentation prompt"}
+{"text": "Back is clean ?", "intent": "grade_condition_q", "referent": "current_lot", "seller_directed": true, "highlighted": true, "frame": 42, "source": "observed", "note": "OBSERVATIONAL - unanswerable by the copilot; correct response is a presentation prompt"}
 {"text": "Not bad condition out of blister..tcg has it incorrectly classified as holofoil", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 44, "source": "observed", "note": "a viewer correcting a CATALOG error"}
 {"text": "That front centering is to the left", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 44, "source": "observed", "note": "a viewer making an observational condition assessment from video"}
-{"text": "E-reader centering lmfao", "intent": "social", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 46, "source": "observed"}
-{"text": "I wanna see what the grade on that would be", "intent": "social", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 46, "source": "observed"}
-{"text": "Rumbles", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 46, "source": "observed"}
-{"text": "emo", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 47, "source": "observed"}
+{"text": "E-reader centering lmfao", "intent": "hype_noise", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 46, "source": "observed"}
+{"text": "I wanna see what the grade on that would be", "intent": "hype_noise", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 46, "source": "observed"}
+{"text": "Rumbles", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 46, "source": "observed"}
+{"text": "emo", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 47, "source": "observed"}
 {"text": "Named after your ex", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 47, "source": "observed"}
-{"text": "Why's they skunk look like a rock", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 47, "source": "observed"}
-{"text": "is the dark dragonite clean ?", "intent": "grade_q", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 47, "source": "observed", "note": "OBSERVATIONAL, and about a lot that already sold"}
-{"text": "I'm hard", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 48, "source": "observed"}
-{"text": "Zaa", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 48, "source": "observed"}
-{"text": "50", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 48, "source": "observed"}
-{"text": "Is that a mouth or a nose nobody knows", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 49, "source": "observed"}
-{"text": "Do you have the dragonight on the back wall in your shop??", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 49, "source": "observed", "note": "background inventory + shop; 'dragonight' misspelled"}
-{"text": "Nobody nose", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 49, "source": "observed"}
+{"text": "Why's they skunk look like a rock", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 47, "source": "observed"}
+{"text": "is the dark dragonite clean ?", "intent": "grade_condition_q", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 47, "source": "observed", "note": "OBSERVATIONAL, and about a lot that already sold"}
+{"text": "I'm hard", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 48, "source": "observed"}
+{"text": "Zaa", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 48, "source": "observed"}
+{"text": "50", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 48, "source": "observed"}
+{"text": "Is that a mouth or a nose nobody knows", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 49, "source": "observed"}
+{"text": "Do you have the dragonight on the back wall in your shop??", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 49, "source": "observed", "note": "background inventory + shop; 'dragonight' misspelled"}
+{"text": "Nobody nose", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 49, "source": "observed"}
 {"text": "Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 49, "source": "observed"}
-{"text": "Why my ex call me diglet", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 51, "source": "observed"}
-{"text": "My husband wants lol so I thought I'd ask", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 51, "source": "observed", "note": "follow-up to the dragonight question, still unanswered"}
-{"text": "W husband", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 51, "mod": true, "source": "observed"}
+{"text": "Why my ex call me diglet", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 51, "source": "observed"}
+{"text": "My husband wants lol so I thought I'd ask", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 51, "source": "observed", "note": "follow-up to the dragonight question, still unanswered"}
+{"text": "W husband", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 51, "mod": true, "source": "observed"}
 {"text": "Back again plz ?? Sorry", "intent": "request", "referent": "current_lot", "seller_directed": true, "highlighted": true, "frame": 53, "source": "observed", "note": "presentation request - show the back"}
-{"text": "Ty sir", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
-{"text": "Nice", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
+{"text": "Ty sir", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
+{"text": "Nice", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
 {"text": "Bro tell me about it fancy style man with this Pokemon lol", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
-{"text": "sweet thanks", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
+{"text": "sweet thanks", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 53, "source": "observed"}
 {"text": "This seems cheap", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 55, "mod": true, "source": "observed"}
-{"text": "Do u have the mew one", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 55, "source": "observed", "note": "MISSED by the incumbent. 'the mew one' is under-specified - two Mews in catalog, must abstain"}
-{"text": "Back was clean yah?", "intent": "grade_q", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 55, "mod": true, "source": "observed"}
-{"text": "Any bubble mew?", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 55, "source": "observed"}
-{"text": "modern slooooop", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "source": "observed"}
-{"text": "Okay", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "source": "observed"}
-{"text": "Shy starnie", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "mod": true, "source": "observed"}
+{"text": "Do u have the mew one", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 55, "source": "observed", "note": "MISSED by the incumbent. 'the mew one' is under-specified - two Mews in catalog, must abstain"}
+{"text": "Back was clean yah?", "intent": "grade_condition_q", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 55, "mod": true, "source": "observed"}
+{"text": "Any bubble mew?", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 55, "source": "observed"}
+{"text": "modern slooooop", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "source": "observed"}
+{"text": "Okay", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "source": "observed"}
+{"text": "Shy starnie", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "mod": true, "source": "observed"}
 {"text": "great take", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "source": "observed"}
 {"text": "So hard to find clean", "intent": "market_comment", "referent": "current_lot", "seller_directed": false, "highlighted": false, "frame": 57, "source": "observed"}
 {"text": "I have a master set", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 57, "mod": true, "source": "observed"}
 {"text": "And sealed", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 59, "mod": true, "source": "observed"}
-{"text": "never ever", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 59, "source": "observed"}
-{"text": "Stupid ass mutes can't get around em", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 61, "source": "observed"}
-{"text": "Of course wholliday is the flower lmao", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 61, "mod": true, "source": "observed"}
-{"text": "Ty", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 63, "source": "observed"}
+{"text": "never ever", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 59, "source": "observed"}
+{"text": "Stupid ass mutes can't get around em", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 61, "source": "observed"}
+{"text": "Of course wholliday is the flower lmao", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 61, "mod": true, "source": "observed"}
+{"text": "Ty", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 63, "source": "observed"}
 {"text": "Gary collection getting out of hand", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 63, "source": "observed"}
-{"text": "did i miss the skyridge", "intent": "price_q", "referent": "closed_lot", "seller_directed": true, "highlighted": false, "frame": 63, "source": "observed", "note": "MISSED by the incumbent. Late-arrival / missed-lot question"}
-{"text": "do you believe in grading pop control?", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": true, "frame": 63, "source": "observed", "note": "FALSE POSITIVE for the incumbent: an opinion question, off-topic"}
+{"text": "did i miss the skyridge", "intent": "price_value_q", "referent": "closed_lot", "seller_directed": true, "highlighted": false, "frame": 63, "source": "observed", "note": "MISSED by the incumbent. Late-arrival / missed-lot question"}
+{"text": "do you believe in grading pop control?", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": true, "frame": 63, "source": "observed", "note": "FALSE POSITIVE for the incumbent: an opinion question, off-topic"}
 {"text": "Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 63, "source": "observed"}
 {"text": "it's confirmed", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "mod": true, "source": "observed"}
-{"text": "you've been running crazy cards this week", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
+{"text": "you've been running crazy cards this week", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
 {"text": "all at a dollar crazy", "intent": "market_comment", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
-{"text": "You got any psyducks", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 66, "source": "observed", "note": "MISSED by the incumbent. No question mark"}
+{"text": "You got any psyducks", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 66, "source": "observed", "note": "MISSED by the incumbent. No question mark"}
 {"text": "Pre bid Lugia so I can sleep", "intent": "request", "referent": "upcoming_queue", "seller_directed": true, "highlighted": false, "frame": 66, "source": "observed", "note": "MISSED by the incumbent. Pre-bid request with a stated reason"}
-{"text": "Nooooo", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
-{"text": "Huge", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
+{"text": "Nooooo", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
+{"text": "Huge", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 66, "source": "observed"}
 {"text": "Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 69, "source": "observed"}
-{"text": "Ggs", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 69, "source": "observed"}
-{"text": "primes", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 69, "source": "observed"}
+{"text": "Ggs", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 69, "source": "observed"}
+{"text": "primes", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 69, "source": "observed"}
 {"text": "is raiding with a party of 32.", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 72, "source": "observed", "note": "a raid moved 32 viewers in at once, ~16% of the room"}
-{"text": "Let's gooooo", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 72, "mod": true, "source": "observed"}
+{"text": "Let's gooooo", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 72, "mod": true, "source": "observed"}
 {"text": "you almost said shining mewtwo", "intent": "market_comment", "referent": "current_lot", "seller_directed": true, "highlighted": false, "frame": 72, "source": "observed", "note": "a viewer catching the host mid-misidentification"}
 {"text": "is entering the givvy optional", "intent": "unknown", "referent": "none", "seller_directed": true, "highlighted": false, "frame": 72, "source": "observed", "note": "MISSED by the incumbent. Giveaway mechanics"}
 {"text": "I get that scyther you become less human after 8 and have nothing left at 12hrs could barely talk right lol", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 75, "source": "observed"}
 {"text": "Unlocked Bronze", "intent": "system_event", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 75, "source": "observed"}
-{"text": "venasaur 151?", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 75, "source": "observed", "note": "Venusaur, misspelled; '151' is a set"}
-{"text": "dragonite has been staring at me all night", "intent": "social", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 75, "source": "observed"}
-{"text": "Love her more than beans at breakfast", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 75, "source": "observed"}
+{"text": "venasaur 151?", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": true, "frame": 75, "source": "observed", "note": "Venusaur, misspelled; '151' is a set"}
+{"text": "dragonite has been staring at me all night", "intent": "hype_noise", "referent": "upcoming_queue", "seller_directed": false, "highlighted": false, "frame": 75, "source": "observed"}
+{"text": "Love her more than beans at breakfast", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 75, "source": "observed"}
 {"text": "It's psyduck yall lol", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 78, "source": "observed"}
 {"text": "Scyther can you re run the lugia unseen force, I came in middle of the stream?", "intent": "request", "referent": "closed_lot", "seller_directed": true, "highlighted": true, "frame": 78, "source": "observed", "note": "re-run request from a late arrival; addresses the seller by handle"}
 {"text": "Yeah I picked it up", "intent": "cross_user", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 78, "source": "observed"}
 {"text": "thats call of legends", "intent": "cross_user", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 78, "source": "observed", "note": "viewers answering another viewer's set question"}
-{"text": "Earlier", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 78, "source": "observed"}
+{"text": "Earlier", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 78, "source": "observed"}
 {"text": "It was the Japanese silver border", "intent": "cross_user", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 78, "source": "observed", "note": "answers 'what set is that pikachu silver border from' - viewer-to-viewer, minutes later"}
 {"text": "Unseen", "intent": "cross_user", "referent": "closed_lot", "seller_directed": false, "highlighted": false, "frame": 81, "source": "observed"}
-{"text": "Any team rocket holos", "intent": "avail_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 81, "source": "observed", "note": "MISSED by the incumbent. No question mark"}
-{"text": "Yeah", "intent": "social", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 81, "source": "observed"}
+{"text": "Any team rocket holos", "intent": "availability_q", "referent": "catalog", "seller_directed": true, "highlighted": false, "frame": 81, "source": "observed", "note": "MISSED by the incumbent. No question mark"}
+{"text": "Yeah", "intent": "hype_noise", "referent": "none", "seller_directed": false, "highlighted": false, "frame": 81, "source": "observed"}

@@ -35,13 +35,51 @@ class Intent(StrEnum):
     ATTRIBUTE_Q = "attribute_q"            # "1st ed?" "shadowless?" "reverse holo?"
     GRADE_CONDITION_Q = "grade_condition_q"  # "centering?" "whitening?" "cert #?"
     PRICE_VALUE_Q = "price_value_q"        # "what's it going for?" "last sold?"
-    AVAILABILITY_Q = "availability_q"      # "how many left?"
+    AVAILABILITY_Q = "availability_q"      # "how many left?" "any blazikens?"
     SHIPPING_RETURNS_Q = "shipping_returns_q"  # highest volume, lowest risk
     AUTHENTICITY_Q = "authenticity_q"      # "is it authenticated?" — human-gated
     BUY_COMMIT = "buy_commit"              # "I'll take it" -> proposes an ACTION
     NEGOTIATION = "negotiation"            # "$350 shipped?" — human-gated
     HYPE_NOISE = "hype_noise"              # dropped, but counted for the velocity signal
     OFF_TOPIC_ABUSE = "off_topic_abuse"
+
+    # --- added 2026-09-12 after the first field observation (D-13 amendment) ---
+
+    REQUEST = "request"
+    """"run the shining dragon" · "lugia next!" · "Back again plz" · "Go quicker".
+
+    The highest-intent traffic in the room and the class the armchair taxonomy
+    missed entirely. Buyers do not ask whether you have something — they ask you
+    to sell it to them now. Maps onto `swap_showcase` / `push_lot` rather than
+    onto a reply, and roughly half of these carry no question mark, which is
+    exactly where the platform's own highlighting fails.
+    """
+
+    MARKET_COMMENT = "market_comment"
+    """"8 is 3 k" · "1.5 in a 7, 1.3 in a 6" · "Check comps" · "Psa10 77k".
+
+    Viewers supplying the comps and population figures the seller never states.
+    At 13.7% of observed traffic this is the largest non-social class — it
+    outnumbers every category of question combined, which makes it the clearest
+    demand signal in the data. Never auto-replied to; it feeds the nudge layer.
+    """
+
+    CROSS_USER = "cross_user"
+    """Viewers addressing each other, not the seller.
+
+    24% of observed traffic, and it carries question marks while not being
+    questions to us — "base set?" was one viewer asking another about a card
+    that viewer owns. Surfacing one is a false positive, and a conspicuous one.
+    """
+
+    SYSTEM_EVENT = "system_event"
+    """Platform-generated: "Unlocked Bronze", "is raiding with a party of 32".
+
+    Not a user message at all, so it never enters the scorer. Some are genuine
+    signal — a raid moved 32 viewers in at once, ~16% of the room — and feed the
+    engagement layer rather than the reply queue.
+    """
+
     UNKNOWN = "unknown"
 
 
