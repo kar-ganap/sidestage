@@ -51,7 +51,7 @@ treated as a floor for those stretches.
 |---|---|
 | Mean velocity is two orders of magnitude below the 30 msg/s design assumption | **Holds.** Even the method's absolute ceiling (0.67 msg/s) is 45× below it. |
 | There is no "deluge" in the mean | **Holds.** |
-| The actionable share is ~12% of traffic | **Holds** — a ratio, unaffected by censoring, provided misses are class-uniform. |
+| The actionable share is ~17% of traffic | **Holds** — a ratio, unaffected by censoring, provided misses are class-uniform. |
 | **No backpressure or drop policy is needed** | **Does NOT hold** — but not because bursts were found. See below. |
 
 ### On burstiness: we can claim nothing in either direction
@@ -155,8 +155,11 @@ by hand. 161 labelled messages, 27 seller-directed (16.8% of traffic), 16 highli
 
 **This is the competitive baseline to beat, and it is now a number rather than an
 assertion.** It also reframes Spike 2: the task is not "detect questions" — a regex already
-does that at 50/69 — it is detecting *intent without interrogative syntax* and *filtering
-out chatter that happens to carry a question mark*.
+does that at **41/69** — it is detecting *intent without interrogative syntax* and *filtering
+out chatter that happens to carry a question mark*. Those are two different failures and the
+classifier has to fix both; raising recall by loosening the threshold would make the
+precision worse, which is exactly why the operating point has to be argued rather than
+picked.
 
 ### And detection is not the bottleneck anyway
 
