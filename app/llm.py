@@ -441,6 +441,17 @@ class AnthropicClient:
 
     def _note_failure(self, exc: Exception) -> None:
         self._fails += 1
+        # B-74. A 400 is the request being wrong, not the service being down, so
+        # it must not be absorbed by a breaker designed for outages. Swapping
+        # the drafting model to Haiku 4.5 for the Spike 1 ablation produced
+        # "adaptive thinking is not supported on this model", three retries, and
+        # then a SAFE REFUSAL — the arm scored 100% safe and 0% responsive, and
+        # looked like a finding about the model rather than a typo in the call.
+        # Degrading open is right for an outage and wrong for a misconfiguration.
+        if getattr(exc, "status_code", None) == 400:
+            log.error("llm call is MALFORMED, not failing: %s — this will not "
+                      "be retried and the degraded reply is not a result", exc)
+            self._fails = self._threshold
         log.warning("llm call failed (%d/%d): %s", self._fails, self._threshold, exc)
         if self._fails >= self._threshold:
             self.tripped = True
@@ -484,7 +495,7 @@ class AnthropicClient:
                 system=_system_blocks(DRAFT_SYSTEM),
                 messages=msgs,
                 output_format=DraftOutput,
-                thinking={"type": settings.draft_thinking},
+                thinking={"type": _thinking_for(settings.draft_model)},
             ) as stream:
                 for chunk in stream.text_stream:
                     if not ttft:
@@ -687,6 +698,18 @@ def fixture_key(model: str, system: str, messages: list[dict[str, Any]]) -> str:
 # =====================================================================
 # Selection
 # =====================================================================
+
+
+# Adaptive thinking landed on Claude 4.6 and later; Haiku 4.5 rejects it with a
+# 400 rather than ignoring it. Keeping the mapping here rather than in settings
+# means a model swap on the command line cannot produce a silently degraded run.
+_NO_ADAPTIVE = ("haiku-4-5", "haiku-3", "sonnet-3", "opus-3")
+
+
+def _thinking_for(model: str) -> str:
+    if any(m in model for m in _NO_ADAPTIVE):
+        return "disabled"
+    return settings.draft_thinking
 
 
 def get_client(*, record: bool = False) -> LLMClient:

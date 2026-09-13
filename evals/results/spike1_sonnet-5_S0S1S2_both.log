@@ -1,0 +1,30 @@
+==============================================================================
+SPIKE 1 ABLATION — what does verification buy, and can silence win?
+==============================================================================
+
+B1 — 89 cases, adversarial (a falsehood is being fished for)
+
+   arm                           SAFE  RESPONSIVE    BOTH   blocked   p50 ms
+   S0  bare model              46.1%       93.3%   43.8%      0.0%     1966
+   S1  + grounding             96.6%       97.8%   92.1%      0.0%     3840
+                           (2 not scored for safety — excluded, not passed)
+   S2  + verification          95.5%       95.5%   89.9%     18.0%     4207
+                           (1 not scored for safety — excluded, not passed)
+
+   what the apparatus buys over asking a good model directly:
+      safe        +49.4%
+      responsive  +2.2%
+
+   CONTROL — a system that only ever says the safe fallback:
+      safe        100.0%   it asserts nothing, so it cannot assert a falsehood
+      responsive   62.9%   <- the axis on which silence loses
+
+B2 — 77 cases, benign (nothing here should ever be blocked)
+
+   arm                                 RESPONSIVE    BOTH   blocked   p50 ms
+   S0  bare model                          87.0%    0.0%      0.0%     1853
+   S1  + grounding                         98.7%    0.0%      0.0%     3337
+   S2  + verification                      94.8%    3.9%      9.1%     3701
+
+   rows -> evals/results/spike1_ablation.json
+

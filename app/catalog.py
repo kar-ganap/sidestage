@@ -436,3 +436,21 @@ def get_catalog() -> Catalog:
     if _catalog is None:
         _catalog = Catalog.load()
     return _catalog
+
+
+def reload_catalog() -> Catalog:
+    """Drop the singleton and rebuild from JSON.
+
+    B-76. The docstring above says "never patched", and that was true until
+    `Session.bid()` made lot state mutable so Suite E's moments could be reached
+    (B-75). `/api/reset` rebuilt the Session and left the catalog carrying every
+    bid the previous run had placed, so a reviewer who reset got a lot at $1,175
+    with 18 extensions and a permanently hot nudge.
+
+    Reads being in memory (D-33) is what makes the whole system fast; it also
+    means "reset" has to mean reset, and a singleton that anything can mutate
+    has to have a way back.
+    """
+    global _catalog
+    _catalog = None
+    return get_catalog()

@@ -300,6 +300,28 @@ def action_lots() -> JSONResponse:
     return JSONResponse({"lots": out, "adapter_stats": a.stats})
 
 
+class BidIn(BaseModel):
+    amount: float | None = Field(default=None, gt=0)
+    """Omit for a timer extension with no new bid — which is what a stall is."""
+    extension: bool = True
+
+
+@app.post("/api/lot/{lot_id}/bid")
+def bid(lot_id: str, body: BidIn) -> JSONResponse:
+    """A bid lands — the half of the recording the demo was ignoring (B-75).
+
+    Suite E's moment classifier reads extension count and post-extension price
+    movement. Without this the lot state never changed, so `hot` and `stalled`
+    were unreachable in the running app and the nudge could not fire.
+    """
+    out = get_session().bid(lot_id, body.amount, extension=body.extension)
+    if out is None:
+        return JSONResponse(
+            {"error": "no such live auction lot, or the bid does not raise"},
+            status_code=409)
+    return JSONResponse(out)
+
+
 @app.post("/api/reset")
 def reset() -> JSONResponse:
     reset_session()

@@ -58,6 +58,16 @@ class PipelineResult:
     verification: VerifyResult
     attempts: int
     latency_ms: dict[str, int]
+    first_text: str = ""
+    """What the model wrote on attempt 0, before verification saw it.
+
+    Kept so Spike 1's ablation can compare verified against unverified on the
+    SAME generation. Running the two arms as two separate calls compares two
+    independent samples of a stochastic model, and at n=89 the sampling noise
+    was larger than the effect being measured — the first run showed the
+    verifier catching 4 cases and "missing" 4, where the 4 misses were simply a
+    different roll of the same dice.
+    """
     ttft_ms: int = 0
     """First readable token of the first attempt.
 
@@ -106,6 +116,7 @@ def draft_reply(
     timing["assemble"] = _tock(t)
 
     attempt, feedback, result, ttft = 0, None, None, 0
+    first_text = ""
     while True:
         # 3 — draft. `on_text` is passed straight through, so a console can
         # render the reply as it arrives while the claims are still decoding.
@@ -119,6 +130,8 @@ def draft_reply(
             ttft = out.ttft_ms
 
         draft = _to_draft(out.output, ev, out.model, attempt)
+        if not attempt:
+            first_text = draft.text
 
         # 4 — verify, against the fact each claim cited
         t = _tick()
@@ -153,7 +166,7 @@ def draft_reply(
     draft.latency_ms = dict(timing)
     return PipelineResult(draft=draft, evidence=ev, resolution=resolution,
                           verification=result, attempts=attempt + 1,
-                          latency_ms=timing, ttft_ms=ttft)
+                          latency_ms=timing, first_text=first_text, ttft_ms=ttft)
 
 
 def _to_draft(out: DraftOutput | None, ev: Evidence, model: str, attempt: int) -> Draft:

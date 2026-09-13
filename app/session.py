@@ -27,11 +27,11 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from app.actions.ledger import Ledger
-from app.catalog import Catalog, get_catalog
+from app.catalog import Catalog, get_catalog, reload_catalog
 from app.entities import get_resolver
 from app.judge import JudgeRunner, Opinion
 from app.llm import LLMClient, get_client
-from app.models import ActionType, Draft, Intent, Lot, Verdict
+from app.models import ActionType, Draft, Intent, Lot, LotFormat, Verdict
 from app.moments import MomentCall, classify as classify_moment, nudge as build_nudge
 from app.pipeline import PipelineResult, draft_reply
 from app.triage import Route, TriageCascade, TriageResult, _shingle
@@ -192,6 +192,62 @@ class Session:
             return None
         return {"text": text, "moment": c.moment.value, "why": c.why,
                 "extensions": c.extensions, "delta": c.delta}
+
+    def bid(self, lot_id: str, amount: float | None, *,
+            extension: bool = True) -> dict | None:
+        """A bid lands on a live auction lot.
+
+        B-75. Suite E classifies auction dynamics — `hot`, `stalled`, `normal` —
+        from extension count and how far the price moved after the first
+        extension. In the running app **it could never fire**: the catalog is a
+        frozen snapshot of a recorded show, nothing mutated lot state, and every
+        lot that classifies as hot or stalled in that snapshot is already
+        `sold`. The one live lot is `normal` and the queued lots have no bid
+        data at all. An entire eval suite, and the nudge it backs, was
+        unreachable from the product.
+
+        `/api/replay` already pushes the show's recorded *chat* through the
+        cascade. This is the same idea for its *bids* — the half of the
+        recording the demo was ignoring.
+
+        `bid_at_first_extension` is captured on the first extension rather than
+        at open, because the question Suite E asks is what happened during the
+        contested close: lot 4 opened at $27 and closed at $350, and the number
+        that matters is that 92% of that movement came across 24 extensions.
+
+        **A timer extension and a bid are separate events**, and the first
+        version of this conflated them. A bid must raise the price, so if every
+        extension carried a bid then `delta` could never be zero and `stalled`
+        — `STALL_DELTA_ABS = 0.0`, exactly zero, bids that stopped arriving —
+        was unreachable by construction even after the state became mutable.
+        Recorded lot_003 shows the real shape: 3 extensions with the bid frozen
+        at $111. So `amount` is optional: omit it and the timer extended with
+        nothing behind it, which is precisely what a stall is.
+        """
+        lot = self.catalog.lots.get(lot_id)
+        if lot is None or lot.format is not LotFormat.AUCTION:
+            return None
+        if lot.status not in ("live", "queued"):
+            return None
+        with self._lock:
+            if amount is not None:
+                if amount <= (lot.current_bid or 0):
+                    return None      # a bid must raise; the room sees the max
+                lot.current_bid = amount
+            if extension:
+                if lot.bid_at_first_extension is None:
+                    # Whatever the price was when the endgame began — the bid
+                    # that triggered this extension, or the standing bid if the
+                    # timer extended with nothing behind it.
+                    lot.bid_at_first_extension = lot.current_bid
+                lot.extensions += 1
+            if lot.status == "queued":
+                lot.status = "live"
+                self.active_lot_id = lot.id
+        return {"lot": lot.id, "current_bid": lot.current_bid,
+                "extensions": lot.extensions,
+                "bid_at_first_extension": lot.bid_at_first_extension,
+                "nudge": self.nudge() if lot.id == self.active_lot_id else None}
 
     def set_active_lot(self, lot_id: str) -> bool:
         if lot_id not in self.catalog.lots:
@@ -457,6 +513,12 @@ def get_session() -> Session:
 
 
 def reset_session() -> Session:
+    """Back to boot state — including the catalog (B-76).
+
+    Lot state became mutable when `bid()` was added, so rebuilding only the
+    Session left every bid from the previous run in place.
+    """
     global _session
+    reload_catalog()
     _session = Session()
     return _session

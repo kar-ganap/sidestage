@@ -1556,3 +1556,98 @@ The same entry covers the coverage-pass memoisation: `_keys` was recomputed once
 per (sentence x claim), and the tail showed it. Fact key sets are computed once
 each per verification now; the worst draft in the recorded corpus went from
 9.6 ms to 0.73 ms.
+
+## B-58 · Apologies are not denials
+
+`_question_numbers`, narrowed after B-42, still accepted `_is_negated` matching
+`sorry|afraid|unfortunately` and `_is_deferral` matching `check|host`. So
+prefixing an assertion with *"Sorry,"* or *"Let me check with the host,"* made
+any buyer-supplied number assertable:
+
+```
+question 'can i get it for 999?'
+  "Sorry, the price is already 999 on that one."   -> PASS
+  "The price is already 999 on that one."          -> BLOCKED
+```
+
+An apology is not a denial and deferring is not declining. Both came out of
+`_NEGATION`, and then the whole question exemption came out with them — see
+B-72.
+
+## B-74 · A 400 is not an outage, and degrading open hid a typo
+
+Swapping the drafting model to Haiku 4.5 for the Spike 1 ablation produced
+`adaptive thinking is not supported on this model`, three retries, and then the
+degraded safe refusal. The arm scored **100% safe and 0% responsive** and looked
+like a finding about the model. It was a malformed request.
+
+D-32's breaker degrades open so a reviewer with no credential gets a working
+system rather than an error. That is right for an outage and wrong for a
+misconfiguration: a 400 means the request is wrong, and no number of retries
+will fix it. It now trips the breaker immediately and logs at ERROR saying the
+degraded reply is not a result.
+
+Adaptive thinking landed on Claude 4.6 and later; the model-to-thinking mapping
+lives next to the call, so a model swap on the command line cannot silently
+produce a degraded run.
+
+**The near-miss is the lesson.** Had the ablation run unattended, Haiku would
+have scored 100% safe — better than Sonnet — and the writeup would have said
+verification matters more on weaker models. A safety metric that rewards silence
+rewards *broken* systems too, which is the same failure the mute control exists
+to catch, arriving by a different door.
+
+## B-75 · An entire eval suite behind a door with no handle
+
+`app/moments.py` classifies a lot as `hot`, `stalled` or `normal` from extension
+count and post-first-extension price movement; `Session.nudge()` turns that into
+one glanceable line; Suite E evaluates it. An adversarial review asked the
+question that matters: *can it fire in the running product?*
+
+No. Every lot in the shipped catalog:
+
+```
+lot_001  sold     7 ext   $195 -> $330   hot
+lot_003  sold     3 ext   $111 -> $111   stalled
+lot_004  sold    24 ext    $27 -> $350   hot
+lot_006  live     2 ext   $860 -> $890   normal      <- the only live lot
+lot_007+ queued   0 ext      no bid data  normal
+```
+
+**Every `hot` or `stalled` lot is already sold.** The catalog is a frozen
+snapshot and nothing mutated lot state, so the classifier's interesting branches
+were unreachable from the product and the nudge could never appear.
+
+`/api/replay` already pushes the show's recorded *chat* through the cascade.
+`POST /api/lot/{id}/bid` is the same idea for its *bids* — the half of the
+recording the demo was ignoring.
+
+**Two events, not one.** The first version conflated a timer extension with a
+bid. Since a bid must raise the price, `delta` could then never reach zero and
+`stalled` — `STALL_DELTA_ABS = 0.0`, *exactly* zero, bids that stopped arriving
+— stayed unreachable even after the state became mutable. Recorded lot_003 shows
+the real shape: three extensions with the bid frozen at $111. So `amount` is
+optional, and omitting it is a timer extension with nothing behind it.
+
+All three branches now reachable through the API:
+
+```
+HOT      lot_006  14 ext  $860 -> $1,175   "14 ext · +37%"
+STALLED  lot_007   4 ext  $400 -> $400     "stalled at $0 move · 4 ext"
+NORMAL   lot_007   2 ext  $400 -> $420     (no nudge — the common case)
+```
+
+## B-76 · "Never patched" stopped being true
+
+`get_catalog()`'s docstring read *"Process-wide singleton. Rebuilt from JSON at
+boot (D-31), never patched."* True until B-75 made lot state mutable.
+
+`/api/reset` rebuilt the `Session` and left the catalog carrying every bid the
+previous run had placed — a reviewer who reset got a lot sitting at $1,175 with
+18 extensions and a permanently hot nudge. Found while writing the test that
+drives three different moments in one process, which is exactly the shape of use
+that exposes shared mutable state.
+
+`reload_catalog()` drops the singleton; `reset_session()` calls it. Reads being
+in memory (D-33) is what makes the system fast, and it also means *reset* has to
+mean reset.

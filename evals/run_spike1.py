@@ -60,7 +60,6 @@ from pathlib import Path
 from app.catalog import get_catalog
 from app.config import settings
 from app.entities import get_resolver
-from app.evidence import assemble
 from app.judge import judge as responsiveness
 from app.llm import get_client
 from app.models import Claim, ClaimType, Draft, Intent, Verdict
@@ -139,26 +138,6 @@ def _bare(question: str) -> str | None:
         return None
 
 
-def _grounded(question: str, intent: Intent, lot) -> str | None:
-    """S1 — evidence and the claim contract, but nothing checks the output.
-
-    This is the arm that answers "isn't giving the model the facts enough?",
-    which is the first thing a reviewer asks about a verification spike.
-    """
-    cat = get_catalog()
-    ev = assemble(intent=intent, resolution=get_resolver().resolve(question),
-                  catalog=cat, lot=lot)
-    try:
-        out = get_client().draft(question=question, evidence=ev, intent=intent)
-    except Exception as exc:
-        log.warning("S1 arm failed: %s", type(exc).__name__)
-        return None
-    # `output is None` is a truncated or refused generation (B-12), which is a
-    # real result for this arm — an empty reply that ships. Not the same as the
-    # call never completing, which is `None` above.
-    return "" if out.output is None else out.output.reply_text.strip()
-
-
 def run_case(case: dict, arms: set[str], *, adversarial: bool) -> list[Row]:
     cat = get_catalog()
     intent = _INTENT_FOR.get(case.get("violation_code", "none"), Intent.UNKNOWN)
@@ -186,19 +165,30 @@ def run_case(case: dict, arms: set[str], *, adversarial: bool) -> list[Row]:
         t = time.perf_counter()
         seen = _bare(q)
         out.append(score("S0", seen, False, int((time.perf_counter() - t) * 1000)))
-    if "S1" in arms:
-        t = time.perf_counter()
-        seen = _grounded(q, intent, lot)
-        out.append(score("S1", seen, False, int((time.perf_counter() - t) * 1000)))
-    if "S2" in arms:
+    # S1 and S2 come from ONE generation, not two.
+    #
+    # The first version of this ran them as separate calls, and at n=89 the
+    # sampling noise of a stochastic model was larger than the effect: the
+    # verifier appeared to catch 4 cases and miss 4, where the 4 "misses" were
+    # a different roll of the same dice on a case neither arm had a view about.
+    # A paired test on unpaired data answers a question nobody asked.
+    #
+    # So: generate once. S1 is what the model wrote before verification saw it;
+    # S2 is what ships after it did. The only difference between the arms is the
+    # verifier, which is the entire point of an ablation.
+    if {"S1", "S2"} & set(arms):
         t = time.perf_counter()
         r = draft_reply(q, intent=intent, lot=lot, catalog=cat,
                         resolver=get_resolver(), client=get_client())
-        blocked = r.draft.verdict is Verdict.BLOCKED
-        # What the operator is handed, which is what the buyer would read.
-        seen = (r.draft.fallback_text or SAFE_FALLBACK) if blocked else r.draft.text
-        out.append(score("S2", seen, blocked, int((time.perf_counter() - t) * 1000),
-                         [v.code for v in r.draft.violations]))
+        ms = int((time.perf_counter() - t) * 1000)
+        if "S1" in arms:
+            out.append(score("S1", r.first_text, False, ms))
+        if "S2" in arms:
+            blocked = r.draft.verdict is Verdict.BLOCKED
+            # What the operator is handed, which is what the buyer would read.
+            seen = (r.draft.fallback_text or SAFE_FALLBACK) if blocked else r.draft.text
+            out.append(score("S2", seen, blocked, ms,
+                             [v.code for v in r.draft.violations]))
     return out
 
 
@@ -219,11 +209,16 @@ def _table(rows: list[Row], arms: list[str], *, adversarial: bool) -> None:
             continue
         safe, n_safe = _rate(sub, "safe")
         resp, _ = _rate(sub, "responsive")
-        both = sum(1 for r in sub if r.safe and r.responsive) / len(sub)
         line = f"   {LABEL[arm]:<24}"
-        line += f"{safe:>9.1%} " if adversarial else f"{'':>10}"
-        line += (f"{resp:>11.1%} {both:>7.1%} "
-                 f"{sum(r.blocked for r in sub)/len(sub):>9.1%} "
+        if adversarial:
+            both = sum(1 for r in sub if r.safe and r.responsive) / len(sub)
+            line += f"{safe:>9.1%} {resp:>11.1%} {both:>7.1%} "
+        else:
+            # No falsehood exists on a benign case, so `safe` is undefined and a
+            # BOTH column here was always ~0 — a number that looked like a
+            # measurement and was an artefact of `None and x`.
+            line += f"{'':>10}{resp:>11.1%} {'—':>7} "
+        line += (f"{sum(r.blocked for r in sub)/len(sub):>9.1%} "
                  f"{int(statistics.median(r.ms for r in sub)):>8}")
         print(line)
         if adversarial and n_safe < len(sub):
@@ -238,8 +233,20 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--arms", default="S0,S1,S2")
     ap.add_argument("--suite", default="both", choices=["b1", "b2", "both"])
+    ap.add_argument("--draft-model", default=None,
+                    help="override the drafting model for S0/S1/S2. The point: "
+                         "if verification is a GUARANTEE rather than an accuracy "
+                         "improver, its value should appear exactly when the "
+                         "model behaves worse.")
     a = ap.parse_args()
     arms = [s for s in ("S0", "S1", "S2") if s in set(a.arms.split(","))]
+    if a.draft_model:
+        # `Settings` is frozen so a stray assignment cannot silently change the
+        # model mid-run; overriding it here is deliberate and scoped to this
+        # process. `app.llm` reads `settings.draft_model` at call time, and the
+        # fixture key includes the model, so a swapped model cannot collide with
+        # a recorded fixture for the other one.
+        object.__setattr__(settings, "draft_model", a.draft_model)
     if not settings.anthropic_api_key:
         print("ANTHROPIC_API_KEY not set — this suite generates and judges live.")
         return 2
@@ -247,6 +254,7 @@ def main() -> int:
     print("=" * 78)
     print("SPIKE 1 ABLATION — what does verification buy, and can silence win?")
     print("=" * 78)
+    print(f"   drafting model: {settings.draft_model}")
 
     everything: list[Row] = []
     suites = [("b1", "guardrail_adversarial", True), ("b2", "guardrail_control", False)]
@@ -289,7 +297,10 @@ def main() -> int:
                            for c, o in zip(cases, ops)]
 
     RESULTS.mkdir(exist_ok=True)
-    out = RESULTS / "spike1_ablation.json"
+    # Per model and per arm-set: a smoke test with `--arms S1,S2 -n 2` silently
+    # overwrote a full 154-case run once, and the row-level data was gone.
+    tag = settings.draft_model.replace("claude-", "").replace("-2025", "")
+    out = RESULTS / f"spike1_{tag}_{''.join(arms)}_{a.suite}.json"
     out.write_text(json.dumps({
         "run_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "draft_model": settings.draft_model,

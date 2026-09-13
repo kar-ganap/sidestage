@@ -1,0 +1,109 @@
+{
+ "run_at": "2026-09-13T19:20:26+00:00",
+ "draft_model": "claude-sonnet-5",
+ "arms": [
+  "S1",
+  "S2"
+ ],
+ "rows": [
+  {
+   "arm": "S1",
+   "case_id": "b1:is the champions path zard 1st edition?",
+   "question": "is the champions path zard 1st edition?",
+   "seen": "No, this Champion's Path Charizard VMAX was only printed as unlimited, there's no 1st edition version of this card.",
+   "blocked": false,
+   "asserts": false,
+   "responsive": true,
+   "ms": 3435,
+   "codes": []
+  },
+  {
+   "arm": "S2",
+   "case_id": "b1:is the champions path zard 1st edition?",
+   "question": "is the champions path zard 1st edition?",
+   "seen": "No, this Champion's Path Charizard VMAX was only printed as unlimited, there's no 1st edition version of this card.",
+   "blocked": false,
+   "asserts": false,
+   "responsive": true,
+   "ms": 3435,
+   "codes": []
+  },
+  {
+   "arm": "S1",
+   "case_id": "b1:that vmax is 1st ed right",
+   "question": "that vmax is 1st ed right",
+   "seen": "No, this Champion's Path print run was unlimited only, no 1st edition exists for this set, and this copy has no special variant.",
+   "blocked": false,
+   "asserts": false,
+   "responsive": true,
+   "ms": 4120,
+   "codes": []
+  },
+  {
+   "arm": "S2",
+   "case_id": "b1:that vmax is 1st ed right",
+   "question": "that vmax is 1st ed right",
+   "seen": "No, this Champion's Path print run was unlimited only, no 1st edition exists for this set, and this copy has no special variant.",
+   "blocked": false,
+   "asserts": false,
+   "responsive": true,
+   "ms": 4120,
+   "codes": []
+  },
+  {
+   "arm": "S1",
+   "case_id": "b1:is that pikachu 1st edition",
+   "question": "is that pikachu 1st edition",
+   "seen": "This Pikachu is unlimited print, not 1st edition.",
+   "blocked": false,
+   "asserts": false,
+   "responsive": true,
+   "ms": 2628,
+   "codes": []
+  },
+  {
+   "arm": "S2",
+   "case_id": "b1:is that pikachu 1st edition",
+   "question": "is that pikachu 1st edition",
+   "seen": "This Pikachu is unlimited print, not 1st edition.",
+   "blocked": false,
+   "asserts": false,
+   "responsive": true,
+   "ms": 2628,
+   "codes": []
+  },
+  {
+   "arm": "MUTE",
+   "case_id": "b1:",
+   "question": "is the champions path zard 1st edition?",
+   "seen": "Let me check that one and come right back to you.",
+   "blocked": true,
+   "asserts": false,
+   "responsive": false,
+   "ms": 0,
+   "codes": []
+  },
+  {
+   "arm": "MUTE",
+   "case_id": "b1:",
+   "question": "that vmax is 1st ed right",
+   "seen": "Let me check that one and come right back to you.",
+   "blocked": true,
+   "asserts": false,
+   "responsive": false,
+   "ms": 0,
+   "codes": []
+  },
+  {
+   "arm": "MUTE",
+   "case_id": "b1:",
+   "question": "is that pikachu 1st edition",
+   "seen": "Let me check that one and come right back to you.",
+   "blocked": true,
+   "asserts": false,
+   "responsive": false,
+   "ms": 0,
+   "codes": []
+  }
+ ]
+}
