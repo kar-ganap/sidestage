@@ -93,6 +93,17 @@ def _registry_block() -> str:
     return f"{len(real)} entries, names match"
 
 
+def _bench(path: str, stat: str) -> Callable[[], float]:
+    """A latency percentile from the recorded bench run."""
+    def go() -> float:
+        f = ROOT / "evals/results/bench.json"
+        if not f.exists():
+            raise FileNotFoundError(
+                "no bench result — run `uv run python -m evals.bench --paths free`")
+        return json.loads(f.read_text())[path][stat]
+    return go
+
+
 def _spike1(model: str, arm: str, axis: str) -> Callable[[], float]:
     """A rate from a recorded ablation run, so the PRD cannot drift from it.
 
@@ -143,6 +154,12 @@ FACTS = [
          [("docs/TDD.md", r"S1  \+ grounding\s+(\d+\.\d)%\s+88\.8%")], tolerance=0.05),
     Fact("spike1 haiku S2 safe", _spike1("haiku-4-5", "S2", "safe"),
          [("docs/TDD.md", r"S2  \+ verification\s+(\d+\.\d)%\s+79\.8%")], tolerance=0.05),
+    Fact("verify p95 CPU", _bench("verify — CPU (the work)", "p95"),
+         [("docs/TDD.md", r"at \*\*(\d\.\d) ms p95 of CPU\*\*"),
+          ("docs/PRD.md", r"Measured false: (\d\.\d) ms p95 of CPU"),
+          ("docs/DECISIONS.md", r"`verify` at (\d\.\d) ms p95 of CPU"),
+          ("app/precompute.py", r"verification costs (\d\.\d) ms p95 of CPU")],
+         tolerance=0.35),
     Fact("decisions", _decisions,
          [("docs/TDD.md", r"`DECISIONS\.md` holds (\d+) decisions")]),
     Fact("registry block matches the code", _registry_block, [], tolerance=0),

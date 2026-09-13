@@ -40,9 +40,10 @@ from pathlib import Path
 from app.catalog import get_catalog
 from app.entities import get_resolver
 from app.evidence import assemble
-from app.llm import RATES, get_client
+from app.llm import RATES, FixtureMissing, ReplayClient, get_client
 from app.models import Intent
 from app.pipeline import draft_reply
+from evals.record_fixtures import DEMO
 from app.triage import TriageCascade, features, prefilter
 from app.verify import verify
 
@@ -127,26 +128,51 @@ def bench_assemble(reps: int) -> Samples:
     return s
 
 
-def bench_verify(reps: int) -> Samples:
+def bench_verify(reps: int) -> tuple[Samples, Samples]:
     """The number the whole claim contract rests on.
 
     D-09's argument is that assembling evidence *before* generation turns
     verification into dict lookups. If this is not sub-millisecond, that
-    argument is decorative — and D-36's precomputation design, which re-verifies
-    a cached draft at serve time, depends on it outright.
+    argument is decorative.
+
+    **Measured over the real recorded corpus, not one synthetic draft** (B-80).
+    The old version timed a single two-claim reply, which said nothing about a
+    three-sentence one — and a claim of "0.2 ms" that holds only for the
+    shortest draft in the set is not a claim about the system.
+
+    **CPU time as well as wall time.** Wall-clock tails on a shared machine are
+    scheduling noise rather than work: one run reported a warm p99 *above* its
+    cold p99, which is incoherent and was the tell. `process_time()` counts only
+    CPU actually spent here, which answers "how much work is this"; wall time is
+    what an operator experiences, tenants and all. Both are reported because
+    they answer different questions and only one of them is about the code.
     """
-    s = Samples("verify (claims vs facts)")
+    cpu = Samples("verify — CPU (the work)")
+    wall = Samples("verify — wall (this machine)")
     cat, res = get_catalog(), get_resolver()
-    ev = assemble(intent=Intent.ATTRIBUTE_Q,
-                  resolution=res.resolve("is that 1st edition?"),
-                  catalog=cat, lot=cat.lots.get("lot_001"))
-    out = draft_reply("is that 1st edition?", intent=Intent.ATTRIBUTE_Q,
-                      lot=cat.lots.get("lot_001"), catalog=cat, resolver=res)
-    for _ in range(reps):
-        t0 = time.perf_counter()
-        verify(out.draft, ev, catalog=cat)
-        s.ms.append((time.perf_counter() - t0) * 1000)
-    return s
+    client = ReplayClient(strict=True)
+    drafts = []
+    for msg, intent, lot_id in DEMO:
+        try:
+            r = draft_reply(msg, intent=intent,
+                            lot=cat.lots.get(lot_id) if lot_id else None,
+                            catalog=cat, resolver=res, client=client,
+                            max_repairs=0)
+        except FixtureMissing:
+            continue
+        drafts.append(r)
+    if not drafts:                       # no fixtures recorded yet
+        return cpu, wall
+    per = max(1, reps // len(drafts))
+    for r in drafts:
+        for i in range(per + 3):
+            t0, c0 = time.perf_counter(), time.process_time()
+            verify(r.draft, r.evidence, catalog=cat)
+            if i < 3:
+                continue                 # warm the regexes for this draft
+            wall.ms.append((time.perf_counter() - t0) * 1000)
+            cpu.ms.append((time.process_time() - c0) * 1000)
+    return cpu, wall
 
 
 # --- model paths -----------------------------------------------------------
@@ -195,6 +221,18 @@ def bench_draft(n: int) -> tuple[Samples, Samples, Samples]:
     return ttft, send, repaired
 
 
+def _save(rows: list[tuple[Samples, int | None]]) -> None:
+    """Write the distributions so `tools/check_docs.py` can verify a quoted
+    number without re-running anything. A doc check nobody runs is not a check.
+    """
+    out = Path(__file__).parent / "results"
+    out.mkdir(exist_ok=True)
+    (out / "bench.json").write_text(json.dumps({
+        s.name: {"n": len(s.ms), "p50": round(s.pct(0.50), 3),
+                 "p95": round(s.pct(0.95), 3), "p99": round(s.pct(0.99), 3)}
+        for s, _ in rows if s.ms}, indent=1), encoding="utf-8")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--paths", choices=["all", "triage", "free"], default="all")
@@ -214,13 +252,15 @@ def main() -> int:
     # message is ~55 ms, because every unmatched token triggers a fuzzy scan
     # over the catalog. It is the dominant term in stage 1 and the reason the
     # gate is milliseconds rather than the microseconds D-15 predicted.
-    rows = [(bench_resolve(texts, a.reps), None),
+    rows: list[tuple[Samples, int | None]] = [
+            (bench_resolve(texts, a.reps), None),
             (bench_features(texts, a.reps), 50),
-            (bench_assemble(200 * a.reps), None),
-            (bench_verify(200 * a.reps), None)]
+            (bench_assemble(200 * a.reps), None)]
+    rows += [(x, None) for x in bench_verify(200 * a.reps)]
     for s, b in rows:
         print(s.line(b))
 
+    _save(rows)
     if a.paths == "free":
         print("\n   (--paths free: model paths skipped)\n")
         return 0

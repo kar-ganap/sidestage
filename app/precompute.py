@@ -10,7 +10,7 @@ unverifiable after the fact.
 
 WHY IT IS SAFE HERE, AND THIS IS D-09 PAYING A DIVIDEND IT WAS NOT BUILT FOR.
 Evidence is assembled before generation and every claim cites a fact id, so
-**verification costs 0.2 ms** (measured, `evals/bench.py`). A cached draft can
+**verification costs 0.9 ms p95 of CPU** (measured, `evals/bench.py`). A cached draft can
 therefore be re-verified against *freshly assembled* evidence at serve time and
 dropped if anything moved. The cached unit is the draft **plus its claims** —
 never the text alone, because text alone is exactly what cannot be rechecked.
@@ -191,7 +191,8 @@ class PrecomputeCache:
             self.stats.misses += 1
             return None
 
-        # The whole safety argument, and it costs ~0.2 ms: rebuild the evidence
+        # The whole safety argument, and it costs well under a millisecond:
+        # rebuild the evidence
         # from the world as it is NOW and recheck the cached claims against it.
         ev = assemble(intent=intent, resolution=self.resolver.resolve(question),
                       catalog=self.catalog, lot=lot)

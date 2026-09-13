@@ -66,7 +66,7 @@ flowchart TD
     subgraph LOOP ["app/pipeline.py — the core loop"]
         R1["1 · resolve<br/>what is this about?"] --> R2["2 · assemble<br/><b>everything assertable,<br/>before a word is generated</b>"]
         R2 --> R3["3 · draft<br/>reply + claims citing fact ids"]
-        R3 --> R4["4 · verify<br/><b>each claim vs THE FACT IT CITED</b><br/><i>0.2 ms p95</i>"]
+        R3 --> R4["4 · verify<br/><b>each claim vs THE FACT IT CITED</b><br/><i>0.9 ms p95 CPU</i>"]
         R4 -->|"all violations repairable<br/>and no retry spent"| R5["5 · repair<br/>one bounded retry"] --> R3
         R4 --> R6["6 · settle"]
     end
@@ -135,7 +135,7 @@ sequenceDiagram
     M-->>P: reply + claims, each naming a fact id
     Note over P,V: no network call, the facts are already in hand
     P->>V: verify(draft, evidence)
-    V-->>P: verdict + violations, 0.2 ms p95
+    V-->>P: verdict + violations, 0.9 ms p95 CPU
     alt every violation repairable
         P->>M: one bounded retry with the feedback
     end
@@ -148,10 +148,12 @@ generate first, then go and check — and verification costs a round trip per cl
 and cannot sit on the critical path at all.
 
 **Because the fetch already happened, verification is a dict lookup.** Measured
-at **0.2 ms p95** (`evals/bench.py`). That is not an optimisation detail — it is
+at **0.9 ms p95 of CPU** (`evals/bench.py`, over all 18 recorded drafts rather
+than one synthetic reply). That is not an optimisation detail — it is
 what makes verification affordable on the critical path at all, and it is what
 makes D-36's precomputation design safe (a cached draft can be re-verified
-against fresh evidence at serve time for 0.2 ms, and dropped if the world moved).
+against fresh evidence at serve time for under a millisecond, and dropped if
+the world moved).
 
 ### Authority is four-valued, and the fourth is the interesting one
 
@@ -460,11 +462,11 @@ data ready.
 | suite | what it proves | result |
 |---|---|---|
 | **A** triage vs incumbent | reads intent, not punctuation | gate recall 88.9%, cascade precision 93.6% on held-out data from two platforms |
-| **B1** adversarial guardrails | nothing unsafe reaches the buyer | 97.8% safe, 2.2% escaped |
-| **B2** false-positive control | the verifier is calibrated, not paranoid | 7.8–10.4% over-blocked |
-| **C** grounding & abstention | asks "which Mew?" exactly when it should | **36/36** — 0 confident guesses, 0 unnecessary questions |
-| **D** unit + golden replay | deterministic, CI-safe, no key | 130 fixtures; the tape raises on prompt drift |
-| **E** moment detection | hot/stalled/normal on 10 real labelled lots | **10/10**, one stalled instance, stated |
+| **B1** adversarial guardrails | nothing unsafe reaches the buyer | 96.6% safe against 46.1% for a bare model (ablated, §4) |
+| **B2** false-positive control | the verifier is calibrated, not paranoid | 9.1% over-blocked; **7.9-point responsiveness cost, p = 0.016** |
+| **C** grounding & abstention | asks "which Mew?" exactly when it should | 36/36 curated; **77% under chat noise, and every loss is a silence, not a wrong card** |
+| **D** unit + golden replay | deterministic, CI-safe, no key | 199 fixtures; the tape raises on prompt drift |
+| **E** moment detection | hot/stalled/normal on 10 real labelled lots | 10/10 — **and so do 215 other threshold pairs** |
 
 **Train on synthetic, test on real**, with `triage_test.jsonl` never fit or tuned
 against. Every file carries `source`, so the two can never be silently mixed.
@@ -650,16 +652,34 @@ means messages are lost when several arrive inside one window. Every rate here i
 a **lower bound**.
 
 **The mock marketplace is not real eBay semantics.** `MockMarketplaceAdapter`
-implements 7 fault modes including lost responses and partial writes; real API
+implements 6 fault modes including lost responses and partial writes; real API
 integration was out of scope (D-24). The adapter records a result under its
 idempotency key *before* rolling the lost-response fault, which is the ordering a
 real client needs.
 
-**Suite E rests on ten lots and one stalled instance.** Its threshold sweep
-passes at every setting in the range, which is *not* validation: observed
-extension counts are 1, 2, 3, 3, 6, 7, 7, 11, 15, 24, so any cutoff in the empty
-3–6 gap splits the same two groups. The suite validates the shape of the rule,
-not the value of the constants (B-29).
+**Suite E rests on ten lots and one stalled instance, and quantifies its own
+powerlessness.** `216 of 2,500` threshold pairs score the same 10/10 —
+extensions anywhere in 1..6 crossed with movement anywhere in 1%..42% — and that
+count is printed next to the score by default, because a `10/10` standing alone
+reads as validation however carefully a docstring qualifies it (B-81). Observed
+extension counts are 1, 2, 3, 3, 6, 7, 7, 11, 15, 24 and hot starts at 43%
+movement against 12% for the highest normal one, so any cutoff in either gap
+splits the same two groups. The suite validates the *shape* of the rule — that a
+gap exists and that extension count finds it — not the value of the constants
+(B-29). Constraining them needs lots inside the gap: 4–5 extensions at 15–40%
+movement. None were observed across two shows.
+
+**Suite C was saturated, and now has an arm that can fail.** 36/36 on every
+curated axis is what an eval written by whoever wrote the resolver looks like.
+The same cases under realistic chat noise — dropped apostrophes, lost spacing,
+transpositions, where the expected answer is unchanged — score **77%** (B-82).
+The rate is less interesting than the direction: **of the 27 it loses, 0 resolve
+to the wrong item and 27 find nothing.** It degrades to silence rather than to
+confident error, which is the property D-14 exists to protect and is now
+measured rather than assumed. Lost spacing is the weakest mode (61%) and is
+deliberately unpatched — matching across word boundaries is the change most
+likely to turn safe silences into confident errors, and this arm is what would
+have to prove it did not.
 
 **The triage scorer has no feature for being addressed by name.** eBay Live
 viewers write `nick did you see that galade SAR`; `at_mention` is a strong

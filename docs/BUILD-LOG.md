@@ -1769,3 +1769,86 @@ smaller one because that is the set the cascade was scored on; quoting 53.6%
 against the cascade's 89.2% would score two arms on different data, which is
 exactly the error the row exists to avoid. Now said out loud instead of left for
 a reader to reconcile.
+
+## B-80 · A latency claim measured on one synthetic draft
+
+`bench_verify` timed a single two-claim reply and the docs quoted the result in
+ten places as **0.2 ms p95**. A number that holds only for the shortest draft in
+the corpus is not a claim about the system, and the coverage rewrite of B-56 had
+made it stale anyway.
+
+Rebuilt to run every recorded draft, and to report **CPU time as well as wall
+time**. The wall figures on this machine were incoherent — one run reported a
+*warm* p99 above its *cold* p99, which is impossible for real work and was the
+tell that load average ~35 with other tenants was being measured rather than the
+code. `process_time()` answers *how much work is this*; wall answers *what does
+an operator experience*. Both are printed because they are different questions
+and only one of them is about the verifier.
+
+```
+verify — CPU (the work)        p50 0.56   p95 0.83   p99 0.93
+verify — wall (this machine)   p50 0.56   p95 1.23   p99 17.9
+```
+
+**The honest correction is that it got ~4x more expensive.** B-56's rewrite —
+numeric canonicalisation, an explicit lemma table, per-sentence scoping — costs
+that, and it buys the correctness the string-matching version did not have. It
+is still sub-millisecond, which is what D-09's argument needs. Quoting 0.2 ms
+would have been quoting a verifier that no longer exists.
+
+`evals/bench.py` writes `evals/results/bench.json`, and `tools/check_docs.py`
+reads it, so the four places that quote this number cannot drift again.
+
+## B-81 · `10/10 correct` reads as validation however it is qualified
+
+Suite E's headline was `10/10 correct`, with an honest docstring underneath
+explaining that a wide band of thresholds scores the same. Nobody reads the
+docstring. The score was doing the talking.
+
+Measured properly: **216 of 2,500 (hot_ext, hot_pct) pairs also score 10/10** —
+extensions anywhere in 1..6 crossed with movement anywhere in 1%..42%. The
+docstring had claimed a narrower band (3..6 x 5..30%), itself a hand-copied
+number that was never re-derived.
+
+The sweep now runs **by default**, printed next to the score, because a
+qualification nobody asks for is a qualification nobody reads. What the suite
+establishes is that the classes **separate** — observed extension counts are
+1, 2, 3, 3, 6, 7, 7, 11, 15, 24, and hot starts at 43% movement against 12% for
+the highest normal one — not where the line goes.
+
+To constrain the constants you need lots *inside* the gap: 4-5 extensions at
+15-40% movement. None were observed across two shows, which is itself a finding
+about the domain rather than a gap in the sampling.
+
+## B-82 · An eval that cannot fail is not measuring
+
+Suite C scored **100% on every axis** — resolution 19/19, abstention 7/7,
+correct silence 10/10, and zero instances of either error class. That is what an
+eval written by whoever wrote the resolver looks like: it contains the surfaces
+they thought of, and a perfect score on those says nothing about the ones they
+did not.
+
+Added an arm that can fail, without needing new labels: the same 36 cases under
+realistic chat noise, where **the expected answer is unchanged** because
+"champion's path zard" and "champions path zard" name the same card and a viewer
+typing at auction speed produces both.
+
+```
+UNDER PERTURBATION          90/117    77%
+   space lost               14/23     61%
+   transposed               23/30     77%
+   letter dropped           26/32     81%
+   letter doubled           27/32     84%
+```
+
+**The direction matters more than the rate.** Of the 27 it loses, **0 resolve to
+the wrong item and 27 find nothing.** It degrades to silence, not to confident
+error — which is exactly the property D-14 exists to protect, and it is now
+measured rather than assumed. A failure to find costs the buyer an answer; a
+wrong find grounds the whole reply in a card nobody asked about, and every
+downstream check then passes.
+
+Lost spacing is the weakest mode and is **deliberately not patched yet**.
+Matching across word boundaries is precisely the change most likely to convert
+safe silences into confident errors, and this arm is what would have to prove it
+did not.

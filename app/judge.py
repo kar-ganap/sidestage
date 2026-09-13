@@ -2,7 +2,7 @@
 
 THE GAP. Verification asks, of each claim: *is this assertion supported by the
 fact it cites?* That is answerable from evidence already in hand, which is why it
-costs 0.2 ms. It is also why it cannot see the failure it misses:
+costs under a millisecond. It is also why it cannot see the failure it misses:
 
     Q: "is the centering good on that zard?"
     A: "It's the Base Set Charizard 4/102, shadowless print."

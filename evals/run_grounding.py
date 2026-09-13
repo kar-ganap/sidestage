@@ -3,7 +3,28 @@
     uv run python -m evals.run_grounding
     uv run python -m evals.run_grounding --verbose
 
-TWO METRICS, AND THE SECOND IS THE ONE THAT MATTERS (D-26).
+THREE ARMS. The curated suite scores 100% on all of its axes, which is what an
+eval written by whoever wrote the resolver looks like: it contains the surfaces
+they thought of. So there is a third arm that **can fail** — the same 36 cases
+under realistic chat noise, where the expected answer is unchanged because
+"champion's path zard" and "champions path zard" name the same card.
+
+It scores **77%**, and the interesting number is not the rate:
+
+    of the 27 it loses, 0 resolve to the WRONG item and 27 find nothing
+
+**It degrades to silence, not to confident error.** That distinction is the
+whole point of D-14: a failure to find costs the buyer an answer, while a wrong
+find grounds the entire reply — evidence, claims, verification — in a card
+nobody asked about, and every downstream check then passes.
+
+The weakest mode is lost spacing (61%): `mewtwoarmored`, `celebrationsmew`.
+Known and deliberately not patched yet — closing it means matching across word
+boundaries, which is precisely the change most likely to convert safe silences
+into confident errors, and the suite above is what would have to prove it did
+not.
+
+TWO CURATED METRICS, AND THE SECOND IS THE ONE THAT MATTERS (D-26).
 
 **Resolution accuracy** — when a surface form names exactly one thing we stock,
 do we find it? This is the ordinary fuzzy-matching question.
@@ -65,6 +86,98 @@ def observed(res) -> str:
     return "none"
 
 
+# --- the arm that can actually fail (B-82) ----------------------------------
+#
+# The curated suite scores 100% on every axis, which is what a suite written by
+# the person who wrote the resolver looks like: it contains the surfaces they
+# thought of, and a perfect score on those says nothing about the ones they did
+# not. An eval that cannot fail is not measuring.
+#
+# Perturbation is scoreable without new labels, because the EXPECTED ANSWER IS
+# UNCHANGED: "champion's path zard" and "champions path zard" name the same
+# card, and a viewer typing at auction speed produces both. If accuracy holds
+# under noise the 100% is a property of the resolver; if it collapses, the 100%
+# was a property of the curation.
+
+def _perturbations(text: str) -> list[tuple[str, str]]:
+    """Realistic chat noise. Every one of these was observed in the transcripts:
+    dropped apostrophes, dropped vowels, doubled letters, lost spacing, case."""
+    import re as _re
+    out: list[tuple[str, str]] = []
+    if "'" in text or "\u2019" in text:
+        out.append(("apostrophe dropped", _re.sub(r"['\u2019]", "", text)))
+    out.append(("upper", text.upper()))
+    words = text.split()
+    if len(words) > 1:
+        out.append(("space lost", words[0] + words[1] +
+                    ("" if len(words) == 2 else " " + " ".join(words[2:]))))
+    longest = max(words, key=len) if words else ""
+    if len(longest) > 4:
+        i = len(longest) // 2
+        out.append(("letter doubled",
+                    text.replace(longest, longest[:i] + longest[i] + longest[i:], 1)))
+        out.append(("letter dropped",
+                    text.replace(longest, longest[:i] + longest[i + 1:], 1)))
+        out.append(("transposed",
+                    text.replace(longest,
+                                 longest[:i] + longest[i + 1] + longest[i] +
+                                 longest[i + 2:], 1)))
+    return out
+
+
+def _robustness(rows: list[dict], r) -> None:
+    total = hit = dangerous = silent = 0
+    worst: dict[str, list[int]] = {}
+    examples: list[str] = []
+    for row in rows:
+        for label, text in _perturbations(row["text"]):
+            if text.strip().lower() == row["text"].strip().lower():
+                continue
+            res = r.resolve(text)
+            got = observed(res)
+            ok = got == row["expect"]
+            if ok and row["expect"] == "item":
+                ok = [i.name for i in res.items][:1] == [row["item"]]
+            total += 1
+            hit += ok
+            if not ok:
+                wrong_item = (row["expect"] == "item" and got == "item"
+                              and [i.name for i in res.items][:1] != [row["item"]])
+                guessed_at_ambiguous = row["expect"] == "abstain" and got == "item"
+                if wrong_item or guessed_at_ambiguous:
+                    dangerous += 1
+                else:
+                    silent += 1
+            w = worst.setdefault(label, [0, 0])
+            w[0] += ok
+            w[1] += 1
+            if not ok and len(examples) < 6:
+                examples.append(f"{row['text']!r} -> {text!r}: "
+                                f"expected {row['expect']}"
+                                f"{'/' + row['item'] if row.get('item') else ''}, "
+                                f"got {got}"
+                                f"{'/' + res.items[0].name if res.items else ''}")
+    if not total:
+        return
+    print(f"\n   UNDER PERTURBATION — the arm that can fail")
+    print(f"      {hit}/{total}{hit / total:>9.0%}   same expected answer, "
+          f"realistic chat noise")
+    # The RATE matters less than the DIRECTION. Degrading to silence costs the
+    # buyer an answer; degrading to the wrong card grounds the entire reply —
+    # evidence, claims, verification — in something nobody asked about, and
+    # every downstream check then passes. D-14 exists for exactly this.
+    print(f"      of the {total - hit} it loses: "
+          f"{dangerous} resolved to the WRONG item, {silent} found nothing")
+    if dangerous == 0:
+        print( "         it degrades to silence, not to confident error")
+    for label, (h, n) in sorted(worst.items(), key=lambda kv: kv[1][0] / kv[1][1]):
+        print(f"         {label:<20}{h:>3}/{n:<4}{h / n:>7.0%}")
+    if examples:
+        print("      what it loses:")
+        for e in examples:
+            print(f"         {e}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--verbose", action="store_true")
@@ -95,6 +208,8 @@ def main() -> int:
         sub = [x for x in results if x[0]["expect"] == bucket]
         hit = sum(1 for x in sub if x[3])
         print(f"   {label:<18}{hit:>3}/{len(sub):<4}{hit/len(sub):>7.0%}")
+
+    _robustness(rows, r)
 
     # Abstention is two-sided, and the sides are not symmetric in cost.
     guessed = [x for x in results if x[0]["expect"] == "abstain" and x[1] == "item"]

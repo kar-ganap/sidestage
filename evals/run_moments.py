@@ -15,18 +15,23 @@ that is reported here rather than smoothed into an average — a rule whose
 negative class rests on a single observation should say so every time it is
 scored.
 
-THE SWEEP, AND WHAT IT DOES NOT SHOW. `--sweep` reports every threshold pair
-that scores 10/10, and the band is wide: extensions 3-6 crossed with movement
-5-30% all score perfectly. The flattering reading is "the placement is robust".
-The honest one is that **a sweep where everything passes is not evidence the
-thresholds are right — it is evidence this suite cannot tell them apart.**
+THE HEADLINE IS NOT THE SCORE. This suite scores 10/10, and **216 of 2,500
+threshold pairs also score 10/10** — extensions anywhere in 1..6 crossed with
+movement anywhere in 1%..42%. That number is printed next to the score by
+default (B-81), because a qualification buried in a docstring is a
+qualification nobody reads, and `10/10 correct` standing alone reads as
+validation of the shipped constants.
 
-The observed extension counts are 1, 2, 3, 3, 6, 7, 7, 11, 15, 24. Nothing sits
-between 3 and 6, so any cutoff inside that gap separates the same two groups.
-The suite therefore validates the *shape* of the rule — that a gap exists and
-that extension count finds it — and says nothing about whether 5 beats 4. With
-ten lots it cannot, and quoting the band as validation of the constants would be
-reading the data backwards.
+What the score establishes is that the classes **separate**, not where the line
+goes. Observed extension counts are 1, 2, 3, 3, 6, 7, 7, 11, 15, 24 — nothing
+between 3 and 6 — and the hot class starts at 43% movement against 12% for the
+highest normal one. Any cutoff in either gap splits the same two groups. With
+ten lots it cannot be otherwise, and quoting the band as validation of the
+constants would be reading the data backwards.
+
+To constrain the thresholds you need lots INSIDE the gap: 4-5 extensions at
+15-40% movement. None were observed, which is itself a finding about the
+domain — contested closes and ordinary ones do not look alike.
 """
 
 from __future__ import annotations
@@ -126,6 +131,33 @@ def ebay_check() -> None:
     print("      is evidence the case is real, not evidence the threshold is right.")
 
 
+def _admissible(rows: list[dict], ext_max: int = 25,
+                pct_max: int = 100) -> tuple[int, int]:
+    """How many threshold pairs score a perfect run?
+
+    B-81. The suite's headline was `10/10 correct`, which reads as validation
+    however carefully the docstring qualifies it underneath. It is not: the
+    observed extension counts are 1, 2, 3, 3, 6, 7, 7, 11, 15, 24 and the hot
+    class starts at 43% movement against 12% for the highest normal one, so the
+    classes are separable with an enormous margin and a wide family of rules
+    splits them identically.
+
+    Reporting the SIZE of that family alongside the score is the honest
+    headline: it turns "we scored 10/10" into "we scored 10/10, and so would
+    215 other rules, so this is evidence of separability and not of placement."
+
+    This runs by default rather than behind `--sweep`, because a qualification
+    nobody asks for is a qualification nobody reads.
+    """
+    n = 0
+    for he in range(1, ext_max + 1):
+        for hp in (x / 100 for x in range(1, pct_max + 1)):
+            s, _ = score(rows, hot_ext=he, hot_pct=hp)
+            if s == len(rows):
+                n += 1
+    return n, ext_max * pct_max
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--sweep", action="store_true")
@@ -149,7 +181,14 @@ def main() -> int:
               f"{r['expected']:<9}{c.moment.value:<9}{mark}")
 
     ok, wrong = score(rows)
-    print(f"\n   {ok}/{len(rows)} correct")
+    admissible, tested = _admissible(rows)
+    print(f"\n   {ok}/{len(rows)} correct — and so do "
+          f"{admissible - 1} other threshold pairs")
+    print(f"      {admissible} of {tested} (hot_ext, hot_pct) pairs also score "
+          f"{len(rows)}/{len(rows)}.")
+    print( "      The shipped pair is one of them; this suite cannot tell them")
+    print( "      apart. The score establishes that the classes SEPARATE, not")
+    print( "      where the line goes (B-81).")
     for r, got in wrong:
         print(f"      MISS  {r['title']}: expected {r['expected']}, got {got}")
 

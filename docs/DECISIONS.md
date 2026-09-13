@@ -714,7 +714,12 @@ how this goes wrong.
 | Draft → sendable (verified) | 3897 | **9954** | 9954 | p95 ≤ 3000 ms ❌ | operator review cadence |
 | — of which repaired | 7202 | 9954 | 9954 | — | fires 31% on these probes |
 
-**`verify` at 0.2 ms is the one that matters.** D-09 claims that assembling
+**`verify` at 0.9 ms p95 of CPU is the one that matters.** *(Was 0.2 ms. The
+coverage rewrite of B-56 — numeric canonicalisation, a lemma table, per-sentence
+scoping — costs roughly 4x what the string-matching version did. It buys the
+correctness that version did not have, and it is still sub-millisecond, which is
+what the argument below needs. Quoting the old number would have been quoting a
+verifier that no longer exists.)* D-09 claims that assembling
 evidence *before* generation turns verification into dict lookups rather than
 network calls. That is now measured, not asserted — and D-36's precomputation
 design, which re-verifies a cached draft against fresh evidence at serve time,

@@ -327,5 +327,5 @@ Stated so it can be checked rather than argued.
   the operator would stop reading its questions. *Measured: 0 of 36 grounding
   cases, though all three bugs Suite C found were of exactly this kind.*
 - **If verification cost sat on the critical path**, the whole design collapses
-  into "call a model twice". *Measured false: 0.2 ms p95, because the evidence is
+  into "call a model twice". *Measured false: 0.9 ms p95 of CPU, because the evidence is
   fetched before generation rather than after.*
