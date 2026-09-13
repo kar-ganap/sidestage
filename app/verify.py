@@ -270,6 +270,11 @@ def _comp(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if fact.kind is not ClaimType.COMP:
         return [_miscite(claim, fact, "a comp claim must cite a comp fact")]
     if not fact.value.get("quotable"):
+        # The message below prescribes declining. A reply that declines is
+        # therefore correct, and blocking it made the instruction impossible to
+        # follow (B-24). A *number* alongside the denial is still a violation.
+        if _asserts_absence(claim) and not _numbers(claim.quote):
+            return []
         return [Violation(
             code="comp_not_quotable", severity=Severity.UNREPAIRABLE,
             message=(f"no quotable comp: {fact.value.get('reason')}. Say we do not "
@@ -317,10 +322,40 @@ def _pop(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     return []
 
 
+# Words that mark a claim as asserting the ABSENCE of something rather than its
+# value. Kept narrow on purpose: this predicate can only ever turn a violation
+# into a pass, so a loose pattern is a hole in the verifier.
+_DENIAL = re.compile(
+    r"\b(no|not|none|never|without|un\w+ed|isn.?t|aren.?t|don.?t|doesn.?t|"
+    r"can.?t|cannot|lack\w*|zero|n/?a|raw|ungraded|unavailable|insufficient|"
+    r"unknown)\b", re.I)
+
+
+def _asserts_absence(claim: Claim) -> bool:
+    """Is this claim saying "there is no X" rather than "X is 7"?
+
+    B-24. Two verifiers independently had the same bug: a fact recording that
+    something is ABSENT — an ungraded card, a comp window with too few sales —
+    was used to block a reply that correctly said so. `_comp`'s violation
+    message literally reads "Say we do not have enough recent sales rather than
+    giving a number", and it fired on a reply that said exactly that.
+
+    A claim asserting absence is *supported* by the fact recording the absence.
+    The two are the same statement. Checking it as though it asserted presence
+    is the error, and it makes the system's own prescribed answer unsendable.
+    """
+    return bool(_DENIAL.search(claim.value) or _DENIAL.search(claim.quote))
+
+
 def _grade(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if fact.kind is not ClaimType.GRADE:
         return [_miscite(claim, fact, "a grade claim must cite a grade fact")]
     if fact.value.get("raw"):
+        # A numeric grade on a raw card is the violation. Saying it is ungraded
+        # is the correct answer, and the record is what establishes it (B-24).
+        stated = [n for n in (_numbers(claim.value) or _numbers(claim.quote)) if 0 < n <= 10]
+        if not stated and _asserts_absence(claim):
+            return []
         return [Violation(
             code="grade_on_raw_card", severity=Severity.UNREPAIRABLE,
             message="this card is ungraded — there is no grade to state.",
