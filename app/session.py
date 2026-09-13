@@ -26,11 +26,12 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from app.actions.ledger import Ledger
 from app.catalog import Catalog, get_catalog
 from app.entities import get_resolver
 from app.judge import JudgeRunner, Opinion
 from app.llm import LLMClient, get_client
-from app.models import Draft, Intent, Lot, Verdict
+from app.models import ActionType, Draft, Intent, Lot, Verdict
 from app.moments import MomentCall, classify as classify_moment, nudge as build_nudge
 from app.pipeline import PipelineResult, draft_reply
 from app.triage import Route, TriageCascade, TriageResult, _shingle
@@ -137,6 +138,11 @@ class Session:
         # inserts into `self.cards` while `queue()` iterates it. The failure was
         # invisible single-threaded, which is why it survived every manual test.
         self._lock = threading.RLock()
+        # D-21's write path, reachable from the running app (B-73). It was
+        # 53 KB of adapter and ledger imported by nothing but its own 46 tests:
+        # a lifecycle nobody could exercise, a fault model nobody could trigger,
+        # and a "concrete failure path" that was not on any path at all.
+        self.actions = _ledger()
         self.judge = JudgeRunner()
         self.active_lot_id: str | None = self._first_live()
 
@@ -330,6 +336,31 @@ class Session:
             card.status = "sent"
         return entry
 
+    # -- writes -----------------------------------------------------------
+
+    def act(self, action: str, params: dict) -> dict:
+        """propose -> confirm -> execute, as one operator gesture.
+
+        The three stages stay separate in `Ledger` because they are separate in
+        time: the snapshot is taken when the operator is ASKED, and a
+        confirmation that arrives after the lot sold must be detectable. The
+        console collapses them because it asks and acts in one click; the seam
+        is still there for a confirmation dialog that takes real time.
+        """
+        entry = self.actions.propose(ActionType(action), params)
+        self.actions.confirm(entry.id)
+        outcome = self.actions.execute(entry.id)
+        row = {
+            "id": outcome.entry.id, "action": action, "params": params,
+            "status": outcome.entry.status, "ok": outcome.ok,
+            "message": outcome.message, "diverged": outcome.diverged,
+            "inverse": outcome.entry.inverse, "error": outcome.entry.error,
+            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+        }
+        with self._lock:
+            self.ledger.append(row)
+        return row
+
     def snapshot(self) -> tuple[list, list]:
         """The log and the ledger, copied under the lock (B-38).
 
@@ -385,6 +416,34 @@ class Session:
             "queue_open": len(self.queue()),
             "sent": n_sent,
         }
+
+
+def _ledger() -> Ledger:
+    """One ledger per session, seeded from the same catalog the reads use.
+
+    The adapter holds the marketplace's OWN copy of every lot, with its own
+    version counter — which is the entire reason a read-back can disagree with
+    what we think we wrote. Faults are off by default: a reviewer turns them on
+    with `SIDESTAGE_FAULTS=1` and watches the same action survive a lost
+    response, a rate limit and a stale read.
+    """
+    import json
+    import os
+    from app.actions.adapter import FaultConfig, adapter_from_catalog
+    from app.config import DATA_DIR
+
+    raw = json.loads((DATA_DIR / "catalog.json").read_text(encoding="utf-8"))
+    faults = FaultConfig(seed=1729) if os.getenv("SIDESTAGE_FAULTS") else None
+    if faults is not None:
+        # Tuned so each interesting path is VISIBLE rather than so everything
+        # fails. The first profile tried used a 6-call rate limit, and a burst
+        # of twelve clicks exhausted the bounded retry on ten of them — a demo
+        # of a broken marketplace, not of a system surviving one. Rate limiting
+        # is left off here and available via FaultConfig for a targeted test.
+        faults = FaultConfig(
+            seed=1729, lost_response_rate=0.20, transient_error_rate=0.10,
+            stale_read_rate=0.20, long_tail_rate=0.10, read_lag_ms=60)
+    return Ledger(adapter_from_catalog(raw["lots"], faults=faults))
 
 
 _session: Session | None = None

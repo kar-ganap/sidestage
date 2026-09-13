@@ -15,6 +15,7 @@ THE API IS THE WORKFLOW, in the order a reviewer should exercise it:
     GET  /api/state           chat log, queue, ledger, counters
     POST /api/cards/{id}/draft   evidence -> generate -> verify -> repair
     POST /api/cards/{id}/send    the operator's decision, journalled
+    POST /api/actions            a write, with read-back and a recorded inverse
 
 Dropped messages come back from `/api/state` alongside surfaced ones, carrying
 the features that dropped them. That is the product, not a debug view.
@@ -31,6 +32,8 @@ from pydantic import BaseModel, Field
 
 from app.config import STATIC_DIR, settings
 from app.models import Intent
+from app.actions.adapter import AdapterError
+from app.actions.ledger import LedgerError
 from app.session import Card, EmptyReply, LoggedMessage, get_session, reset_session
 from app.triage import Model
 
@@ -237,6 +240,64 @@ def set_lot(lot_id: str) -> JSONResponse:
     ok = get_session().set_active_lot(lot_id)
     return JSONResponse({"ok": ok, "lot": _lot(get_session().active_lot)},
                         status_code=200 if ok else 404)
+
+
+class ActionIn(BaseModel):
+    action: str = Field(pattern="^(push_lot|swap_showcase|markdown|adjust_quantity)$")
+    params: dict = Field(default_factory=dict)
+
+
+@app.post("/api/actions")
+def act(body: ActionIn) -> JSONResponse:
+    """The write path: propose -> confirm -> execute -> read back -> journal.
+
+    B-73. This route is why `app/actions/` exists in the product rather than
+    only in its tests. Until it was added, 53 KB of adapter and ledger — the
+    idempotency key, the read-back, the recorded inverse, six marketplace fault
+    modes — was imported by nothing but its own 46 tests. A concrete failure
+    path that is not on any path is a claim, not a property.
+
+    Run the server with `SIDESTAGE_FAULTS=1` and the same call survives a lost
+    response, a rate limit and a stale read, because every attempt reuses the
+    key minted at propose time.
+    """
+    try:
+        return JSONResponse(get_session().act(body.action, body.params))
+    except LedgerError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=409)
+    except (KeyError, TypeError) as exc:
+        # A missing `lot_id` is the operator's request being wrong, not ours.
+        return JSONResponse(
+            {"error": f"{body.action} needs different params: {exc}"},
+            status_code=422)
+
+
+@app.get("/api/actions/lots")
+def action_lots() -> JSONResponse:
+    """The MARKETPLACE's copy of every lot, not ours.
+
+    Kept separate from `/api/state` on purpose: the whole reason a read-back can
+    disagree is that the marketplace holds its own row with its own version
+    counter. Showing both is what makes a divergence legible instead of
+    mysterious.
+    """
+    a = get_session().actions.adapter
+    out = []
+    for lot_id in sorted(a.lot_ids()):
+        try:
+            v = a.read_lot(lot_id)
+        except AdapterError as exc:
+            # A read is allowed to fail: with faults on, this route hits the
+            # same 503s and rate limits the write path does. Reporting the lot
+            # as unreadable is the honest render — dropping it would make the
+            # view silently incomplete, and a 500 would make one flaky lot take
+            # down the whole panel.
+            out.append({"lot_id": lot_id, "unreadable": type(exc).__name__})
+            continue
+        out.append({"lot_id": lot_id, "status": v.status, "price": v.price,
+                    "quantity": v.quantity, "position": v.position,
+                    "version": v.version})
+    return JSONResponse({"lots": out, "adapter_stats": a.stats})
 
 
 @app.post("/api/reset")

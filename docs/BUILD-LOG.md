@@ -1484,3 +1484,75 @@ Gated on the buyer having named something: *"is the umbreon coming up?"* wants a
 position, not the opening bid of eight other lots, and every fact minted is
 prompt the model pays for on a latency-bound path. Fact count on that question
 went 19 -> 18, not 19 -> 27.
+
+## B-73 · The concrete failure path was not on any path
+
+`app/actions/` is 53 KB — a marketplace adapter with six fault modes, and a
+ledger implementing D-21's `propose -> confirm -> execute -> read-back ->
+journal` lifecycle with idempotency keys and recorded inverses. It had **46
+tests**. It was imported by **nothing else in the repository**: not
+`app/main.py`, not `app/session.py`, not any eval.
+
+An adversarial review found it by asking the only question that matters about a
+"concrete failure path": *what calls it?*
+
+Nothing did. A fault model nobody can trigger and an idempotency key nobody mints
+are claims about the design, not properties of the system. Worse, the test
+distribution was upside down: 46 tests on unreachable code, and **zero** on
+`app/verify.py`, which every safety number depends on.
+
+**Wired in rather than withdrawn.** `Session.act()` runs the three stages as one
+operator gesture — the seam stays because the stages are separate *in time*: the
+precondition snapshot is taken when the operator is ASKED, so a confirmation
+arriving after the lot sold is detectable. `POST /api/actions` and
+`GET /api/actions/lots` expose it, the second deliberately separate from
+`/api/state` because the whole reason a read-back can disagree is that the
+marketplace holds its own row with its own version counter.
+
+`SIDESTAGE_FAULTS=1` turns on the adversarial marketplace. Fifteen writes through
+the API:
+
+```
+outcomes      12 verified, 3 diverged
+adapter       15 applied, 4 replays, 4 lost responses, 10 transient errors,
+              6 stale reads, 3 long tails
+```
+
+The 4 replays are the point: a lost response means the write may have landed, so
+the bounded retry reuses the key minted at propose time and the adapter answers
+from its idempotency store instead of re-applying. The 3 divergences are
+reported, never retried — retrying a write that may have landed is how you
+double-apply.
+
+**The first fault profile was wrong and worth recording.** A 6-call rate limit
+plus twelve rapid clicks exhausted the bounded retry on ten of them: a demo of a
+broken marketplace rather than of a system surviving one. Rates are tuned so
+each interesting path is *visible*.
+
+`GET /api/actions/lots` also had to learn that a READ can fail. With faults on it
+hits the same 503s the writes do; it now renders the lot as unreadable rather
+than 500ing the panel or silently dropping the row — a view that is quietly
+incomplete is worse than one that says what it could not read.
+
+`tests/test_actions_api.py` goes through `TestClient`, not through `Ledger`
+directly. That is the point: it fails if the route is removed or `Session` stops
+holding a ledger, neither of which the original 46 tests could see.
+
+## B-72 · A dead parameter with a comment explaining why it mattered
+
+Removing `_question_numbers` left `VerifyContext.question` set and never read —
+a parameter threaded through `verify()`, `pipeline.py` and `precompute.py`, with
+a comment in the pipeline insisting *"`question` is not optional here in
+practice"*. The comment was false the moment the last reader went.
+
+Removed from all three. The check it existed for survives: B-37's case
+("We're at $890, so $320 wouldn't push it") is recognisable from the reply,
+because the reply denies the figure. `test_the_buyer_cannot_choose_what_the_
+system_may_assert` now asserts on the **signature** — `verify()` must not accept
+a question — because that is the only version of the guarantee that cannot
+regress by someone re-adding a reader.
+
+The same entry covers the coverage-pass memoisation: `_keys` was recomputed once
+per (sentence x claim), and the tail showed it. Fact key sets are computed once
+each per verification now; the worst draft in the recorded corpus went from
+9.6 ms to 0.73 ms.

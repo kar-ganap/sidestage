@@ -195,7 +195,7 @@ class PrecomputeCache:
         # from the world as it is NOW and recheck the cached claims against it.
         ev = assemble(intent=intent, resolution=self.resolver.resolve(question),
                       catalog=self.catalog, lot=lot)
-        result = verify(best.draft, ev, catalog=self.catalog, question=question)
+        result = verify(best.draft, ev, catalog=self.catalog)
         if result.verdict is not Verdict.PASS:
             best.rejected += 1
             self.stats.stale += 1

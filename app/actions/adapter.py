@@ -562,6 +562,15 @@ class MockMarketplaceAdapter:
             lot_id: [(0, self._snapshot(rec))] for lot_id, rec in self._lots.items()
         }
 
+    def lot_ids(self) -> list[str]:
+        """Every lot the marketplace knows about.
+
+        A public accessor because the console needs to render the marketplace's
+        own view beside ours, and reaching into `_lots` from a route makes the
+        route depend on a private field.
+        """
+        return list(self._lots)
+
     # --- the four writes (D-04) ---------------------------------------
 
     def push_lot(self, lot_id: str, *, idempotency_key: str) -> WriteResult:

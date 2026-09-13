@@ -208,45 +208,64 @@ def test_a_comp_number_does_not_license_a_bid():
 
 
 def test_the_buyer_cannot_choose_what_the_system_may_assert():
-    """B-42, finding #3 — the worst of the twelve.
+    """B-42 finding #3, and the reason `verify()` no longer takes a question.
 
-    `_known_tokens` folded the question in verbatim, so asking "is it a psa 10?"
-    exempted "10" and the reply "Yes, this Charizard is a PSA 10" passed against
-    a record of PSA 9. Same draft with an empty question blocked correctly: the
-    buyer was choosing the verifier's exemption set.
+    `_known_tokens` folded the buyer's question in verbatim, so asking "is it a
+    psa 10?" exempted "10" and "Yes, this Charizard is a PSA 10" passed against
+    a PSA 9 record. Same draft, empty question, blocked. **The buyer was
+    choosing the verifier's exemption set** — a prompt-injection path in the
+    safety component, added by a fix meant to stop over-blocking.
+
+    Narrowing it was not enough (B-58): "Sorry, the price is already 999" and
+    "Let me check with the host, we have 24 left" still passed, because
+    apologies are not denials and deferring is not declining. So the question is
+    no longer an input to verification at all — the signature does not accept
+    one, which is the only version of this guarantee that cannot regress.
     """
     e = ev(fact("f1", ClaimType.IDENTITY))
-    text = "Yes, this Charizard is a PSA 10."
-    d = draft(text, claim(ClaimType.IDENTITY, "Charizard", "f1", text))
-    assert blocked(d, e, question="is it a psa 10?")
-    assert blocked(d, e, question="")
-    # Words too, not only numbers.
-    for q, t in [("will you ship today, guaranteed?",
-                  "Yes, we will ship this Charizard today, guaranteed."),
-                 ("is it gem mint?", "Yes, this Charizard is gem mint.")]:
-        d2 = draft(t, claim(ClaimType.IDENTITY, "Charizard", "f1", t))
-        assert blocked(d2, e, question=q), t
+    for t in ("Yes, this Charizard is a PSA 10.",
+              "Yes, we will ship this Charizard today, guaranteed.",
+              "Yes, this Charizard is gem mint.",
+              "Sorry, the price is already 999 on that one."):
+        assert blocked(draft(t, claim(ClaimType.IDENTITY, "Charizard", "f1", t)), e), t
+
+    import inspect
+    from app.verify import verify as _v
+    assert "question" not in inspect.signature(_v).parameters, (
+        "verify() must not accept a question: nothing outside the draft may "
+        "widen what the draft is allowed to assert")
 
 
-def test_buyer_number_may_be_repeated_in_order_to_refuse_it():
-    """B-37, kept. "We're at $890, so $320 wouldn't push it" repeats an offer to
-    decline it; no fact contains $320 and none could, so blocking it left no
-    repair available. The exemption survives, scoped to sentences that deny."""
+def test_a_number_the_reply_refuses_needs_no_fact():
+    """B-37, and the reason dropping the question cost nothing.
+
+    "We're at $890, so $320 wouldn't push it" repeats an offer in order to
+    decline it. No fact contains $320 and none ever could, so blocking it left
+    no repair available — the worst case the first adversarial pass found.
+
+    The refusal is recognisable from the REPLY: the sentence denies the figure.
+    That is what `_negated_near` reads, and a denial cannot be smuggled in from
+    outside the draft the way a question could.
+    """
     e = ev(fact("f1", ClaimType.BID))
     d = draft("We're at $890, so $320 wouldn't push it.",
               claim(ClaimType.BID, "890", "f1", "We're at $890"))
-    assert not blocked(d, e, question="would you take $320?")
+    assert not blocked(d, e)
+    # ...but ASSERTING the same figure still needs a fact.
+    t2 = "We're at $890, and $320 is where this one closes."
+    assert blocked(draft(t2, claim(ClaimType.BID, "890", "f1", "We're at $890")), e)
 
 
 @pytest.mark.parametrize("offered", ["320", "1,320", "1320"])
-def test_the_refusal_exemption_has_no_thousands_ceiling(offered: str):
-    """B-45. The exemption set tokenised with `[a-z0-9]+` while spans kept their
-    separators, so "1,320" could never match and the headline case worked only
-    below four figures — as did every four-figure comp and pop in the catalog."""
+def test_a_refusal_works_above_four_figures(offered: str):
+    """B-45. Spans kept their separators while the exemption set tokenised with
+    `[a-z0-9]+`, so "1,320" could never match anything: the headline case worked
+    only below four figures, as did every four-figure comp and pop in the
+    catalog. Numbers are canonicalised on both sides now (`_numkey`)."""
     e = ev(fact("f1", ClaimType.BID))
     d = draft(f"We're at $890, so ${offered} wouldn't push it.",
               claim(ClaimType.BID, "890", "f1", "We're at $890"))
-    assert not blocked(d, e, question=f"would you take ${offered}?")
+    assert not blocked(d, e)
 
 
 def test_a_cited_policy_clause_is_not_an_unbacked_claim():

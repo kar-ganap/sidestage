@@ -100,14 +100,6 @@ class VerifyContext:
     catalog: Catalog
     lot: Lot | None
     reply: str
-    question: str = ""
-    """What the buyer asked, so coverage can tell a quotation from an assertion.
-
-    "We're at $890, so $320 wouldn't push it" repeats the buyer's own offer in
-    order to decline it. $320 is in no fact and never can be, so a rule that
-    demands every number be cited blocks a correct refusal with no repair
-    available (B-37).
-    """
 
 
 @dataclass
@@ -140,13 +132,13 @@ class VerifyResult:
 
 
 def verify(draft: Draft, evidence: Evidence, *, catalog: Catalog | None = None,
-           now: datetime | None = None, question: str = "") -> VerifyResult:
+           now: datetime | None = None) -> VerifyResult:
     cat = catalog or get_catalog()
     now = now or datetime.now(UTC)
     t0 = time.perf_counter()
     lot = cat.lots.get(evidence.lot_id) if evidence.lot_id else None
     ctx = VerifyContext(evidence=evidence, catalog=cat, lot=lot,
-                        reply=draft.text, question=question)
+                        reply=draft.text)
     v: list[Violation] = []
 
     for i, claim in enumerate(draft.claims):
@@ -792,6 +784,23 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
     """
     out: list[Violation] = []
     proper = _proper_nouns(ctx)
+
+    # B-72. Facts and quotes do not change during a verification, so their key
+    # sets are computed once each rather than once per (sentence x claim). The
+    # naive version put `_keys` inside the inner loop and the tail showed it:
+    # p99 12 ms and a 40 ms worst case over the recorded corpus, against a D-09
+    # argument that verification is dict lookups. A claim of "0.2 ms" that is
+    # only true for a two-sentence reply is not a claim about the system.
+    fkeys: dict[str, set[str]] = {}
+
+    def cited_keys(fact_id: str) -> set[str]:
+        if fact_id not in fkeys:
+            f = ctx.evidence.by_id(fact_id)
+            fkeys[fact_id] = _keys(f"{f.value} {f.note}") if f is not None else set()
+        return fkeys[fact_id]
+
+    quoted = [(c, _norm(c.quote)) for c in draft.claims if c.quote.strip()]
+
     for raw in _SENTENCE.findall(draft.text):
         s = raw.strip()
         if not s or not _asserts(s):
@@ -806,8 +815,8 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
         # The facts cited by claims that speak to THIS sentence. Scope is the
         # whole fix: a claim vouches for the sentence it quotes, not the draft.
         exempt: set[str] = set(proper)
-        for c in draft.claims:
-            if not c.quote.strip() or not _overlaps(_norm(c.quote), n):
+        for c, qn in quoted:
+            if not _overlaps(qn, n):
                 continue
             # B-65. `_overlaps` is substring containment, so a quote of the
             # three characters "305" spoke for EVERY sentence containing 305 —
@@ -821,9 +830,7 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
             if (not _WORD_ONLY.search(c.quote)
                     and _norm(draft.text).count(_norm(c.quote)) != 1):
                 continue
-            f = ctx.evidence.by_id(c.source_fact_id)
-            if f is not None:
-                exempt |= _keys(f"{f.value} {f.note}")
+            exempt |= cited_keys(c.source_fact_id)
 
         uncovered = []
         for sp in dict.fromkeys(_assertive_spans(n)):
@@ -1159,8 +1166,8 @@ def _sentence_count(s: str) -> int:
 
 
 # Widened to the contractions people actually type — "wouldn't", "can't",
-# "won't" — because `_question_numbers` now depends on recognising a refusal,
-# and a refusal the pattern misses turns into a block with no repair (B-37).
+# "won't" — because `_coverage` depends on recognising a refusal, and a refusal
+# the pattern misses turns into a block with no repair available (B-37).
 _NEGATION = re.compile(
     r"\b(not|no|never|none|cannot|can'?t|won'?t|wouldn'?t|couldn'?t|shouldn'?t|"
     r"don'?t|doesn'?t|didn'?t|isn'?t|aren'?t|wasn'?t|weren'?t|unable)\b", re.I)
