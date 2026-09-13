@@ -662,17 +662,42 @@ how this goes wrong.
 
 ---
 
-## Latency budgets — provisional targets, to be replaced by measured p50/p95/p99
+## Latency budgets — measured 2026-09-13 by `evals/bench.py`
 
-| Path | Target | Derived from |
-|---|---|---|
-| Ingest → triaged and queued (deterministic) | p95 ≤ 50 ms | — |
-| Ingest → triaged and queued (LLM-escalated) | p95 ≤ 600 ms | — |
-| **Nudge on screen → seller can speak it** | **p95 ≤ 1500 ms** | **the auction mechanic below** |
-| Question card → **first readable token** | p95 ≤ 1500 ms | the same mechanic, honestly applied — see D-35 |
-| Question card → **sendable** (verified) | p95 ≤ 3000 ms | operator review cadence, not the lot clock |
-| On-demand research query → answer | p95 ≤ 2000 ms *(the brief's stated target)* | — |
-| Answer-cache hit, end to end | ≤ 80 ms | — |
+| Path | p50 | **p95** | p99 | Target | Derived from |
+|---|---:|---:|---:|---|---|
+| Entity resolve | 3.0 | 26.5 | 48.1 | — | (dominates the line below) |
+| Triage stage 1 (gate) | 2.7 | **27.0** | 43.8 | p95 ≤ 50 ms ✅ | glance cadence |
+| Evidence assemble | 0.1 | **0.1** | 0.7 | — | — |
+| **Verify (claims vs facts)** | 0.1 | **0.2** | 0.2 | — | **D-09's whole argument** |
+| Triage stage 2 (escalated) | 1763 | **2317** | 2317 | ~~600 ms~~ → 8 s ✅ | one lot duration — see below |
+| Draft → first readable token | 2229 | **6834** | 6834 | p95 ≤ 1500 ms ❌ | auction mechanic (D-35) |
+| Draft → sendable (verified) | 3897 | **9954** | 9954 | p95 ≤ 3000 ms ❌ | operator review cadence |
+| — of which repaired | 7202 | 9954 | 9954 | — | fires 31% on these probes |
+
+**`verify` at 0.2 ms is the one that matters.** D-09 claims that assembling
+evidence *before* generation turns verification into dict lookups rather than
+network calls. That is now measured, not asserted — and D-36's precomputation
+design, which re-verifies a cached draft against fresh evidence at serve time,
+is only safe because of this number.
+
+**The 600 ms escalated-triage target was never derived and is withdrawn.** A
+Sonnet call has a floor around 1.8 s, so the figure was unreachable by
+construction — it was a number in a table, not a constraint. Re-derived: an
+escalated message must reach the operator's queue before the lot it concerns is
+gone, which at 8–15 s lots gives ~8 s. Measured 2.3 s p95. Passes with room.
+
+**The two draft budgets are missed and stay missed.** p95 is roughly 2× and 3×
+their targets, driven by the repair round (B-16), which is kept deliberately
+because it halves over-blocking. Recorded rather than tuned away; D-36's
+precomputation is the route below them, and B-15/B-16 measured what happens when
+you instead buy latency out of the model's reasoning or its retry.
+
+**Stage 1 cost scales with message length** — a 1-token message resolves in
+~0 ms, a 19-token one in ~55 ms, because every unmatched token triggers a fuzzy
+scan over the catalog. That is why the gate is milliseconds rather than the
+microseconds D-15 predicted, and it is where to look first if the budget ever
+binds.
 
 **Derived, not asserted — 2026-09-12.** The sub-2-second figure was originally taken from the
 brief and justified as "fast is good." Field observation supplies a real derivation.
