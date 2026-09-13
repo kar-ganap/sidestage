@@ -662,3 +662,65 @@ training data, and deliberately not implemented now.
 legible instead of suspicious. It does not make the correction free — it makes
 it *auditable*, which is the most that is available once you have seen the
 answer.
+
+---
+
+## B-22 · What generalises, stated as narrowly as the evidence allows
+
+Three claims were available after the cross-platform test. Two do not survive.
+
+**Does not survive: "the cascade beats the incumbent on a new platform."**
+A2's mean F1 over five runs is 79.4% against the incumbent's 80.0% on the
+original labels. A wash (B-21b).
+
+**Does not survive: "the incumbent is unstable."** Its per-segment recall reads
+40.0 / 40.7 / 68.8 / 60.0, which *looks* erratic, but a chi-square test of
+homogeneity across the four segments gives **chi2(3) = 5.65, p = 0.097**. It does
+not reject. The instability is suggestive and has been quoted in this repo as
+though established; at this n it is not, and the claim is withdrawn.
+
+**Survives, and is the claim to make: the gate's recall STRICTLY DOMINATES the
+incumbent's on held-out data from two platforms.**
+
+Paired McNemar over the 37 held-out seller-directed messages (batch1 + show2 —
+batch0 and batch2 are training data and are excluded):
+
+| | |
+|---|---:|
+| incumbent recall | 17/37 = 45.9% |
+| gate recall | **33/37 = 89.2%** |
+| gate catches, incumbent misses | **16** |
+| **incumbent catches, gate misses** | **0** |
+| McNemar exact | **p = 3.05e-05** |
+
+**Zero discordant pairs in the other direction.** Not "higher recall on average"
+— *every* message the regex finds, the gate also finds, plus sixteen more. The
+one-sidedness is what makes it significant at n=37.
+
+**Why it is less surprising than it sounds, which has to be said first.** The
+gate **subsumes** the incumbent: `question_mark` is one of its fifteen features
+and carries the largest weight, +2.481 against a bias of −1.201. A message whose
+only active feature is a question mark scores **0.78** against a threshold of
+0.24. So dominance is close to structural.
+
+It is not guaranteed, though. Every negative weight summed is −2.664, and a
+message carrying a question mark *plus all five negatives at once* scores 0.200
+and **fails** the gate. The superset property is therefore an empirical result
+about real traffic — no message in 79 positives hit that combination — not an
+arithmetic identity.
+
+**So the defensible sentence is:** *adopting the gate is a strict recall
+improvement over the platform's current behaviour, with no observed recall
+regression, on held-out data from two platforms and two sellers.*
+
+**Everything it does not say.** Nothing about precision, which is worse by
+design — the gate is a recall-oriented filter and stage 2 exists to buy the
+precision back. Nothing about the full cascade, which is where the eBay Live
+loss actually was. Nothing about F1. And the incumbent on show 2 is *simulated*
+rather than observed, because eBay Live has no platform highlight.
+
+**Lesson.** The impressive-sounding claim (beats the incumbent) and the
+true-sounding one (the incumbent is unstable) both failed. The one that held was
+narrower than either and had to be found by asking what test the data could
+actually support — a paired test on the same messages, rather than a comparison
+of two averages computed from different samples.
