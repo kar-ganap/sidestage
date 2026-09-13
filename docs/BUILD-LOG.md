@@ -724,3 +724,61 @@ true-sounding one (the incumbent is unstable) both failed. The one that held was
 narrower than either and had to be found by asking what test the data could
 actually support — a paired test on the same messages, rather than a comparison
 of two averages computed from different samples.
+
+---
+
+## B-23 · The claim that is actually about what we built
+
+B-22's claim compares the gate against the incumbent, and it is weaker than it
+reads for two reasons: on eBay Live the incumbent is **simulated** (that
+platform has no highlighting, so we are asking "what if eBay copied Whatnot"),
+and the gate **contains** the regex as its highest-weighted feature. "A regex
+plus fourteen features beats a regex" is close to arithmetic.
+
+**The claim about our own design is the two-stage structure**, and it is
+testable without reference to any baseline. The gate deliberately trades
+precision for recall; stage 2 is supposed to buy the precision back. Either it
+does or it does not.
+
+**189 held-out messages, 37 seller-directed, two platforms, two sellers:**
+
+| | precision | recall | F1 | false positives |
+|---|---:|---:|---:|---:|
+| A1 gate alone | 47.1% | **89.2%** | 61.7% | **37** |
+| A2 gate + model | **93.6%** | 79.3% | **85.8%** | **2** |
+
+Three runs of the stochastic arm, all identical in the part that matters:
+
+```
+run 1: removed 35/37 false positives (95%), cost 4 true positives
+run 2: removed 35/37 false positives (95%), cost 3 true positives
+run 3: removed 35/37 false positives (95%), cost 4 true positives
+```
+
+Paired McNemar on **errors** — same messages, which classifier is wrong:
+
+```
+A1 wrong where A2 right = 35     A2 wrong where A1 right = 3-4     p < 0.0001
+```
+
+**So: stage 2 removes 95% of what the gate wrongly admits, and pays 3-4 of 37
+true positives for it.** That is the architecture working as designed, measured
+on held-out data from two platforms, and it is significant by an order of
+magnitude rather than marginally.
+
+**It is also the honest place to point at the eBay Live "loss".** A2's F1 there
+was a wash against the incumbent (B-21b) — but the *mechanism* did exactly what
+it was built to do on that show too. The cascade is not a way to beat a regex;
+it is a way to run a loose recall filter safely, and that is what the numbers
+support.
+
+**What it still does not say.** Nothing about whether 79.3% recall is *good* —
+that is a product judgement against the operating point (B-19), not a
+measurement. And stage 2 costing 3-4 true positives is a real price: those are
+buyers the gate found and the model threw away.
+
+**Intent accuracy, the second thing Suite A scores**, on correctly-surfaced
+messages: **86% on Whatnot held-out (18/21), 71% on eBay Live (5/7)**. n=7 is
+not a number to quote; both misses were `-> availability_q`, which is the
+sink the classifier falls into when a message names a card and asks something
+vague.
