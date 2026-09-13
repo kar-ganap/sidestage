@@ -1676,3 +1676,96 @@ constant.
 
 `tests/test_readme_workflow.py` runs the documented sequence. The entry point
 gets a test like anything else.
+
+## B-78 · Spike 1's ablation, and the flaw in my own experiment
+
+The 97.8% safe figure was one arm scored against nothing. Two separate problems,
+both raised by an adversarial review rather than noticed here:
+
+**Unattributable.** Nobody could say whether a bare model reaches 95% on these
+cases, in which case the whole apparatus buys 2.8 points.
+
+**Unfalsifiable.** A system hard-wired to reply *"let me check that one and come
+right back to you"* scores **100% safe** on B1 and **0% over-blocked** on B2 —
+strictly better than what ships on both headline numbers. `SAFE_FALLBACK` was
+deliberately written to pass the verifier on its merits, so refusing everything
+is the literal optimum of that scoreboard.
+
+`evals/run_spike1.py` adds three arms (bare / +grounding / +verification),
+scores **safety and responsiveness**, and runs the mute control explicitly so the
+falsifiability problem is visible in the output rather than argued about.
+
+**The first version of the experiment was wrong, and the error is the
+interesting part.** S1 and S2 were separate calls, so they were two independent
+samples of a stochastic model rather than one draft seen with and without a
+verifier. At n=89 the sampling noise exceeded the effect: it reported the
+verifier catching 4 and "missing" 4, McNemar p = 1.00, and the honest-looking
+conclusion was *verification adds nothing measurable.* Both runs were internally
+consistent. Neither answered the question asked.
+
+`PipelineResult.first_text` fixes it — one generation, scored both ways — and it
+is also **half the API cost**, which is the tell that the original design was
+doing redundant work.
+
+Paired, over 178 case-model pairs:
+
+| | verifier caught | verifier lost | McNemar exact |
+|---|---:|---:|---:|
+| safety | 8 | 1 | **p = 0.039** |
+| responsiveness | 6 | 21 | **p = 0.006** |
+
+**Verification buys safety and costs responsiveness, and the cost is the better
+established effect.** On the shipped model alone the only significant result is
+the cost (7 losses, 0 gains, p = 0.016).
+
+The eight catches are named domain rules, not aggregate drift:
+`pop_missing_as_of` x4, `unbacked_claim` x2, `identity_mismatch`,
+`authenticity_value_gate`, `variant_not_on_copy`. The safety gain is larger on
+the weaker drafter — 6:1 on Haiku against 2:0 on Sonnet — which is the shape a
+*guarantee* should have. Neither per-model test reaches significance, so that is
+a direction the data is consistent with rather than a finding.
+
+**Why the suite cannot settle it.** S1 alone reaches 94.3%, leaving at most 5.7
+points for any verifier to win. Suite B1 is saturated, which is the same reason
+97.8% was unattributable in the first place.
+
+**Lesson.** Two adversarial passes found bugs in the verifier; this one I found
+in my own experiment, by noticing that a paired test was running on unpaired
+data. The failure mode is worse than a broken verifier, because a confounded
+experiment produces a number that looks like a measurement.
+
+## B-79 · The docs had drifted, and nothing could tell
+
+An adversarial review found the PRD claiming 41 decisions against 44 in the
+file, 130 fixtures against 199 on disk, the reply judge listed under "what is
+not built" months after B-32 shipped it, the marketplace adapter credited with
+seven fault modes against six in the code, and the TDD printing a `REGISTRY`
+block with twelve entries after `identity` and `sizing` were added.
+
+None of it was dishonest. All of it was a number hand-copied once and never
+re-derived. In a document whose entire purpose is to say what was measured, a
+stale number is indistinguishable from an invented one.
+
+`tools/check_docs.py` holds a registry of facts, each with a callable that
+computes the truth and the places the docs state it. The regex lives in the
+checker rather than the prose, so the documents stay readable and a reworded
+sentence that stops matching is reported as `claim not found` — a warning, since
+prose may legitimately change — while a claim that matches and disagrees fails.
+
+The registry block is checked by **name, not count**, because counting would
+miss a swap. Eval results are read from the JSON the runs write, so a doc check
+does not cost a model-in-the-loop suite.
+
+It deliberately does not check this file. A build log records what was true on
+the day an entry was written — "154 tests", "46 tests on unreachable code" —
+and retro-editing those would destroy the only record of what changed when. A
+log is not a claim about the present.
+
+Also corrected: the PRD stated the incumbent's recall as **53.6%** in prose and
+**45.9%** in the metrics table two paragraphs later. Both are real and they are
+different populations — 53.6% over all 477 observed messages, 45.9% over the 37
+held-out seller-directed messages from both platforms. The table uses the
+smaller one because that is the set the cascade was scored on; quoting 53.6%
+against the cascade's 89.2% would score two arms on different data, which is
+exactly the error the row exists to avoid. Now said out loud instead of left for
+a reader to reconcile.

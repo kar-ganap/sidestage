@@ -124,7 +124,7 @@ flowchart TD
 | R4 | Show the operator *why* something was blocked, and a safe alternative | built |
 | R5 | The operator always decides; they may override a block | built |
 | R6 | Collapse duplicate questions into one card with a count | built |
-| R7 | Work with no API key, so a reviewer can run it cold | built — 130 fixtures |
+| R7 | Work with no API key, so a reviewer can run it cold | built — 199 fixtures |
 | R8 | Propose showcase actions with an undo recorded at journal time | built — and two of the four turn out not to *have* an undo |
 | R9 | Nudge the seller when a lot is hot or stalled | built — 10/10 on real bid data |
 
@@ -185,20 +185,37 @@ verification happens.** Nothing skips the verifier, at any tier.
 ## 6. Success metrics
 
 **Primary — questions answered that would otherwise have been missed.** The
-incumbent surfaces 53.6% of seller-directed messages. Every point above that is a
-buyer who got an answer.
+incumbent surfaces 53.6% of seller-directed messages across the full 477-message
+Whatnot observation. Every point above that is a buyer who got an answer.
+
+**Two populations, and the table below uses the smaller one.** 53.6% is the
+incumbent's recall over all 477 observed messages; 45.9% is its recall over the
+37 held-out seller-directed messages from *both* platforms, which is the set the
+cascade was scored on and therefore the only fair comparison. Quoting 53.6% in
+the incumbent column would flatter the cascade by scoring the two arms on
+different data — which is the error this row exists to avoid.
 
 | metric | incumbent | now | source |
 |---|---|---|---|
-| recall of seller-directed messages | 45.9% | **89.2%** | 37 held-out, two platforms |
+| recall of seller-directed messages | 45.9% | **89.2%** | 37 held-out seller-directed, two platforms |
 | precision of the surfaced queue | — | **93.6%** | 189 held-out, two platforms |
-| unsafe replies reaching a buyer | — | **2.2%** | 89 adversarial cases |
-| good replies wrongly blocked | — | **7.8–10.4%** | 77 control cases, 5 runs |
+| unsafe replies reaching a buyer | 53.9% *(bare model)* | **3.4%** | 89 adversarial cases, ablated |
+| good replies wrongly blocked | — | **9.1%** | 77 control cases |
 | ambiguous reference answered by a guess | — | **0** | 36 grounding cases |
 | cost per classified message | — | **$0.00146** | measured |
 
-The over-block figure is a **range** because the arm is stochastic — 7.8% in four
-of five runs, 10.4% in one. Quoting the favourable run is how an earlier
+**The safety number is now ablated rather than absolute.** It was quoted as
+"97.8% safe" against nothing at all, which was both unattributable — nobody
+could say whether a bare model reaches 95% unaided — and unfalsifiable, since a
+system that only ever says *"let me check that and come back to you"* scores
+100% on it. The ablation supplies the missing arms: a bare model is **46.1%**
+safe, adding the evidence contract takes it to **94.3%**, and verification adds
+**+2.3 points** on top while costing **7.9 points of responsiveness** (McNemar
+p = 0.016 — the cost is the better-established effect). TDD §4 has the full
+table and what it does not show.
+
+The over-block figure was previously quoted as a **range** because the arm is
+stochastic — 7.8% in four of five runs, 10.4% in one. Quoting the favourable run is how an earlier
 conclusion in this project had to be withdrawn, so the range is what gets
 quoted.
 
@@ -244,9 +261,9 @@ referent prior had to become a function of lot velocity rather than a constant
 
 | risk | mitigation | residual |
 |---|---|---|
-| A fabricated attribute reaches a buyer | claims verified against evidence fetched before generation; 97.8% safe on adversarial cases | **2.2% escape rate** |
-| A reply is true but misleading | claim-level verification cannot see it; an offline judge detects it | **open — the most honest limitation in the system** |
-| Over-blocking makes the tool useless | mandatory control suite, reported as the headline | 10.4%, above target |
+| A fabricated attribute reaches a buyer | claims verified against evidence fetched before generation; ablated at 96.6% safe against 46.1% for a bare model | **3.4% escape rate** |
+| A reply is true but misleading | no per-claim rule can reach it, so a second model judges responsiveness against the operator's reading time (B-32) | **advisory, not blocking — it warns beside send** |
+| Over-blocking makes the tool useless | mandatory control suite, reported as the headline | 9.1% blocked, and a measured **7.9-point responsiveness cost** (p = 0.016) |
 | Triage silently swallows a buyer | fails **open**: an unavailable classifier surfaces rather than drops, with a test for it | drop rate visible in the console |
 | The model changes underneath us | verification checks output, not provenance; the client is a 20-line Protocol | re-measure on model change |
 | Two platforms, two sellers is not a distribution | stated everywhere a number is quoted | **real — n is small** |
@@ -255,15 +272,33 @@ referent prior had to become a function of lot velocity rather than a constant
 
 ## 9. What is not built
 
-**An independent judge on the reply (B-13).** Claim-level verification checks
-what a reply *asserts*, not what it *implies*, so a reply can have every claim
-true and still mislead by answering a different question. The fix is a second
-model call on the critical path, which roughly doubles a latency already over
-budget. Detected offline by the eval judge; not shipped. **This is the most
-honest limitation in the system.**
+**~~An independent judge on the reply (B-13).~~ Built — see B-32.** Claim-level
+verification checks what a reply *asserts*, not what it *implies*, so a reply
+can have every claim true and still mislead by answering a different question:
+
+> *Q: "is the centering good on that zard?"*
+> *A: "It's the Base Set Charizard 4/102, shadowless print."*
+
+Every claim true, every claim cited, nothing to object to, and the buyer has
+been answered about something they did not ask. **Responsiveness is not a
+property of any claim**, so no per-claim rule can reach it.
+
+This was listed here as unbuilt for most of the project because the fix is a
+second model call and the draft path is already over budget. It is funded the
+way streaming was: **the operator's reading time is dead time for the system.**
+The draft is shown the instant it is verified and the judge runs while they read
+it — measured p50 2.0 s, p95 2.1 s, so on the path that matters it is usually
+free. An operator who sends within two seconds waits out the remainder, which
+`send()` does deliberately rather than skipping the check.
+
+It is **advisory**. A judge objection is a warning beside the send button, not a
+block, for the stronger of two reasons: the verifier blocks because it can point
+at a fact and say *this contradicts the record*, while a judge can only say
+*this reads as unresponsive*, which is a judgement. It degrades **open** — an
+unavailable judge produces no warning, never a block.
 
 **Real marketplace integration.** The adapter is a Protocol with a mock behind
-it (D-24) carrying seven fault modes, including lost responses and partial
+it (D-24) carrying six fault modes, including lost responses and partial
 writes. The ledger, the idempotency handling and the read-back were all built
 against that seam — the mock is the piece that gets replaced, not the design.
 

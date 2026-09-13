@@ -5,7 +5,7 @@ decides which messages deserve the seller's attention, drafts replies that are
 **verified against assembled evidence before they can be sent**, and proposes
 showcase actions through a ledger that records how to undo them.
 
-> **How to read this.** `DECISIONS.md` holds 41 decisions with their rejected
+> **How to read this.** `DECISIONS.md` holds 44 decisions with their rejected
 > alternatives. `BUILD-LOG.md` holds 31 entries on what building it taught us —
 > mostly things we got wrong. This document is the design those two produced,
 > with the measurements that back it. Every number here is reproducible from a
@@ -227,8 +227,14 @@ inline for that reason (B-16).
 
 ## 4. Spike 1 — claim verification
 
-**The claim:** reply safety does not depend on the model behaving, because every
-assertion is checked against evidence fetched before generation.
+**The claim, as originally written:** *reply safety does not depend on the model
+behaving, because every assertion is checked against evidence fetched before
+generation.*
+
+**The claim, after the ablation:** verification buys safety and costs
+responsiveness, both measurably, and **the cost is the better-established
+effect**. The original wording is retained above because it is what the design
+was built to deliver and the measurement is what narrowed it.
 
 **How it is measured.** Suite B runs the *whole pipeline* on 89 adversarial and
 77 benign cases. Adversarial cases carry a chat message and a lot, not a
@@ -247,6 +253,93 @@ B1 adversarial — 89 cases
 B2 control — 77 cases
    OVER-BLOCKED             6-8   7.8-10.4%   <- the number that matters
 ```
+
+**That 97.8% was unfalsifiable, and it took an adversarial review to say so.**
+A system hard-wired to reply *"let me check that one and come right back to
+you"* scores **100% safe** here and **0% over-blocked** on B2 — strictly better
+than what ships, on both headline numbers. `SAFE_FALLBACK` was deliberately
+written to pass the verifier on its merits, so refusing everything is the
+literal optimum of this scoreboard. A safety metric whose maximum is silence is
+measuring abstention.
+
+It was also **unattributable**: one arm, scored against nothing, so nobody could
+say whether a bare model reaches 95% on these cases and the whole apparatus buys
+2.8 points.
+
+### The ablation (`evals/run_spike1.py`)
+
+Three arms and a control, scored on **two** questions per reply — *does it
+assert the falsehood* (Opus grader, as before) and *does it answer what was
+asked* (`app/judge.py`). Only both counts, which is the axis a mute system
+fails.
+
+| arm | | |
+|---|---|---|
+| **S0** bare model | no evidence, no claim contract, no verifier | a competent assistant told who it is |
+| **S1** + grounding | evidence assembled, claims required, **no verifier** | |
+| **S2** + verification | the shipped pipeline | |
+
+**S1 and S2 share one generation.** The first version ran them as separate
+calls, and at n=89 the sampling noise of a stochastic model was larger than the
+effect being measured — it reported the verifier catching 4 cases and "missing"
+4, where the misses were a different roll of the same dice. `PipelineResult`
+exposes `first_text` so the only difference between the arms is the verifier,
+which is the entire point of an ablation. S0 cannot be paired: it is a different
+prompt, so it is reported from a separate full run.
+
+```
+B1, 89 adversarial cases           SAFE   RESPONSIVE    BOTH   blocked
+  S0  bare model (sonnet-5)       46.1%       93.3%   43.8%      0%
+  S1  + grounding                 94.3%       98.9%   93.3%      0%
+  S2  + verification              96.6%       91.0%   85.4%   19.1%
+
+  same, drafting with haiku-4.5
+  S1  + grounding                 88.8%       88.8%   79.8%      0%
+  S2  + verification              95.5%       79.8%   75.3%   27.0%
+
+  CONTROL — only ever says the safe fallback
+                                 100.0%       59.6%   59.6%    100%
+```
+
+**What the evidence contract buys is large and unambiguous.** S0 -> S1 is
+**+48.2 points of safety**. A bare model asserts the falsehood in over half of
+these cases. That is Spike 1's real result and it was never measured before.
+
+**What verification buys is smaller, real, and comes with a bill.** Paired
+McNemar over both models (178 case-model pairs, each a trial of the same
+question):
+
+| | verifier caught | verifier lost | McNemar exact |
+|---|---:|---:|---:|
+| safety | 8 | 1 | **p = 0.039** |
+| responsiveness | 6 | 21 | **p = 0.006** |
+
+Both effects are real; **the cost is better established than the benefit.** On
+the shipped model alone the only significant effect is the cost — 7
+responsiveness losses against 0 gains, p = 0.016 — and the 2:0 safety gain does
+not reach significance.
+
+**What it catches is specific, which matters more than the aggregate.** Pooled,
+the eight catches are `pop_missing_as_of` x4 (a population figure quoted with no
+read date), `unbacked_claim` x2, `identity_mismatch`, `authenticity_value_gate`
+(promising marketplace authentication on a lot below the $250 gate), and
+`variant_not_on_copy`. These are named domain rules firing on real replies that
+grounding alone shipped. An aggregate of 96.6 vs 94.3 hides that.
+
+**The safety gain is larger on the weaker model** — 6:1 on Haiku against 2:0 on
+Sonnet — which is what a *guarantee* should look like: its value appears when
+the model behaves worse. Neither per-model test reaches significance, so this is
+a direction the data is consistent with, not a finding.
+
+**Why the suite cannot settle it.** S1 alone reaches 94.3% on Sonnet, so at most
+5.7 points are available for any verifier to win and only a handful of cases can
+discriminate. Suite B1 is **saturated**, which is the same reason the original
+97.8% was unattributable. Measuring this properly needs adversarial cases where
+grounding alone fails; that is item 2 of what I would do next.
+
+**The responsiveness axis is judged by `app/judge.py`, which nothing measures.**
+Every responsiveness number above inherits that error. Stated here rather than
+in a footnote because it is the weakest link in this section.
 
 **B2 is quoted as a range because the arm is stochastic.** Five runs gave 7.8%
 four times and 10.4% once. A single run of a model-in-the-loop suite is one
@@ -267,14 +360,19 @@ from *blocked* to *answered safely* when it was fixed, with no change in escapes
 B1 had been scoring the bug as evidence the verifier worked.
 
 **Verifier registry** — a dict of pure functions, one per claim type, which is
-why adding a check is a function rather than a branch:
+why adding a check is a function rather than a branch. It must be **total**: a
+lookup returning `None` used to mean *skip*, and `identity` and `sizing` were
+offered to the model with no entry, so a claim of either type went entirely
+unchecked while still satisfying the coverage backstop (B-37). `identity` is the
+second most common claim type in the recorded fixtures. It now fails closed, and
+`tools/check_docs.py` fails if this block drifts from the code again:
 
 ```python
 REGISTRY: dict[ClaimType, Verifier] = {
-    VARIANT: _variant, COMP: _comp, POP: _pop, GRADE: _grade,
-    CONDITION: _condition, CENTERING: _centering, AVAILABILITY: _availability,
-    PRICE: _price, BID: _bid, SHIPPING: _policy, RETURNS: _policy,
-    AUTHENTICITY: _policy,
+    IDENTITY: _identity, SIZING: _sizing, VARIANT: _variant,
+    COMP: _comp, POP: _pop, GRADE: _grade, CONDITION: _condition,
+    CENTERING: _centering, AVAILABILITY: _availability, PRICE: _price,
+    BID: _bid, SHIPPING: _policy, RETURNS: _policy, AUTHENTICITY: _policy,
 }
 ```
 
@@ -524,11 +622,18 @@ the form users produce, not one that is merely consistent.
 
 ## 10. Known limitations
 
-**B-13 — claim-level verification checks what a reply asserts, not what it
-implies.** A reply can have every claim true and still mislead by answering a
-different question. The fix is an independent judge on the critical path, which
-roughly doubles a latency already over budget. Not shipped; the eval judge is the
-offline detector. **This is the most honest limitation in the system.**
+**~~B-13~~ — closed by B-32, and the residual is the honest part.** Claim-level
+verification checks what a reply *asserts*, not what it *implies*. The judge now
+ships (`app/judge.py`), run against the operator's reading time rather than
+before it — p50 2.0 s, p95 2.1 s, so it is usually free on the path that
+matters. It is **advisory**: a warning beside send, never a block, because a
+judge can only say *this reads as unresponsive*, which is a judgement rather
+than a finding. It degrades open.
+
+What remains a limitation is that **nothing measures whether the judge is
+right.** It is scored by no suite of its own; `evals/run_spike1.py` uses it as
+the responsiveness axis, which makes it a measuring instrument that is itself
+unmeasured. That is the real B-13 residual.
 
 **Two intent classes have zero instances in 513 messages.**
 `shipping_returns_q` — because both platforms answer it in a persistent banner
@@ -566,19 +671,29 @@ new training data rather than a refit against the set that revealed it.
 
 ## 11. What I would do next
 
-1. **Close B-13** — an independent judge on the reply, which is the only thing
-   that catches true-but-misleading. It roughly doubles draft latency, so it
-   needs (2) first.
-2. **D-36 precomputation** — draft and verify the top-k (lot × intent) pairs off
-   the queue lookahead. Safe here for a reason it was not designed for:
-   verification is a 0.2 ms dict lookup, so a cached draft can be re-verified
-   against fresh evidence at serve time and dropped if the world moved. This is
-   what buys the latency back for (1).
-3. **More labelled chat from a third seller.** Every generalisation claim here
+1. **Give the judge a suite of its own.** It closed B-13 (B-32) and is now the
+   responsiveness axis of Spike 1's ablation — a measuring instrument that
+   nothing measures. Labelling responsive/unresponsive on the recorded corpus
+   and scoring it against a second grader is the obvious next step, and until
+   that exists every responsiveness number in this document inherits its error.
+2. **Harder adversarial cases for Suite B1.** The ablation showed the suite is
+   saturated: grounding alone reaches the high nineties, so only a handful of
+   cases can discriminate and the suite has no power to measure what
+   verification adds. That is why the original 97.8% was never attributable.
+   The suite needs cases where grounding alone fails.
+3. ~~**D-36 precomputation**~~ — *measured and abandoned (B-31).* The design was
+   to draft and verify the top-k (lot × intent) pairs off the queue lookahead.
+   The hit rate on recorded traffic is **4%**, which does not pay for the
+   complexity. The reasoning that made it attractive still holds and is worth
+   recording: verification is a sub-millisecond dict lookup, so a cached draft
+   can be re-verified against fresh evidence at serve time and dropped if the
+   world moved. Kept here as a rejected option rather than deleted, because the
+   argument for it was sound and only the measurement killed it.
+4. **More labelled chat from a third seller.** Every generalisation claim here
    rests on two shows; the cross-platform set is 28 messages. A first-name
    feature, a taxonomy class for product commentary that is not market
    commentary, and any recalibration of the operating point all need data that
    does not yet exist.
-4. **Real marketplace integration** behind the existing adapter Protocol. The
+5. **Real marketplace integration** behind the existing adapter Protocol. The
    ledger, the fault modes and the read-back are all built against a seam that
    was designed for this; the mock is the thing that gets replaced.
