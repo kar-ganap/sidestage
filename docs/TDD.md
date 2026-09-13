@@ -47,27 +47,44 @@ asked, and it is the strongest argument the field work produced.
 One FastAPI process serves the API, the operator console and the static files.
 All logic is server-side; there is no front-end build step (D-06, D-07).
 
+```mermaid
+flowchart TD
+    M["chat message"] --> P0
+
+    subgraph TRIAGE ["app/triage.py — which messages does the seller ever see?"]
+        P0["0 · prefilter<br/>length, platform events"] --> P1
+        P1["1 · scorer<br/>15 interpretable features → p<br/><i>2.7 ms p50</i>"]
+        P1 -->|"p &lt; threshold — no model call"| DROP["dropped<br/><i>~84% of real traffic</i>"]
+        P1 -->|"p ≥ threshold"| P2["2 · classify<br/>intent · seller_directed · confidence<br/><i>1.8 s · 14–35% of traffic</i>"]
+        P2 -->|"confident veto"| DROP
+        P2 --> P3["3 · cluster<br/>near-duplicates → one card + a count"] --> P4["4 · rank<br/>intent × demand × recency"]
+    end
+
+    P4 --> Q(["operator sees a ranked queue"])
+    Q -->|"operator picks a card"| R1
+
+    subgraph LOOP ["app/pipeline.py — the core loop"]
+        R1["1 · resolve<br/>what is this about?"] --> R2["2 · assemble<br/><b>everything assertable,<br/>before a word is generated</b>"]
+        R2 --> R3["3 · draft<br/>reply + claims citing fact ids"]
+        R3 --> R4["4 · verify<br/><b>each claim vs THE FACT IT CITED</b><br/><i>0.2 ms p95</i>"]
+        R4 -->|"all violations repairable<br/>and no retry spent"| R5["5 · repair<br/>one bounded retry"] --> R3
+        R4 --> R6["6 · settle"]
+    end
+
+    R6 --> PASS["pass / repaired<br/>operator can send"]
+    R6 --> BLOCK["blocked<br/>refused text + reason + safe fallback"]
+
+    style DROP fill:#f0f2f5,stroke:#8b97a6
+    style BLOCK fill:#f6e6e6,stroke:#b23b3b
+    style PASS fill:#e3f2ee,stroke:#0f8a72
+    style R2 stroke-width:3px
+    style R4 stroke-width:3px
 ```
-        chat message
-             |
-  [0] prefilter          length, platform events                 app/triage.py
-             |
-  [1] scorer             15 interpretable features -> p           ~3 ms p50
-             |           drop below threshold: no model call
-  [2] classify           intent + seller_directed + confidence    ~1.8 s
-             |           may VETO: stage 1 is deliberately loose
-  [3] cluster            near-duplicates -> one card + a count
-  [4] rank               intent x demand x recency
-             |
-        ---- operator sees a queue ----
-             |
-  [1] resolve            what is this about?                      app/entities.py
-  [2] assemble           EVERYTHING assertable, before generating  app/evidence.py
-  [3] draft              reply + claims, each citing a fact id     app/llm.py
-  [4] verify             each claim vs THE FACT IT CITED           app/verify.py
-  [5] repair             one bounded retry, only if it could help  app/pipeline.py
-  [6] settle             pass / repaired / blocked
-```
+
+**The two bold steps are the design.** Assembling evidence *before* generation is
+what turns verification into a dict lookup instead of a network call, and
+checking each claim against *the fact it cited* — rather than the strongest fact
+available — is what stops a true-but-miscited claim from passing.
 
 `app/pipeline.py` is the file to read first — it is the whole core loop in 180
 lines and every other module hangs off it.
@@ -100,6 +117,35 @@ Fact(id="f2", kind=VARIANT, authority=RECORD,
 Claim(type=VARIANT, value="shadowless", source_fact_id="f2",
       quote="shadowless copy")
 ```
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant O as Operator
+    participant P as pipeline
+    participant C as Catalog
+    participant M as Model
+    participant V as Verifier
+
+    O->>P: question from the queue
+    Note over P,C: everything assertable is fetched BEFORE generating
+    P->>C: assemble(intent, subject)
+    C-->>P: f1 identity, f2 variant, f3 catalog, f4 observational
+    P->>M: system prompt + FACTS + question
+    M-->>P: reply + claims, each naming a fact id
+    Note over P,V: no network call, the facts are already in hand
+    P->>V: verify(draft, evidence)
+    V-->>P: verdict + violations, 0.2 ms p95
+    alt every violation repairable
+        P->>M: one bounded retry with the feedback
+    end
+    P-->>O: pass / repaired / blocked + reason
+```
+
+**The ordering is the mechanism.** The fetch happens before the generation, which
+is why the check is a dict lookup rather than a network call. Reverse them —
+generate first, then go and check — and verification costs a round trip per claim
+and cannot sit on the critical path at all.
 
 **Because the fetch already happened, verification is a dict lookup.** Measured
 at **0.2 ms p95** (`evals/bench.py`). That is not an optimisation detail — it is
@@ -143,6 +189,34 @@ becomes unbacked and blocks on its own merits.
 `UNREPAIRABLE` (false against an authority — no rewording makes it true) vs
 `REPAIRABLE` (overstated). One bounded retry, and only when **every** violation
 is repairable; one unrepairable violation poisons the batch (D-10b).
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Drafted
+    Drafted --> Verified : verify()
+
+    Verified --> PASS : no violations and text non-empty
+    Verified --> Repairing : all violations REPAIRABLE, no retry spent
+    Verified --> BLOCKED : any UNREPAIRABLE violation
+    Verified --> BLOCKED : retry already spent
+
+    Repairing --> Drafted : redraft with the feedback
+    Drafted --> REPAIRED : second pass clean
+
+    PASS --> [*]
+    REPAIRED --> [*]
+    BLOCKED --> [*] : operator may still send the fallback
+
+    note right of BLOCKED
+        An empty reply is NOT a pass.
+        Nothing to verify is not the same
+        as nothing wrong: every check asks
+        "is this assertion supported", and
+        none of them fires on the absence
+        of one.
+    end note
+```
 
 Measured: the repair round fires on **6.2%** of benign traffic and converts
 **100%** of what it fires on; without it B2 over-blocking would be 12.3% rather
@@ -346,6 +420,29 @@ eligibility is a step function (B-03, D-17b). Measured $0.00146/call.
 failures the client flips to `ReplayClient` (D-32). A reviewer gets a working
 console rather than a stack trace, and degraded mode is the *same code path* as
 the no-key path, so it is exercised constantly rather than only in incidents.
+
+```mermaid
+flowchart LR
+    REQ["draft / classify"] --> CB{"breaker<br/>tripped?"}
+    CB -->|no| LIVE["AnthropicClient<br/><i>live call</i>"]
+    LIVE -->|success| OUT["LLMResult"]
+    LIVE -->|"failure"| FC["count it"]
+    FC -->|"3 consecutive"| TRIP["breaker trips"]
+    FC -->|"fewer"| FB
+    TRIP --> FB
+    CB -->|yes| FB["ReplayClient<br/><i>recorded fixtures</i>"]
+    FB --> OUT
+    NOKEY["reviewer with no<br/>ANTHROPIC_API_KEY"] --> FB
+
+    style FB fill:#e3f2ee,stroke:#0f8a72,stroke-width:3px
+    style TRIP fill:#f6e6e6,stroke:#b23b3b
+```
+
+**`ReplayClient` is reached two ways, and that is the point.** The path a
+reviewer takes with no API key is the *same code* as the path a production
+incident takes. A degraded mode exercised only during incidents is a degraded
+mode nobody has tested; this one runs on every clone.
+
 
 **Triage fails open.** If the classifier is unavailable or returns nothing
 parsable, a message that passed the gate is **surfaced** with a rule-derived
