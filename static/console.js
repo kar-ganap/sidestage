@@ -80,7 +80,37 @@ function Nudge({ nudge }) {
     </div>`;
 }
 
-function Header({ stats, lot, nudge, busy, onReplay, onReset }) {
+/* The auction, driveable (B-128).
+ *
+ * `app/moments.py` classifies hot / stalled / normal and `Session.nudge()`
+ * turns that into one glanceable line — and until this existed a reviewer
+ * could not make it happen. Every lot that classifies as hot or stalled in the
+ * shipped catalog is already SOLD, so the console showed the nudge layer
+ * permanently empty and the eval suite behind it was unreachable by clicking.
+ *
+ * Two buttons because a bid and a timer extension are DIFFERENT EVENTS: a bid
+ * must raise the price, so if every extension carried one the price could never
+ * stand still and `stalled` — bids that stopped arriving — would be
+ * unreachable by construction. "Timer +" sends no amount, which is exactly what
+ * a stall is. */
+function Auction({ lot, busy, onBid, onExtend }) {
+  if (!lot || lot.format !== "auction" || !["live", "queued"].includes(lot.status))
+    return null;
+  const next = Math.round((lot.current_bid || lot.price || 100) * 1.05);
+  return html`
+    <div class="auction">
+      <button class="ghost" disabled=${busy} onClick=${() => onBid(next)}
+              title="a bid, which must raise the price">
+        Bid $${next}
+      </button>
+      <button class="ghost" disabled=${busy} onClick=${onExtend}
+              title="the timer extends with no new bid — this is what a stall is">
+        Timer +
+      </button>
+    </div>`;
+}
+
+function Header({ stats, lot, nudge, busy, onReplay, onReset, onBid, onExtend }) {
   return html`
     <header>
       <div class="brand">Side<span>Stage</span></div>
@@ -94,6 +124,7 @@ function Header({ stats, lot, nudge, busy, onReplay, onReset }) {
           </span>
         </div>`}
       <${Nudge} nudge=${nudge} />
+      <${Auction} lot=${lot} busy=${busy} onBid=${onBid} onExtend=${onExtend} />
       <div class="spacer"></div>
       <div class="counters">
         <div><b>${stats.seen}</b><span>seen</span></div>
@@ -181,13 +212,14 @@ function Queue({ queue, activeId, onPick, onSay }) {
 
 /* ---------------------------------------------------------------- draft */
 
-function Draft({ card, busy, judged, onDraft, onSend, onDismiss, ledger }) {
+function Draft({ card, busy, judged, onDraft, onSend, onDismiss, ledger, actions }) {
   if (!card) {
     return html`
       <div class="col">
         <h2>Draft</h2>
         <div class="scroll">
           <div class="empty">Pick a question from the queue.</div>
+          ${actions}
           ${ledger.length > 0 && html`<${Ledger} ledger=${ledger} />`}
         </div>
       </div>`;
@@ -212,6 +244,7 @@ function Draft({ card, busy, judged, onDraft, onSend, onDismiss, ledger }) {
         ${drafted && html`
           <div class="block">
             <h3>${card.verdict === "blocked" ? "Blocked — not sent" : "Reply"}</h3>
+            <${Degraded} card=${card} />
             <div class=${"reply " + (card.verdict === "blocked" ? "blocked" : "ready")}>
               ${card.reply || html`<em style="color:var(--ink-faint)">
                 the model returned nothing usable</em>`}
@@ -292,7 +325,80 @@ function Draft({ card, busy, judged, onDraft, onSend, onDismiss, ledger }) {
             ${card.attempts > 1 ? ` · ${card.attempts} attempts (one repair)` : ""}
           </div>`}
 
+        ${actions}
         ${ledger.length > 0 && html`<${Ledger} ledger=${ledger} />`}
+      </div>
+    </div>`;
+}
+
+/* B-98/B-128. A replay fixture miss returns "Let me check that and come back to
+ * you" with NO claims — which verifies clean precisely because it asserts
+ * nothing. Without this badge the console rendered a canned sentence as a
+ * verified pass, and a reviewer running with no credential saw a system that
+ * appeared to answer every card and verify every one.
+ *
+ * A pass earned by having nothing to check is not a pass earned by checking. */
+function Degraded({ card }) {
+  if (!card || !card.degraded) return null;
+  return html`
+    <div class="degraded" title=${card.degraded_note || ""}>
+      <b>no model answered</b> — replay fixture miss or tripped breaker. This
+      reply asserts nothing, so it verifies clean by default, not by checking.
+    </div>`;
+}
+
+/* The write path, reachable (B-128).
+ *
+ * `app/actions/` implements D-21 — propose, snapshot preconditions, confirm,
+ * execute under an idempotency key, READ BACK, journal the inverse — and the
+ * console called none of it. The brief grades on "a concrete failure path",
+ * and a reviewer clicking through the product could not reach one.
+ *
+ * The read-back is the part worth watching. A write that returns success and a
+ * read that disagrees is what real marketplaces produce, and a divergence is
+ * REPORTED rather than retried: retrying a write that may have landed is how
+ * you double-apply. Start the server with SIDESTAGE_FAULTS=1 and this panel
+ * shows lost responses being replayed under their original key.
+ */
+function Actions({ lots, busy, onAct }) {
+  const shop = (lots || []).filter(l => l.price != null && !l.unreadable);
+  if (!shop.length) return null;
+  // Prefer a lot with a floor: the floor is what makes the refusal legible.
+  const lot = shop.find(l => l.floor_price != null) || shop[0];
+  const id = lot.lot_id;
+  const floor = lot.floor_price;
+  // A markdown the floor ALLOWS: halfway between the floor and today's price,
+  // so it clears the guard on every fixture row rather than by luck.
+  const legal = floor != null
+    ? Math.max(Math.ceil(floor) + 1, Math.round((lot.price + floor) / 2))
+    : Math.max(1, Math.round(lot.price * 0.9));
+  // A markdown the floor REFUSES: one dollar under it. Aimed, not accidental.
+  const under = floor != null ? Math.floor(floor) - 1 : null;
+  return html`
+    <div class="block" style="margin-top:22px">
+      <h3>Write path <em>D-21 · propose → confirm → execute → read back</em></h3>
+      <div class="actions" style="gap:6px;flex-wrap:wrap">
+        <button class="ghost" disabled=${busy}
+                onClick=${() => onAct("markdown", { lot_id: id, new_price: legal })}>
+          Mark ${id} down to $${legal}
+        </button>
+        ${under != null && html`
+          <button class="ghost" disabled=${busy}
+                  onClick=${() => onAct("markdown", { lot_id: id, new_price: under })}>
+            Try $${under} — under the $${floor} floor
+          </button>`}
+        <button class="ghost" disabled=${busy}
+                onClick=${() => onAct("adjust_quantity",
+                  { lot_id: id, new_quantity: Math.max(0, (lot.quantity || 1) - 1) })}>
+          Drop stock by one
+        </button>
+      </div>
+      <div class="hint">
+        The second button is refused by <code>FloorPriceViolation</code> before
+        anything is written — a precondition, not a rollback. The marketplace
+        keeps its own row with its own version counter, which is why a read-back
+        can disagree; run with <code>SIDESTAGE_FAULTS=1</code> to see lost
+        responses replayed under their original key.
       </div>
     </div>`;
 }
@@ -304,9 +410,21 @@ function Ledger({ ledger }) {
       <ul class="ledger" style="margin:0;padding:0">
         ${ledger.map(e => html`
           <li key=${e.id}>
-            ${e.id} · ${e.at.slice(11, 19)} · ${e.verdict}
+            ${e.id} · ${e.at.slice(11, 19)}${e.action ? " · " + e.action : ""} · ${e.status || e.verdict}
             ${e.overridden && html`<span class="ov"> · operator override</span>`}
-            <div style="color:var(--ink-faint)">${e.text}</div>
+            ${e.diverged && html`<span class="ov"> · read-back disagreed</span>`}
+            <div style="color:var(--ink-faint)">
+              ${e.text || e.message || ""}
+              ${e.params && html`<span> · ${Object.entries(e.params)
+                .filter(([k]) => k !== "lot_id")
+                .map(([k, v]) => k + "=" + v).join(" ")}</span>`}
+            </div>
+            ${e.inverse && html`
+              <div class="hint" style="margin-top:3px">
+                ${e.inverse.reversible === false
+                  ? html`<b>irreversible</b> — ${e.inverse.why}`
+                  : html`inverse recorded: ${JSON.stringify(e.inverse.previous)}`}
+              </div>`}
           </li>`)}
       </ul>
     </div>`;
@@ -320,9 +438,15 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [judged, setJudged] = useState(null);
+  const [lots, setLots] = useState([]);
 
   const refresh = useCallback(async () => setSt(await api("/api/state")), []);
   useEffect(() => { refresh(); }, [refresh]);
+  // The MARKETPLACE's copy, which is deliberately not ours: its own status, its
+  // own version counter. That separation is the entire reason a read-back can
+  // disagree, so the console shows both rather than merging them (B-128).
+  useEffect(() => { api("/api/actions/lots")
+    .then(r => setLots(r.lots)).catch(() => {}); }, []);
 
   // Poll rather than push. The console is one operator on one process, the
   // state is small, and a WebSocket here would be infrastructure in place of
@@ -342,6 +466,32 @@ function App() {
     finally { setBusy(false); }
   };
   const say = async (text) => { await api("/api/chat", { text }); await refresh(); };
+
+  /* B-128. Drives the real auction so the moment classifier and the nudge are
+   * reachable by clicking. `amount: null` is a timer extension with no bid
+   * behind it, which is the only way `stalled` can ever occur — a bid must
+   * raise the price, so extensions that carry one can never leave the price
+   * standing still. */
+  const bid = async (amount) => {
+    if (!st.lot) return;
+    setBusy(true);
+    try { await api(`/api/lot/${st.lot.id}/bid`, { amount }); await refresh(); }
+    finally { setBusy(false); }
+  };
+  const act = async (action, params) => {
+    setBusy(true);
+    try {
+      await api("/api/actions", { action, params });
+      setLots((await api("/api/actions/lots")).lots);
+      await refresh();
+    } finally { setBusy(false); }
+  };
+  const extend = async () => {
+    if (!st.lot) return;
+    setBusy(true);
+    try { await api(`/api/lot/${st.lot.id}/bid`, {}); await refresh(); }
+    finally { setBusy(false); }
+  };
   const doDraft = async (id) => {
     setDrafting(true);
     setJudged(null);
@@ -362,12 +512,14 @@ function App() {
   return html`
     <div class="shell">
       <${Header} stats=${st.stats} lot=${st.lot} nudge=${st.nudge} busy=${busy}
+                 onBid=${bid} onExtend=${extend}
                  onReplay=${replay} onReset=${reset} />
       <div class="cols">
         <${ChatLog} log=${st.log} />
         <${Queue} queue=${st.queue} activeId=${activeId} onPick=${setActive} onSay=${say} />
         <${Draft} card=${card} busy=${drafting} judged=${judged} onDraft=${doDraft}
-                  onSend=${doSend} onDismiss=${doDismiss} ledger=${st.ledger} />
+                  onSend=${doSend} onDismiss=${doDismiss} ledger=${st.ledger}
+                  actions=${html`<${Actions} lots=${lots} busy=${busy} onAct=${act} />`} />
       </div>
     </div>`;
 }

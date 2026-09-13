@@ -332,7 +332,13 @@ FACTS = [
     Fact("fixtures", _fixtures,
          [("README.md", r"against (\d+) recorded fixtures"),
           ("README.md", r"fixtures/\s+(\d+) recorded LLM responses"),
-          ("docs/PRD.md", r"built — (\d+) fixtures")]),
+          ("docs/PRD.md", r"built — (\d+) fixtures"),
+          # B-128. These two were the SAME number in the same repo and neither
+          # was pinned, so `--fix` rewrote three cells green while two others
+          # kept saying 288. Pinning the count is not enough; every place it is
+          # WRITTEN has to be pinned, which is what --audit exists to find.
+          ("docs/SUBMISSION.md", r"replays (\d+) recorded"),
+          ("docs/TDD.md", r"\| (\d+) fixtures; the tape raises")]),
     Fact("tests", _tests,
          [("README.md", r"uv run pytest\s+# (\d+) tests"),
           ("docs/SUBMISSION.md", r"\*\*(\d+) tests\*\*, no credential")]),

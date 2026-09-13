@@ -46,6 +46,8 @@ from app.entities import get_resolver
 from app.evidence import assemble
 from app.llm import (
     DRAFT_SYSTEM,
+    FixtureMissing,
+    ReplayClient,
     TRIAGE_SYSTEM,
     AnthropicClient,
     _draft_messages,
@@ -228,6 +230,40 @@ def record_drafts(client, d: Path, force: bool) -> tuple[int, int]:
     return made, skipped
 
 
+class _FillMissing:
+    """Serve whatever is already on the tape; call live only for what is not.
+
+    `record_console_drafts` drives a whole transcript, so without this it makes a
+    live call for every card — paying for the 25 already recorded and, worse,
+    OVERWRITING them. A re-recorded fixture is a different sentence from the same
+    model, so that silently rewrites the tape the golden suite asserts against.
+    `record_drafts` has always skipped via `have()`; it can, because it computes
+    the key itself. Here the key is only known inside `Session.draft`, so the
+    skip has to live behind the seam instead of in front of it.
+
+    Honours `--force` by simply not being used.
+    """
+
+    def __init__(self, record_to: Path) -> None:
+        self.tape = ReplayClient(strict=True)
+        self.live = AnthropicClient(record_to=record_to)
+        self.recorded = 0
+
+    def draft(self, **kw):
+        try:
+            return self.tape.draft(**kw)
+        except FixtureMissing:
+            self.recorded += 1
+            return self.live.draft(**kw)
+
+    def classify(self, **kw):
+        try:
+            return self.tape.classify(**kw)
+        except FixtureMissing:
+            self.recorded += 1
+            return self.live.classify(**kw)
+
+
 def record_console_drafts(client, d: Path, force: bool) -> tuple[int, int]:
     """Draft every card the CONSOLE's replay actually produces.
 
@@ -244,6 +280,8 @@ def record_console_drafts(client, d: Path, force: bool) -> tuple[int, int]:
     """
     from app.session import Session
 
+    # Only the missing ones cost anything, and the recorded ones stay untouched.
+    client = client if force else _FillMissing(d)
     made = 0
     for name in ("triage_test", "triage_show2"):
         p = DATA / f"{name}.jsonl"
@@ -260,7 +298,7 @@ def record_console_drafts(client, d: Path, force: bool) -> tuple[int, int]:
         for c in cards:
             sess.draft(c.id)
             made += 1
-    return made, 0
+    return made, getattr(client, "recorded", made)
 
 
 def verify_stability() -> bool:
@@ -327,8 +365,8 @@ def main() -> int:
 
     if not a.skip_drafts:
         print("\n   drafts for every card the console's replay produces")
-        m, _ = record_console_drafts(client, d, a.force)
-        print(f"      {m} drafted")
+        m, rec = record_console_drafts(client, d, a.force)
+        print(f"      {m} cards drafted, {rec} needed a live call")
 
     after = len(list(d.glob("*.json")))
     size = sum(f.stat().st_size for f in d.glob("*.json"))

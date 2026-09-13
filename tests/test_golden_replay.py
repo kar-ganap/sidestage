@@ -184,3 +184,61 @@ def test_console_replay_runs_end_to_end_with_no_key(cat):
     assert sess.queue(), "replaying a real transcript must surface something"
     card = sess.draft(sess.queue()[0].id)
     assert card is not None and card.verdict
+
+
+# --- the gap B-26 closed, and the check that keeps it closed ---------------
+
+
+def _console_cards_without_a_fixture() -> list[tuple[str, str, str, str]]:
+    """Every card the console's replay can surface, and whether it has a fixture.
+
+    Driven through the real `Session` for the same reason the recorder is
+    (`evals/record_fixtures.record_console_drafts`): the fixture key is a hash
+    of the evidence block, so the only honest way to ask "does this card have a
+    fixture" is to produce the card the way the console produces it.
+    """
+    import json
+    from pathlib import Path
+
+    data = Path(__file__).parent.parent / "evals" / "data"
+    out = []
+    for name in ("triage_test", "triage_show2"):
+        p = data / f"{name}.jsonl"
+        if not p.exists():
+            continue
+        rows = [json.loads(line) for line in
+                p.read_text(encoding="utf-8").splitlines() if line.strip()]
+        client = ReplayClient(strict=False)
+        sess = Session(client=client)
+        for r in rows:
+            if "_meta" not in r:
+                sess.ingest(r["text"])
+        for card in list(sess.cards.values()):
+            client.misses.clear()
+            sess.draft(card.id)
+            if client.misses:
+                out.append((name, card.intent.value if hasattr(card.intent, "value")
+                            else str(card.intent), card.text, client.misses[0]))
+    return out
+
+
+def test_every_card_the_console_can_surface_has_a_fixture():
+    """B-26 recurring. A fixture miss is INVISIBLE: `_safe_draft` returns a
+    reply that asserts nothing, so it earns a clean verdict and reads as the
+    system being careful rather than as missing data.
+
+    That is why `test_console_replay_runs_end_to_end_with_no_key` above cannot
+    catch this — it is non-strict by design, and a degraded card satisfies
+    `card.verdict` just as well as a real one. B-26 recorded 22 of 22 and said
+    so; the corpus then grew and coverage regressed to 25 of 31 with every test
+    still green.
+
+    So this asserts coverage directly, against the same code path the reviewer
+    clicks. Re-record with: uv run python -m evals.record_fixtures
+    """
+    missing = _console_cards_without_a_fixture()
+    assert not missing, (
+        f"{len(missing)} card(s) the console surfaces have no fixture, and each "
+        f"will silently serve the safe refusal:\n" +
+        "\n".join(f"  {src}  {intent:16} {text[:48]!r}  key={key}"
+                  for src, intent, text, key in missing))

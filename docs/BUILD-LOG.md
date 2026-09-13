@@ -2734,3 +2734,59 @@ cannot tell you whether that means anything"* is the only honest answer when a
 probe is blind, and it is what pointed at the probe rather than at the code.
 Silently excluding those — which is what B-122's "inert" did — is how a harness
 reports 32/32 while four of its rules are unconstrained.
+
+## B-128 · B-26's lesson, recurring against B-26's own fix
+
+**Found while preparing the demo,** by clicking what a reviewer clicks: replay
+the transcript with no credential and draft the queue. One of the three cards
+came back *"Let me check that and come back to you."* — `_safe_draft`, the
+non-strict fixture miss, which is exactly the failure B-26 closed.
+
+**Coverage had regressed from 22 of 22 to 25 of 31 and every test stayed green.**
+B-26 recorded by driving the real `Session`, so the keys matched by
+construction, and it said so: *"22 of 22 cards now serve from fixtures."* The
+corpus then grew — `triage_show2`, and a cascade that surfaces more — and six
+cards arrived with no fixture.
+
+**Why nothing caught it, which is the whole point.** The suite already had
+`test_console_replay_runs_end_to_end_with_no_key`. It is non-strict on purpose
+(it mirrors the reviewer, and D-32 degradation is non-strict), and it asserts
+`card.verdict`. A degraded card HAS a verdict — `_safe_draft` returns text that
+asserts nothing, so it earns a clean `pass` on its merits. **The assertion was
+satisfied by the failure it was written to detect.** That is B-26's own lesson:
+a fixture miss is indistinguishable from the system declining to answer.
+
+**Fix, two parts.** `test_every_card_the_console_can_surface_has_a_fixture`
+asserts coverage *directly* — it drives both transcripts through the real
+`Session`, clears `ReplayClient.misses` per card, and fails naming the message
+and the key to record. It failed with six, which is how I know it bites. Then
+recording made it pass.
+
+**And the recorder was overpaying and overwriting.** `record_console_drafts`
+drafted all 31 cards live regardless of `--force`, because it could not skip:
+`record_drafts` computes the key itself and calls `have()`, but here the key is
+only known inside `Session.draft`. So the skip had to go BEHIND the seam —
+`_FillMissing` serves `ReplayClient(strict=True)` and falls through to live only
+on `FixtureMissing`. Six live calls instead of 31, and the 25 already on the
+tape are left alone. Re-recording them would have been worse than the cost: a
+re-recorded fixture is a different sentence from the same model, so it rewrites
+the tape the golden suite asserts against.
+
+**What the demo gained.** The reviewer's first click now shows three different
+outcomes — `repaired`, `pass`, `blocked` — where one was previously a safe
+refusal that read as caution.
+
+**And the blocked one is not a bug.** *"Champion's Path Charizard VMAX PSA 10 up
+next"* cites a real queue fact whose title contains PSA 10, and coverage still
+blocks the `10`. Two deliberate rules meet there: `_fact_keys` strips title
+digits because B-95 laundered a fabricated PSA 10 on a raw card through a sold
+lot's name, and `_coverage` v3 refuses `claim.value` as an exemption source
+because that let *"current bid 890, 12 watchers"* pass with only the first
+figure checked. Either relaxation reopens a documented attack. So it fails
+closed, the operator gets the fallback, and the cost is stated rather than
+fixed.
+
+**Lesson.** A test that tolerates the degraded path cannot also guard it. When a
+fallback is designed to be indistinguishable from success — which is what makes
+it a good fallback — something has to assert the fallback did NOT happen, and
+that assertion has to name the real thing it counts.

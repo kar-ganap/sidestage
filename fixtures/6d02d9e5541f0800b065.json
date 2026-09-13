@@ -1,0 +1,17 @@
+{
+  "key": "6d02d9e5541f0800b065",
+  "latency_ms": 4693,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard VMAX Champion's Path 074/073 PSA 10",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "No Lugia queued up right now \u2014 next up is the Charizard VMAX Champion's Path 074/073 PSA 10."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "key": "3d2df0518e0c38c20ac1",
+  "latency_ms": 10679,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard VMAX Champion's Path 074/073 PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10"
+      },
+      {
+        "quote": "Blaziken ex FireRed & LeafGreen PSA 8",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Blaziken ex FireRed & LeafGreen PSA 8"
+      },
+      {
+        "quote": "Shining Dragonite Neo Destiny raw LP",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Shining Dragonite Neo Destiny raw LP"
+      },
+      {
+        "quote": "Gengar FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "Gengar FireRed & LeafGreen PSA 9"
+      },
+      {
+        "quote": "Mew ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "No Jirachi in the queue or in the shop right now\u2014next up is Charizard VMAX Champion's Path 074/073 PSA 10, then Blaziken ex FireRed & LeafGreen PSA 8, then Shining Dragonite Neo Destiny raw LP, and in the shop there's Gengar FireRed & LeafGreen PSA 9 and Mew ex FireRed & LeafGreen PSA 9."
+  }
+}

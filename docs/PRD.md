@@ -130,7 +130,7 @@ flowchart TD
 | R4 | Show the operator *why* something was blocked, and a safe alternative | built |
 | R5 | The operator always decides; they may override a block | built |
 | R6 | Collapse duplicate questions into one card with a count | built |
-| R7 | Work with no API key, so a reviewer can run it cold | built — 288 fixtures |
+| R7 | Work with no API key, so a reviewer can run it cold | built — 294 fixtures |
 | R8 | Propose showcase actions with an undo recorded at journal time | built — and two of the four turn out not to *have* an undo |
 | R9 | Nudge the seller when a lot is hot or stalled | built — 10/10 on real bid data |
 

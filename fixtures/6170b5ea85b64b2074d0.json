@@ -1,0 +1,29 @@
+{
+  "key": "6170b5ea85b64b2074d0",
+  "latency_ms": 6855,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard Base Set 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard Base Set 4/102 holo"
+      },
+      {
+        "quote": "we're live",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "Champion's Path Charizard VMAX PSA 10 up next",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Right now we're live on the Charizard Base Set 4/102 holo, with the Champion's Path Charizard VMAX PSA 10 up next."
+  }
+}

@@ -303,7 +303,12 @@ def action_lots() -> JSONResponse:
             continue
         out.append({"lot_id": lot_id, "status": v.status, "price": v.price,
                     "quantity": v.quantity, "position": v.position,
-                    "version": v.version})
+                    "version": v.version,
+                    # The seller's own margin floor travels with the row so the
+                    # console can name the rule BEFORE it fires. A refusal the
+                    # operator could not have predicted reads as a bug; one they
+                    # aimed at reads as the guard working.
+                    "floor_price": v.floor_price})
     return JSONResponse({"lots": out, "adapter_stats": a.stats})
 
 
