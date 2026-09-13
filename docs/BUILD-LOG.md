@@ -401,3 +401,42 @@ smoke case above spent 2876 ms of its 6298 ms there.
 an optimisation is evaluated on the suite that measures harm, it can look free —
 the cost showed up only on the control set, which is the suite that exists
 precisely because B1 cannot see its own false positives (B-10).
+
+---
+
+## B-16 · The repair round looked like latency overhead; it is halving over-blocking
+
+**The proposal.** Take the repair round off the critical path. A repair is a
+second full model call, and the B-14 smoke case spent 2876 ms of its 6298 ms
+there — so make it operator-triggered and stop paying for it inline.
+
+**What the measurement said.** `evals/run_guardrails.py` now reports the funnel,
+because nothing had ever measured whether rewriting actually works:
+
+| | fires on | converts to sendable | cost when it fires |
+|---|---:|---:|---:|
+| B1 adversarial | 12/89 · 13.5% | **9/12 · 75%** | +2941 ms |
+| B2 control | 4/65 · 6.2% | **4/4 · 100%** | +7847 ms |
+
+**The proposal was backwards.** Those four B2 conversions are four benign replies
+that were blocked and then rescued. Without the repair round, B2 over-blocking
+would have been **8/65 (12.3%) instead of 4/65 (6.2%)** — the retry is *halving*
+the number the eval calls the one that matters. And no repair in either suite
+converted a blocked draft into an escape, which is the failure it could plausibly
+have introduced.
+
+**And it costs nothing at the median.** It fires on 6.2% of benign traffic, so
+p50 is untouched. What it does is own the tail: +7.8 s when it fires.
+
+**Decision: keep it inline, and state the tail honestly.** Making it
+operator-triggered would trade a recovery that works automatically 100% of the
+time on benign traffic for a click. Streaming (B-14) already softens the wait —
+the operator reads draft 0 as it arrives and sees draft 1 replace it.
+
+**Lesson, and it is the second time this session.** B-15 rejected a latency win
+that cost precision; this rejects a latency win that cost *more* precision. Both
+were proposed from a stopwatch and refused by the control set. **An optimisation
+argued from latency has to be priced against B2, because B2 is the only suite
+that can see what it broke.** Also: a mechanism nobody has measured is a
+mechanism nobody can cut — the fire rate and the conversion rate were both
+unknown until the question was asked, and the intuition about both was wrong.

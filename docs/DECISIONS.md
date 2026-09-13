@@ -716,6 +716,38 @@ happens when you buy latency out of the model's reasoning budget: over-blocking 
 
 ---
 
+### D-36 · Precomputed drafts are safe here, and deferred anyway — designed 2026-09-12
+**The idea.** The queue lookahead (D-34) knows the next lots. The intent distribution is
+concentrated — per lot the same handful of questions recur. So draft *and verify* the top-k
+(lot × intent) pairs before anyone asks, exactly as the nudge path already does, and serve a
+hit from cache at ~80 ms. It is the only route that clears 1500 ms end to end with certainty.
+
+**Why it is safe here and is not safe in general.** A cache of generated text normally rots:
+the world moves, the cached answer keeps asserting what was true when it was written, and
+nothing notices. That is the standard reason not to precompute LLM output.
+
+It is safe in this system for a reason that was not designed for it. Because evidence is
+assembled before generation and claims cite fact ids (D-09, D-10), **verification is a dict
+lookup — about 2 ms.** So a cached draft can be *re-verified against freshly assembled
+evidence at serve time*, and served only if it still passes. A bid that moved, a lot that
+sold, a comp window that went stale — each invalidates the cached draft through the ordinary
+verifier rather than through cache-invalidation logic nobody can reason about.
+
+**The cached unit is therefore the draft plus its claims, never the text alone.** Text alone
+is unverifiable after the fact, which is precisely the thing that makes generated-output
+caches dangerous.
+
+**Deferred, and the reason is the honest one.** It optimises time-to-sendable, which D-35
+just established is not bound at 1.5 s, while the triage cascade, the console, the ledger
+and four eval suites are unbuilt. Optimising a budget we have shown is slack, ahead of
+delivering a graded requirement, is the wrong order. **The insight is recorded because it is
+worth more than the implementation:** it is D-09 paying a dividend it was not built to pay.
+
+**Rejected alternative.** A TTL cache keyed on message text. It has no way to notice that
+the world changed, which is exactly the failure the re-verification design avoids.
+
+---
+
 ## Evaluation
 
 ### D-26 · Five suites, and B2 is mandatory — settled, amended 2026-09-12

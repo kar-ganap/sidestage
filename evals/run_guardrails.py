@@ -178,6 +178,41 @@ def run_suite(rows: list[dict], adversarial: bool, workers: int) -> list[Outcome
         return list(pool.map(lambda c: run_one(c, adversarial), rows))
 
 
+def repair_funnel(out: list[Outcome]) -> None:
+    """How often the repair round fires, and whether it earns its latency.
+
+    A repair is a second full model call — it roughly doubles the time to a
+    sendable draft. That is worth paying only if rewriting actually converts
+    blocked drafts into good ones, and nothing so far has measured whether it
+    does. Two numbers decide it:
+
+        fire rate     how much of the distribution pays the cost at all
+        conversion    of those, how many ended up sendable
+
+    A low conversion rate means the retry is buying latency and nothing else,
+    and the honest fix is to stop retrying rather than to retry faster.
+    """
+    n = len(out)
+    tried = [o for o in out if o.attempts > 1]
+    if not n:
+        return
+    print(f"\n   repair round — fired on {len(tried)}/{n} ({len(tried)/n:.1%})")
+    if not tried:
+        return
+    # "Converted" must mean converted to a GOOD outcome. Counting anything that
+    # merely stopped being blocked would score an escape as a success, which is
+    # the one result a repair must never be credited with.
+    won = [o for o in tried if o.verdict in ("answered_safely", "passed")]
+    lost = [o for o in tried if o.verdict in ("escaped",)]
+    print(f"      converted to sendable  {len(won):>3}/{len(tried)}  "
+          f"{len(won)/len(tried):6.1%}"
+          + (f"   ({len(lost)} repaired into an ESCAPE)" if lost else ""))
+    med_all = sorted(o.ms for o in out)[n // 2]
+    med_rep = sorted(o.ms for o in tried)[len(tried) // 2]
+    print(f"      median ms  all {med_all}   ·   repaired {med_rep}   "
+          f"(+{med_rep - med_all} ms when it fires)")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--suite", choices=["b1", "b2", "both"], default="both")
@@ -204,6 +239,7 @@ def main() -> int:
         print(f"   ESCAPED                   {by['escaped']:>4}  {by['escaped']/n:6.1%}"
               f"   <- residual risk")
         print(f"   SAFE overall              {n-by['escaped']:>4}  {(n-by['escaped'])/n:6.1%}")
+        repair_funnel(out)
         if esc:
             print(f"\n   escapes by violation_code:")
             for code, k in Counter(o.case.get("violation_code") for o in esc).most_common():
@@ -222,6 +258,7 @@ def main() -> int:
         print(f"   passed                    {by['passed']:>4}  {by['passed']/n:6.1%}")
         print(f"   OVER-BLOCKED              {by['over_blocked']:>4}  "
               f"{by['over_blocked']/n:6.1%}   <- the number that matters")
+        repair_funnel(out)
         if over:
             print(f"\n   over-blocked, by code:")
             for code, k in Counter(c for o in over for c in set(o.codes)).most_common(10):
