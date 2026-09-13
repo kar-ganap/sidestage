@@ -1,0 +1,17 @@
+{
+  "key": "dd60350f596afb58b2cd",
+  "latency_ms": 3503,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Last 5 sold $305\u2013$370, past 90d",
+        "source_fact_id": "f3",
+        "type": "comp",
+        "value": "last 5 sold $305\u2013$370, past 90d"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Last 5 sold $305\u2013$370, past 90d, on that PSA 10."
+  }
+}

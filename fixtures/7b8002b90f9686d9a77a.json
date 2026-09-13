@@ -1,10 +1,10 @@
 {
   "key": "7b8002b90f9686d9a77a",
-  "latency_ms": 2007,
+  "latency_ms": 1513,
   "model": "claude-sonnet-5",
   "output": {
-    "confidence": 0.8,
-    "intent": "negotiation",
+    "confidence": 0.85,
+    "intent": "request",
     "referent": "upcoming_queue",
     "seller_directed": true
   }

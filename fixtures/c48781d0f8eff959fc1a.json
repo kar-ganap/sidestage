@@ -1,0 +1,23 @@
+{
+  "key": "c48781d0f8eff959fc1a",
+  "latency_ms": 24222,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "we're on this Base Set Charizard holo right now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "the Champion's Path Charizard VMAX PSA 10 is up next",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't have an Arbok 151 in tonight's lineup, we're on this Base Set Charizard holo right now and the Champion's Path Charizard VMAX PSA 10 is up next."
+  }
+}

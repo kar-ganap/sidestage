@@ -24,6 +24,7 @@ changed when. A log is not a claim about the present.
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
@@ -121,6 +122,61 @@ def _observed(stat: str) -> Callable[[], object]:
     return go
 
 
+def _triage(arm: str, stat: str) -> Callable[[], float]:
+    """A Spike 2 arm figure, from the run that produced it.
+
+    B-101: every one of these lived only in prose, and every one was computed
+    against a weights file refit before the docs were written. The arms are
+    deterministic up to A2, so nothing was stochastic — a table was copied
+    forward past a refit and nothing could notice.
+    """
+    def go() -> float:
+        f = ROOT / "evals/results/triage.json"
+        if not f.exists():
+            raise FileNotFoundError(
+                "no triage result — run `uv run python -m evals.run_triage --no-llm`")
+        return round(100 * json.loads(f.read_text())["arms"][arm][stat], 1)
+    return go
+
+
+def _triage_meta(key: str) -> Callable[[], object]:
+    def go() -> object:
+        f = ROOT / "evals/results/triage.json"
+        return json.loads(f.read_text())[key]
+    return go
+
+
+def _spike1_spread(model: str, arm: str, axis: str, which: str) -> Callable[[], float]:
+    """The LOW or HIGH end of an arm's range across every recorded run.
+
+    B-100. The published table was a splice of two runs. A fact pinned to one
+    run's value would reintroduce exactly that; these are bounds over all of
+    them, so adding a run that falls outside the quoted range breaks the check.
+    """
+    def go() -> float:
+        vals = []
+        for f in sorted((ROOT / "evals/results").glob("spike1_*.json")):
+            d = json.loads(f.read_text())
+            if d["draft_model"] != model:
+                continue
+            sub = [r for r in d["rows"] if r["arm"] == arm]
+            if not sub:
+                continue
+            if axis == "safe":
+                xs = [True if r["blocked"] else
+                      (None if r["asserts"] is None else not r["asserts"])
+                      for r in sub]
+            else:
+                xs = [r[axis] for r in sub]
+            xs = [x for x in xs if x is not None]
+            if xs:
+                vals.append(100 * sum(xs) / len(xs))
+        if not vals:
+            raise FileNotFoundError(f"no recorded runs for {model}/{arm}")
+        return round(min(vals) if which == "lo" else max(vals), 1)
+    return go
+
+
 def _bench(path: str, stat: str) -> Callable[[], float]:
     """A latency percentile from the recorded bench run."""
     def go() -> float:
@@ -156,6 +212,14 @@ def _spike1(model: str, arm: str, axis: str) -> Callable[[], float]:
     return go
 
 
+# Facts that are COUNTS of repository contents rather than measurements. These
+# move on every commit and `--fix` may rewrite them. Nothing derived from a run
+# is in here: an eval result that edited itself into the docs would defeat the
+# entire purpose of the check.
+_DERIVED_COUNTS = {"tests", "fixtures", "build-log entries", "decisions",
+                   "observed messages"}
+
+
 @dataclass
 class Fact:
     name: str
@@ -170,18 +234,6 @@ FACTS = [
     # that re-runs a model-in-the-loop suite costs money and ten minutes, so
     # nobody runs it; reading the recorded result is what makes this cheap
     # enough to be a habit.
-    Fact("spike1 sonnet S1 safe", _spike1("sonnet-5", "S1", "safe"),
-         [("docs/TDD.md", r"S1  \+ grounding\s+(\d+\.\d)%\s+98\.9%")], tolerance=0.05),
-    Fact("spike1 sonnet S2 safe", _spike1("sonnet-5", "S2", "safe"),
-         [("docs/TDD.md", r"S2  \+ verification\s+(\d+\.\d)%\s+91\.0%")], tolerance=0.05),
-    Fact("spike1 sonnet S1 responsive", _spike1("sonnet-5", "S1", "responsive"),
-         [("docs/TDD.md", r"S1  \+ grounding\s+94\.3%\s+(\d+\.\d)%")], tolerance=0.05),
-    Fact("spike1 sonnet S2 responsive", _spike1("sonnet-5", "S2", "responsive"),
-         [("docs/TDD.md", r"S2  \+ verification\s+96\.6%\s+(\d+\.\d)%")], tolerance=0.05),
-    Fact("spike1 haiku S1 safe", _spike1("haiku-4-5", "S1", "safe"),
-         [("docs/TDD.md", r"S1  \+ grounding\s+(\d+\.\d)%\s+88\.8%")], tolerance=0.05),
-    Fact("spike1 haiku S2 safe", _spike1("haiku-4-5", "S2", "safe"),
-         [("docs/TDD.md", r"S2  \+ verification\s+(\d+\.\d)%\s+79\.8%")], tolerance=0.05),
     Fact("verify p95 CPU", _bench("verify — CPU (the work)", "p95"),
          [("docs/TDD.md", r"at \*\*(\d\.\d) ms p95 of CPU\*\*"),
           ("docs/PRD.md", r"Measured false: (\d\.\d) ms p95 of CPU"),
@@ -198,6 +250,32 @@ FACTS = [
           ("app/llm.py", r"only (\d+)% directed at the seller")]),
     Fact("highlighted == '?' agreement", _observed("highlight_equals_qmark"),
          [("evals/run_triage.py", r"messages, every highlighted row contains `\?` and no unhighlighted\s*\n\s*row does\. (\d+)/485")]),
+    # --- the CONTESTED numbers. An adversarial pass observed that this file
+    # checked 25 facts and "none of the contested ones" — decision counts and
+    # heading counts were never in doubt; the Spike 2 arms and the ablation
+    # spread were wrong in four documents at once.
+    Fact("A1 precision", _triage("A1", "p"),
+         [("README.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| (\d+\.\d)% \|"),
+          ("docs/TDD.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| (\d+\.\d)% \|")],
+         tolerance=0.05),
+    Fact("A1 F1", _triage("A1", "f1"),
+         [("README.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| 46\.2% \| (\d+\.\d)% \|"),
+          ("docs/TDD.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| 46\.2% \| (\d+\.\d)% \|")],
+         tolerance=0.05),
+    Fact("A0 recall", _triage("A0", "r"),
+         [("docs/TDD.md", r"question-mark regex \*\(the incumbent\)\* \| (\d+\.\d)%")],
+         tolerance=0.05),
+    Fact("n_train", _triage_meta("n_train"),
+         [("docs/TDD.md", r"Weights are fit on (\d+) messages"),
+          ("app/triage.py", r"fit on (\d+) labelled messages"),
+          ("evals/fit_triage.py", r"milliseconds on (\d+) rows")]),
+    Fact("spike1 sonnet S1 safe, low", _spike1_spread("claude-sonnet-5", "S1", "safe", "lo"),
+         [("docs/TDD.md", r"S1  \+ grounding\s+96\.6% \[(\d+\.\d)%")], tolerance=0.05),
+    Fact("spike1 sonnet S2 safe, low", _spike1_spread("claude-sonnet-5", "S2", "safe", "lo"),
+         [("docs/TDD.md", r"S2  \+ verification\s+96\.6% \[(\d+\.\d)%")], tolerance=0.05),
+    Fact("spike1 sonnet S0 safe, high", _spike1_spread("claude-sonnet-5", "S0", "safe", "hi"),
+         [("docs/TDD.md", r"S0  bare model\s+49\.4% \[\d+\.\d% - (\d+\.\d)%\]")],
+         tolerance=0.05),
     Fact("decisions", _decisions,
          [("docs/TDD.md", r"`DECISIONS\.md` holds (\d+) decisions"),
           ("docs/SUBMISSION.md", r"\| (\d+) decisions, each with the alternative")]),
@@ -216,7 +294,15 @@ FACTS = [
 
 
 def main() -> int:
-    problems, checked, unmatched = [], 0, []
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--fix", action="store_true",
+                    help="rewrite DERIVED counts in place. Only counts — a "
+                         "measurement is never auto-edited, because a number "
+                         "that silently updates itself is a number nobody "
+                         "reads, and the point of a stale-doc check is to make "
+                         "someone look at what moved.")
+    a = ap.parse_args()
+    problems, checked, unmatched, fixed = [], 0, [], 0
     for fact in FACTS:
         try:
             truth = fact.truth()
@@ -238,6 +324,15 @@ def main() -> int:
             ok = (abs(float(stated) - float(truth)) <= fact.tolerance
                   if fact.tolerance else str(stated) == str(truth))
             if not ok:
+                # Counts of things in the repo are bookkeeping and go stale on
+                # every commit; measurements are results and must be looked at.
+                if a.fix and fact.name in _DERIVED_COUNTS:
+                    text = p.read_text(encoding="utf-8")
+                    lo, hi = m.span(1)
+                    p.write_text(text[:lo] + str(truth) + text[hi:],
+                                 encoding="utf-8")
+                    fixed += 1
+                    continue
                 problems.append(
                     f"  STALE          {rel}: says {stated}, "
                     f"{fact.name} is {truth}")
@@ -245,11 +340,16 @@ def main() -> int:
     for line in problems + unmatched:
         print(line)
     print(f"\n  {checked} claims checked · {len(problems)} stale · "
-          f"{len(unmatched)} not found")
-    # A claim that no longer matches its regex is a warning, not a failure: the
-    # prose may legitimately have been rewritten. A claim that matches and
-    # disagrees is a failure.
-    return 1 if problems else 0
+          f"{len(unmatched)} not found"
+          + (f" · {fixed} counts updated" if fixed else ""))
+    # B-107. `unmatched` used to be a warning and the exit code ignored it, so
+    # a reworded sentence silently stopped being checked — and the docstring
+    # claimed that case was "the other half of the guarantee". In exit-code
+    # terms, which is the only thing CI reads, it passed silently. A claim the
+    # checker can no longer find is a claim nobody is checking, and that is a
+    # failure whether the prose was rewritten deliberately or not: the fix is to
+    # update the regex here, deliberately, in the same commit.
+    return 1 if (problems or unmatched) else 0
 
 
 if __name__ == "__main__":

@@ -1,35 +1,10 @@
 {
   "key": "8a4d7267d45b8e525253",
-  "latency_ms": 6977,
+  "latency_ms": 5039,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "Mew Celebrations 011/025 raw NM for $24 (3 in stock)",
-        "source_fact_id": "f5",
-        "type": "availability",
-        "value": "3 available"
-      },
-      {
-        "quote": "raw NM for $24",
-        "source_fact_id": "f6",
-        "type": "price",
-        "value": "24.00"
-      },
-      {
-        "quote": "Mew ex FireRed & LeafGreen PSA 9 for $240 (1 left)",
-        "source_fact_id": "f7",
-        "type": "availability",
-        "value": "1 available"
-      },
-      {
-        "quote": "PSA 9 for $240",
-        "source_fact_id": "f8",
-        "type": "price",
-        "value": "240.00"
-      }
-    ],
-    "needs_clarification": false,
-    "reply_text": "No bubble Mew listed right now, but we do have Mew Celebrations 011/025 raw NM for $24 (3 in stock) and a Mew ex FireRed & LeafGreen PSA 9 for $240 (1 left)."
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "We've got two Mew cards in the shop right now - the Celebrations 011/025 raw NM and the Mew ex FireRed & LeafGreen PSA 9 - which one are you asking about?"
   }
 }

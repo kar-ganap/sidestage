@@ -1,23 +1,10 @@
 {
   "key": "50ba5b3820e9ecc63763",
-  "latency_ms": 6115,
+  "latency_ms": 3192,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "Base Set Charizard holo",
-        "source_fact_id": "f1",
-        "type": "identity",
-        "value": "Charizard, Base Set 4/102, holo"
-      },
-      {
-        "quote": "live right now",
-        "source_fact_id": "f4",
-        "type": "availability",
-        "value": "live"
-      }
-    ],
+    "claims": [],
     "needs_clarification": false,
-    "reply_text": "No Team Rocket here - what's live right now is the Base Set Charizard holo."
+    "reply_text": "I don't have anything on Team Rocket holos in what's queued up right now, only what's listed for this lot."
   }
 }

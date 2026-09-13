@@ -1,10 +1,41 @@
 {
   "key": "0f251f86b0ad687bc5e5",
-  "latency_ms": 2271,
+  "latency_ms": 13365,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "next up is the Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10 queued at position 7"
+      },
+      {
+        "quote": "then Blaziken ex",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Blaziken ex FireRed & LeafGreen PSA 8 queued at position 8"
+      },
+      {
+        "quote": "then Shining Dragonite",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Shining Dragonite Neo Destiny raw LP queued at position 9"
+      },
+      {
+        "quote": "we've got Gengar",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "Gengar FireRed & LeafGreen PSA 9, 1 available in shop"
+      },
+      {
+        "quote": "and Mew ex PSA 9s",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9, 1 available in shop"
+      }
+    ],
     "needs_clarification": false,
-    "reply_text": "Don't see a Jirachi in this lineup or the shop right now, sorry."
+    "reply_text": "No Jirachi in what's coming up or in the shop right now\u2014next up is the Charizard VMAX Champion's Path PSA 10, then Blaziken ex, then Shining Dragonite, and in the shop we've got Gengar and Mew ex PSA 9s."
   }
 }

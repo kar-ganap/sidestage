@@ -1,0 +1,17 @@
+{
+  "key": "e6896984e38e504af2fb",
+  "latency_ms": 4237,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Pikachu EX FireRed & LeafGreen 70/112",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Pikachu \u2014 EX FireRed & LeafGreen 70/112"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "This listing only has the Pikachu EX FireRed & LeafGreen 70/112, no Dark Dragonite here - did you mean this card?"
+  }
+}

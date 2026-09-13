@@ -1,17 +1,17 @@
 {
   "key": "0acdf402b4e6d4789374",
-  "latency_ms": 3786,
+  "latency_ms": 7053,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "listed raw at NM condition",
+        "quote": "listed at NM condition",
         "source_fact_id": "f2",
-        "type": "grade",
-        "value": "raw, NM"
+        "type": "condition",
+        "value": "NM"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "This one's listed raw at NM condition, but for exact grade specifics like centering, edges, and surface I'll have the host check it on camera."
+    "reply_text": "It's a raw card, not professionally graded, listed at NM condition - for centering, surface, and edges the host will check it on camera."
   }
 }

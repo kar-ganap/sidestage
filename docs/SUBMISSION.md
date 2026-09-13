@@ -87,7 +87,7 @@ writes give 12 verified, 3 diverged, 4 idempotent replays off 4 lost responses.
 A divergent read-back is reported and **never retried**, because retrying a
 write that may have landed is how you double-apply.
 
-**Focused tests and evals.** **261 tests**, no credential. Five eval suites, each
+**Focused tests and evals.** **290 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.
@@ -182,5 +182,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 60 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 73 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

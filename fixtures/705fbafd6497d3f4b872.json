@@ -1,0 +1,23 @@
+{
+  "key": "705fbafd6497d3f4b872",
+  "latency_ms": 5043,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Got your $320",
+        "source_fact_id": "f4",
+        "type": "bid",
+        "value": "320.00"
+      },
+      {
+        "quote": "it's still live so feel free to keep bidding it up",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Got your $320, but we can't accept that on the Charizard right now, it's still live so feel free to keep bidding it up."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "key": "bfe7425885036bb40deb",
+  "latency_ms": 20832,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "We don't have a Venusaur listed in this auction or the shop right now, sorry."
+  }
+}

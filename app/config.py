@@ -50,12 +50,22 @@ class Settings:
     # --- domain thresholds --------------------------------------------
     comp_min_samples: int  # D-primer §5: never quote a bare comp
     comp_max_age_days: int
-    stock_quantifier_floor: int  # below this, "plenty" is a violation
-    authenticity_value_floor: float  # eBay Authenticity Guarantee, modeled
+    stock_quantifier_floor: int
+    """Below this many units, an unbounded quantifier ("plenty", "tons") is a
+    violation; at or above it, it is simply true. Read by `verify._availability`
+    (B-104 — it was read by nothing until then)."""
 
     # --- triage cascade -------------------------------------------------
-    escalate_low: float  # below -> drop without an LLM call
-    escalate_high: float  # above -> surface without an LLM call
+    escalate_low: float
+    """Below this the gate drops without an LLM call.
+
+    B-104: `escalate_high` ("above -> surface without an LLM call") lived here
+    too and was read by nothing — the cascade has no such short-circuit, and
+    `SIDESTAGE_ESCALATE_HIGH` was inert. Deleted rather than implemented,
+    because escalating a high-scoring message is what buys the precision A1->A2
+    is measured on. `authenticity_value_floor` went the same way: the real gate
+    is `min_item_value` in `data/policies.json`, which `_policy` reads, and a
+    second copy in config was a second place to be wrong."""
 
     @property
     def use_live_llm(self) -> bool:
@@ -99,7 +109,5 @@ settings = Settings(
     comp_min_samples=_int("SIDESTAGE_COMP_MIN_SAMPLES", 5),
     comp_max_age_days=_int("SIDESTAGE_COMP_MAX_AGE_DAYS", 90),
     stock_quantifier_floor=_int("SIDESTAGE_STOCK_QUANTIFIER_FLOOR", 10),
-    authenticity_value_floor=float(os.getenv("SIDESTAGE_AUTH_FLOOR", "250")),
     escalate_low=float(os.getenv("SIDESTAGE_ESCALATE_LOW", "0.25")),
-    escalate_high=float(os.getenv("SIDESTAGE_ESCALATE_HIGH", "0.75")),
 )

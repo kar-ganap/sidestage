@@ -516,12 +516,26 @@ failures live in the tail.
 
 | path | p50 | **p95** | p99 | target |
 |---|---:|---:|---:|---|
-| triage stage 1 (gate) | 2.7 | **27.0** | 43.8 | ≤ 50 ms ✅ |
-| evidence assemble | 0.1 | **0.1** | 0.7 | — |
-| **verify (claims vs facts)** | 0.1 | **0.2** | 0.2 | — |
+| triage stage 1 (gate) | 3.5 | **31.6** | 60.4 | ≤ 50 ms ✅ |
+| evidence assemble | 0.09 | **0.14** | 1.42 | — |
+| **verify (claims vs facts) — CPU** | 0.54 | **0.87** | 0.97 | — |
+| verify — wall, this machine | 0.56 | 4.34 | 13.57 | — |
 | triage stage 2 (escalated) | 1763 | **2317** | 2317 | ~~600 ms~~ → 8 s ✅ |
 | draft → first readable token | 2229 | **6834** | 6834 | ≤ 1500 ms ❌ |
 | draft → sendable (verified) | 3897 | **9954** | 9954 | ≤ 3000 ms ❌ |
+
+> **The verify row said 0.2 ms until B-102**, which is the figure
+> `SUBMISSION.md` lists under *Withdrawn* — so the withdrawn number outlived the
+> withdrawal in §7 while §3 and the §2 diagram already said 0.9. Three places
+> stating one measurement, two of them updated. `evals/bench.py` now writes
+> `evals/results/bench.json` and this table is generated from it.
+>
+> **CPU and wall are both here because they answer different questions.** CPU is
+> how much work verification does; wall is what an operator experiences on a
+> shared machine. The wall p99 is an order of magnitude above the CPU p99 and
+> that gap is scheduling, not code — which is also how the earlier measurement
+> was caught: it reported a *warm* p99 above its *cold* p99, impossible for real
+> work.
 
 **The draft budgets are missed and stay missed.** Two things make that honest
 rather than evasive. First, the 1.5 s figure was derived for the **nudge** path —

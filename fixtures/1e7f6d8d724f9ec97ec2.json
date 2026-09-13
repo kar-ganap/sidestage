@@ -1,0 +1,35 @@
+{
+  "key": "1e7f6d8d724f9ec97ec2",
+  "latency_ms": 9900,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "3 in stock",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "3 available"
+      },
+      {
+        "quote": "$24",
+        "source_fact_id": "f6",
+        "type": "price",
+        "value": "$24.00"
+      },
+      {
+        "quote": "1 in stock",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "1 available"
+      },
+      {
+        "quote": "$240",
+        "source_fact_id": "f8",
+        "type": "price",
+        "value": "$240.00"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "We have two Mew items in the shop - Mew Celebrations 011/025 raw NM, 3 in stock at $24, and Mew ex FireRed & LeafGreen PSA 9, 1 in stock at $240 - which one are you asking about?"
+  }
+}

@@ -1,17 +1,23 @@
 {
   "key": "27ad6dd0e0faae6410d1",
-  "latency_ms": 4536,
+  "latency_ms": 6516,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "this Base Set Charizard coming up",
+        "quote": "Base Set Charizard, 4/102, holo",
         "source_fact_id": "f1",
         "type": "identity",
-        "value": "Charizard \u2014 Base Set 4/102"
+        "value": "Charizard, Base Set 4/102, holo"
+      },
+      {
+        "quote": "we don't have enough recent sales to quote a range yet",
+        "source_fact_id": "f2",
+        "type": "comp",
+        "value": "not enough recent sales to quote a range"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Appreciate that, we've got some great pulls in the mix today, including this Base Set Charizard coming up."
+    "reply_text": "This one's the Base Set Charizard, 4/102, holo - we don't have enough recent sales to quote a range yet."
   }
 }

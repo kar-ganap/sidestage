@@ -830,3 +830,196 @@ def test_an_ambiguous_reference_must_be_asked_about_not_answered():
     tell = "That Celebrations Mew 011/025 is a PSA 9 and it is authentic."
     assert blocked(draft(tell, claim(ClaimType.IDENTITY,
                                      "Celebrations Mew 011/025 PSA 9", "f1", tell)), e)
+
+
+# =====================================================================
+# Killing the nine mutants that survived (B-105)
+#
+# `tools/mutate.py` deletes a rule and re-runs this file. Nine rules had no
+# test constraining them at all, including `observational_assertion` — which is
+# D-12, the authority model this project's domain argument rests on. The header
+# of this file claims an earlier pass fixed exactly this problem; it fixed the
+# fifteen mutants that pass happened to define.
+# =====================================================================
+
+
+def test_an_observational_attribute_cannot_be_asserted_at_all():
+    """`condition_kindonly` survived. D-12: what the seller can see on camera is
+    not a record, and on raw cards that is the common case rather than an edge
+    case. Only the mis-citation guard was tested; the rule itself was not."""
+    e = ev(fact("f1", ClaimType.CONDITION,
+                {"observational": ["back_condition", "centering_raw"]},
+                authority=Authority.OBSERVATIONAL))
+    text = "The back is spotless with sharp corners."
+    d = draft(text, claim(ClaimType.CONDITION, "back is spotless", "f1", text))
+    r = run(d, e)
+    assert "observational_assertion" in codes(r) and not r.repairable
+
+
+def test_deferring_to_the_host_is_the_prescribed_answer_not_a_violation():
+    """The other half of D-12, and the B-24 trap: the violation message says
+    "Say the host will check on camera", so a reply that does exactly that must
+    not block."""
+    e = ev(fact("f1", ClaimType.CONDITION,
+                {"observational": ["back_condition"]},
+                authority=Authority.OBSERVATIONAL))
+    text = ("That's raw so I can't speak to the back off notes. "
+            "I'll have the host flip it over on camera.")
+    d = draft(text, claim(ClaimType.CONDITION, "can't speak to the back", "f1",
+                          "I can't speak to the back off notes"))
+    assert "observational_assertion" not in codes(run(d, e))
+
+
+def test_a_deferral_is_read_near_the_claim_not_across_the_whole_reply():
+    """`near_quote_whole` survived. Reply scope let the model ASSERT an
+    observational attribute and defer three sentences later — D-12 nullified by
+    appending the sentence the violation message prescribes."""
+    e = ev(fact("f1", ClaimType.CONDITION,
+                {"observational": ["back_condition"]},
+                authority=Authority.OBSERVATIONAL))
+    text = ("Yes, the back is spotless with sharp corners. "
+            "Prices are firm today. Shipping goes out Monday. "
+            "I'll have the host show it on camera too.")
+    d = draft(text, claim(ClaimType.CONDITION, "back is spotless", "f1",
+                          "the back is spotless with sharp corners"))
+    assert "observational_assertion" in codes(run(d, e))
+
+
+def test_a_population_figure_must_carry_the_date_it_was_read():
+    """`pop_kindonly` survived. Primer §4: pop moves, so a figure without an
+    as-of date is a bug rather than a nicety."""
+    e = ev(fact("f1", ClaimType.POP,
+                {"as_of": "2026-02-20", "stale": False, "pop": 2967, "higher": 0}))
+    text = "PSA has 2,967 of them at a 10."
+    d = draft(text, claim(ClaimType.POP, "2967", "f1", text))
+    assert "pop_missing_as_of" in codes(run(d, e))
+    ok = "PSA had 2,967 at a 10 as of 2026-02-20."
+    assert "pop_missing_as_of" not in codes(
+        run(draft(ok, claim(ClaimType.POP, "2967", "f1", ok)), e))
+
+
+def test_a_stale_population_figure_is_unrepairable():
+    e = ev(fact("f1", ClaimType.POP,
+                {"as_of": "2024-01-01", "stale": True, "age_days": 700,
+                 "pop": 2967}))
+    text = "PSA has 2,967 at a 10 as of 2024-01-01."
+    r = run(draft(text, claim(ClaimType.POP, "2967", "f1", text)), e)
+    assert "pop_stale" in codes(r) and not r.repairable
+
+
+def test_a_price_claim_citing_the_reserve_is_a_leak_not_a_price():
+    """`price_kindonly` survived. `_operator_only` scans the text and was
+    tested; `_price`'s own guard — a claim CITING the reserve fact — was not."""
+    e = ev(fact("f1", ClaimType.PRICE,
+                {"reserve": 1100.0, "operator_only": True},
+                note="reserve $1,100.00 — OPERATOR ONLY"))
+    text = "I need to see more before it goes."
+    r = run(draft(text, claim(ClaimType.PRICE, "1100", "f1",
+                              "need to see more")), e)
+    assert "operator_only_leaked" in codes(r) and not r.repairable
+
+
+def test_the_modal_exemption_is_scoped_and_the_modal_is_still_detected():
+    """B-106. Two mutants (`deferred_off`, `is_deferral_true`) survived because
+    `I'll` had stopped being detected as a commitment AT ALL: `_norm` deletes
+    apostrophes, so "we'll" collapses to "well", and requiring the apostrophe —
+    the fix that stopped the ordinary word "Well," reading as a promise — made
+    the modal invisible on the normalised text coverage ran on.
+
+    A fix for a false positive opening a false negative is this file's recurring
+    failure, and it is exactly what a green suite cannot see."""
+    e = ev(fact("f1", ClaimType.CONDITION, {"observational": ["back"]},
+                authority=Authority.OBSERVATIONAL))
+    # detected, and exempt, because the sentence defers
+    assert not blocked(draft("I'll get the host to check that on camera."), e)
+    # detected, and NOT exempt, because this one promises
+    assert blocked(draft("We'll ship it out free tomorrow."), e)
+    # and the ordinary word is not a modal
+    assert not blocked(draft("Well, that one already sold."), e)
+
+
+def test_a_claim_that_asserts_absence_is_backed_by_the_fact_recording_it():
+    """`asserts_absence_true` survived, and its own docstring says "a loose
+    pattern is a hole in the verifier" — the predicate can only ever turn a
+    violation into a pass, so nothing testing it is exactly the wrong gap.
+
+    B-24: a fact recording that something is ABSENT supports a reply that says
+    so. Asserting a value is a different statement and still blocks."""
+    e = ev(fact("f1", ClaimType.COMP,
+                {"n": 1, "quotable": False, "reason": "only 1 sale in 90d"}))
+    denial = "I don't have enough recent sales to quote a range on this one."
+    assert "comp_not_quotable" not in codes(
+        run(draft(denial, claim(ClaimType.COMP, "not enough sales", "f1",
+                                "don't have enough recent sales")), e))
+    assertion = "These run about $400."
+    assert "comp_not_quotable" in codes(
+        run(draft(assertion, claim(ClaimType.COMP, "$400", "f1", assertion)), e))
+
+    # And the predicate must not fire on a claim that asserts a GRADE rather
+    # than its absence — forcing `_asserts_absence` true would let a grade claim
+    # through on a raw card, which is `grade_on_raw_card`'s whole job.
+    raw = ev(fact("f1", ClaimType.GRADE,
+                  {"grader": "RAW", "value": None, "cert": None, "raw": True}))
+    t = "It is graded and slabbed."
+    r2 = run(draft(t, claim(ClaimType.GRADE, "graded", "f1", t)), raw)
+    assert "grade_on_raw_card" in codes(r2) and not r2.repairable
+
+
+def test_a_modal_is_exempt_only_where_the_sentence_actually_defers():
+    """`deferred_off` and `is_deferral_true` both survived. The exemption exists
+    so "I'll have the host pull it up" is not read as a promise about the
+    record; it must not extend to a sentence that promises something."""
+    e = ev(fact("f1", ClaimType.CONDITION,
+                {"observational": ["back_condition"]},
+                authority=Authority.OBSERVATIONAL))
+    assert not blocked(
+        draft("I'll get the host to check that for you on camera."), e)
+    # ...and a promise dressed as one still blocks: `ship` is never exempt here.
+    assert blocked(draft("I'll ship it to you free, ask the host."), e)
+
+
+def test_a_facts_own_values_vouch_for_it_but_another_lots_title_does_not():
+    """`fact_keys_raw` survived. The live lot's bundle carries sold-lot titles
+    like "Armored Mewtwo SM228 PSA 10 closed at $330", and citing one used to
+    make `10` and `330` free — a fabricated grade laundered through a different
+    item's name. Words from a title stay exempt (B-57); digits do not."""
+    e = ev(fact("f1", ClaimType.AVAILABILITY,
+                {"status": "sold", "position": 1,
+                 "title": "Armored Mewtwo SM228 PSA 10"},
+                note="already sold: Armored Mewtwo SM228 PSA 10 closed at $330"))
+    text = "The Armored Mewtwo closed and this one is a PSA 10."
+    d = draft(text, claim(ClaimType.AVAILABILITY, "sold", "f1",
+                          "The Armored Mewtwo closed"))
+    assert blocked(d, e), "a sold lot's title must not license a grade"
+
+
+def test_every_unbacked_sentence_gets_its_own_violation():
+    """`dedupe_off` survived. `_dedupe` keys on `(code, claim_index, actual)`
+    and coverage violations all carry `claim_index=None`, so without the third
+    component three unbacked sentences collapse into one repair instruction and
+    the bounded retry can only ever make one pass of progress (B-51)."""
+    e = ev(fact("f1", ClaimType.GRADE))
+    r = run(draft("It grades a gem mint. There are 4000 in the world. "
+                  "We will ship today."), e)
+    assert len([v for v in r.violations if v.code == "unbacked_claim"]) == 3
+
+    # Two CLAIMS hitting the same rule are two violations, not a duplicate —
+    # `_dedupe` keys on `(code, claim_index, actual)` precisely so the operator
+    # can see which claim is at fault. What it collapses is one fault reported
+    # twice by two passes, which is the belt-and-braces overlap D-26 wants.
+    dup = ev(fact("f1", ClaimType.BID))
+    two = draft("The bid is $305.",
+                claim(ClaimType.BID, "305", "f1", "The bid is $305"),
+                claim(ClaimType.BID, "305", "f1", "The bid is $305"))
+    assert len([v for v in run(two, dup).violations
+                if v.code == "bid_mismatch"]) == 2
+
+    # What it DOES collapse: the identical fault reported twice. A model that
+    # repeats itself — which happens on a repair — produces two violations that
+    # are the same row, and the operator reads this list aloud under time
+    # pressure, so two rows describing one fault is a product defect even when
+    # the verdict is right.
+    same = ev(fact("f1", ClaimType.GRADE))
+    twice = draft("There are 4000 in the world. There are 4000 in the world.")
+    assert len([v for v in run(twice, same).violations
+                if v.code == "unbacked_claim"]) == 1

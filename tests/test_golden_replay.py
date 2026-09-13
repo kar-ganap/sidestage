@@ -56,10 +56,72 @@ TAPE = [
 
 @pytest.mark.parametrize("msg,intent,lot_id", TAPE)
 def test_tape_replays_without_a_credential(replay, cat, msg, intent, lot_id):
+    """B-103. This used to assert `verdict in (PASS, REPAIRED, BLOCKED)` — every
+    member of the enum, which is true of any value the field can hold. It
+    proved the call returned without raising and nothing else, and that is how
+    FATAL-3 survived: the tape includes "is that 1st edition?", the flagship
+    demo case, and could not notice when it stopped blocking.
+
+    What a golden tape is FOR is that a recorded generation replays to the same
+    verdict. Anything weaker is a smoke test wearing a regression test's name.
+    """
     r = draft_reply(msg, intent=intent, lot=cat.lots.get(lot_id), catalog=cat,
                     resolver=get_resolver(), client=replay)
-    assert r.draft.verdict in (Verdict.PASS, Verdict.REPAIRED, Verdict.BLOCKED)
     assert r.draft.text.strip(), "a replayed draft must have text"
+    assert not r.draft.degraded, (
+        f"{msg!r} fell through to the replay fallback — no model answered, so "
+        f"a clean verdict here means nothing was asserted (B-98)")
+    assert r.draft.verdict is EXPECTED[msg], (
+        f"{msg!r} replayed to {r.draft.verdict.value}, tape says "
+        f"{EXPECTED[msg].value}. Either the fixture was re-recorded against a "
+        f"different generation, or a verifier change moved the verdict.")
+
+
+# The verdict each taped case is recorded AT. A golden tape whose expectation is
+# "any of the three" is not a golden tape (B-103).
+EXPECTED: dict[str, Verdict] = {
+    "is that 1st edition?":            Verdict.PASS,
+    "what set is that charizard from": Verdict.PASS,
+    "is that zard graded":             Verdict.PASS,
+    "hows the centering on that zard": Verdict.PASS,
+    "how much is the mew in the shop": Verdict.PASS,
+    "do you ship to canada":           Verdict.PASS,
+}
+
+
+def test_the_tape_contains_at_least_one_block(replay, cat):
+    """B-103/B-99. The whole point of `app/verify.py` is that it fires, and a
+    reviewer with no credential must be able to watch it happen. When every
+    taped case passes, the safety component has no observable effect on the
+    only path such a reviewer can walk — which is exactly what an adversarial
+    review found: 0 of 18 recorded demo drafts blocked.
+
+    This test fails loudly in that state rather than leaving it to be
+    discovered. `MUST_BLOCK` in `evals/record_fixtures.py` is what keeps it
+    green; if the recorder cannot get a blocking generation, this says so.
+    """
+    from evals.record_fixtures import MUST_BLOCK
+    from app.llm import FixtureMissing
+    from evals.run_guardrails import _INTENT_FOR, load
+
+    blocked = []
+    for row in load("guardrail_adversarial"):
+        if row["chat_message"] not in MUST_BLOCK:
+            continue
+        try:
+            r = draft_reply(row["chat_message"],
+                            intent=_INTENT_FOR.get(row.get("violation_code", "none")),
+                            lot=cat.lots.get(row.get("lot_id", "")), catalog=cat,
+                            resolver=get_resolver(), client=replay)
+        except FixtureMissing:
+            continue
+        if r.draft.verdict is Verdict.BLOCKED:
+            blocked.append((row["chat_message"],
+                            [v.code for v in r.draft.violations]))
+    assert blocked, (
+        "no recorded MUST_BLOCK case blocks on replay — a keyless reviewer "
+        "cannot see the verifier fire at all. Re-record with "
+        "`uv run python -m evals.record_fixtures --force-drafts`.")
 
 
 @pytest.mark.parametrize("msg,intent,lot_id", TAPE)

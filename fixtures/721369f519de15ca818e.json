@@ -1,10 +1,10 @@
 {
   "key": "721369f519de15ca818e",
-  "latency_ms": 2254,
+  "latency_ms": 2563,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [],
     "needs_clarification": true,
-    "reply_text": "Which Mew are you after - the Mew Celebrations 011/025 raw NM, or the Mew ex FireRed & LeafGreen PSA 9?"
+    "reply_text": "We've got a couple mew cards up - do you mean the Mew Celebrations 011/025 or the Mew ex FireRed & LeafGreen PSA 9?"
   }
 }

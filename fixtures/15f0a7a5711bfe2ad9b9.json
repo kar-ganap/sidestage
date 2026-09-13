@@ -1,0 +1,23 @@
+{
+  "key": "15f0a7a5711bfe2ad9b9",
+  "latency_ms": 4972,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Not enough recent sales in the last 90 days to give you a solid range on raw Base Set Charizards right now",
+        "source_fact_id": "f4",
+        "type": "comp",
+        "value": "insufficient sample, cannot quote"
+      },
+      {
+        "quote": "this one's current bid is $890",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "890.0"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Not enough recent sales in the last 90 days to give you a solid range on raw Base Set Charizards right now, but this one's current bid is $890."
+  }
+}

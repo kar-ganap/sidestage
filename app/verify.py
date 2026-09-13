@@ -35,6 +35,7 @@ from datetime import UTC, datetime
 from typing import Callable
 
 from app.catalog import Catalog, get_catalog
+from app.config import settings
 from app.evidence import refresh
 from app.models import (
     Authority,
@@ -629,8 +630,15 @@ def _centering(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
 def _availability(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if (v := _require_kind(claim, fact, ClaimType.AVAILABILITY, "an availability claim must cite an availability fact")):
         return v
-    if _UNBOUNDED.search(ctx.reply):     # B-60: the quote is not the sentence
-        qty = fact.value.get("quantity")
+    qty = fact.value.get("quantity")
+    # B-104. `settings.stock_quantifier_floor` existed with the comment "below
+    # this, 'plenty' is a violation" and was read by NOTHING — this pass flagged
+    # any unbounded quantifier regardless of stock, so a seller with 500 of
+    # something could not say "plenty", which is simply true. A setting whose
+    # comment describes behaviour the code does not have is worse than no
+    # setting: it tells a reader the rule is configurable when it is not.
+    if (_UNBOUNDED.search(ctx.reply)        # B-60: the quote is not the sentence
+            and (qty is None or qty < settings.stock_quantifier_floor)):
         return [Violation(
             code="unbounded_quantifier", severity=Severity.REPAIRABLE,
             message=(f"unbounded quantity language is unverifiable. State the number"
@@ -834,6 +842,13 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
         # ambiguity fact it cites, so they come through `cited_keys` like any
         # other backed figure. It never needed an exemption of its own.
         n = _norm(s)
+        # B-106. Spans are found in the RAW sentence, not the normalised one.
+        # `_norm` deletes apostrophes, which collapses "we'll" into "well" — so
+        # after the B-96 fix made `_COMMITMENT` require the apostrophe (to stop
+        # the ordinary word "Well," being read as a promise), the modal stopped
+        # being detected at all. A fix for a false positive quietly opened a
+        # false negative, which is this file's recurring failure and the reason
+        # the mutation harness is in `tools/`.
 
         # The facts cited by claims that speak to THIS sentence. Scope is the
         # whole fix: a claim vouches for the sentence it quotes, not the draft.
@@ -862,9 +877,10 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
 
         uncovered: list[str] = []
         seen: set[str] = set()
-        deferred = _deferred(n)
-        for sp, start, end in _assertive_spans(n):
-            surface = n[start:end]
+        deferred = _deferred(_soft(s))
+        soft = _soft(s)
+        for sp, start, end in _assertive_spans(soft):
+            surface = soft[start:end]
             if sp in seen or sp in exempt or sp in deferred or surface in proper:
                 continue
             # Denying a COMMITMENT is not making one: "I can't confirm Canada
@@ -878,7 +894,7 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
             # refuse it, is now a CITABLE FACT rather than a hole: `_offer`
             # mints what the buyer said, so the reply names its source like
             # anything else.
-            if not sp.replace(".", "").isdigit() and _negated_at(n, start, end):
+            if not sp.replace(".", "").isdigit() and _negated_at(soft, start, end):
                 continue
             seen.add(sp)
             uncovered.append(sp)
@@ -982,7 +998,7 @@ def _keys(text: object) -> set[str]:
     not also yield "1" and "320" — which would exempt a fabricated $320 because
     some unrelated figure contained those digits.
     """
-    t = _norm(str(text))
+    t = _soft(str(text))
     nums = {m.group(0) for m in _NUMBER_RUN.finditer(t)}
     keys = {_numkey(x) for x in nums}
     for x in sorted(nums, key=len, reverse=True):
@@ -1016,14 +1032,22 @@ _CONDITION_WORDS = {
 def _fact_keys(f: Fact) -> set[str]:
     """What a fact can vouch for — its own values, not its prose furniture."""
     value = f.value
+    note = f.note or ""
     if isinstance(value, dict):
         # A `title` is another lot's NAME. Its words are legitimate (that is
         # B-57), its digits are not: they belong to a different item.
+        titles = " ".join(str(v) for k, v in value.items() if k == "title")
         value = {k: v for k, v in value.items() if k != "title"}
-        titles = " ".join(str(v) for k, v in f.value.items() if k == "title")
+        # ...and the note usually REPEATS the title — "already sold: Armored
+        # Mewtwo SM228 PSA 10 closed at $330" — so stripping the field alone
+        # left the same digits reachable through prose, which is how a
+        # fabricated PSA 10 on a RAW card was laundered through a sold lot's
+        # name (B-95). Remove the title from the note before keying it.
+        if titles:
+            note = note.replace(titles, " ")
     else:
         titles = ""
-    blob = _ISO.sub(" ", f"{value} {f.note}")
+    blob = _ISO.sub(" ", f"{value} {note}")
     keys = _keys(blob)
     keys |= {w for w in _WORD.findall(_norm(titles)) if not w.isdigit()}
     for abbrev, spelled in _CONDITION_WORDS.items():
@@ -1316,6 +1340,22 @@ def _lot_value(lot: Lot) -> float | None:
 
 def _norm(s: str) -> str:
     return re.sub(r"[^\w\s$.,-]", "", s.lower()).strip()
+
+
+def _soft(s: str) -> str:
+    """`_norm`, but keeping the apostrophe (B-106).
+
+    Coverage detects spans and compares keys, and both sides have to agree about
+    what a token is. `_norm` deletes `/` — so "4/102" is one token, `4102` — and
+    it deletes `'`, which collapses "we'll" into "well".
+
+    Detecting on the raw sentence fixed the apostrophe collision and broke the
+    slash agreement: raw "4/102" yields the two numbers 4 and 102, which the
+    fact's normalised keys (`4102`) cannot match, so a correctly cited card
+    number started blocking. Both passes use this instead, so the only
+    difference from `_norm` is the one character that carries meaning here.
+    """
+    return re.sub(r"[^\w\s$.,'-]", "", s.lower()).strip()
 
 
 def _slug(v: object) -> str:

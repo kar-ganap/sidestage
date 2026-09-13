@@ -1,0 +1,17 @@
+{
+  "key": "21c88e201c696846daa3",
+  "latency_ms": 3816,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "listed raw at NM",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "NM"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's listed raw at NM, but for an actual grade I'll have the host check the centering, surface, and edges on camera."
+  }
+}

@@ -1,23 +1,10 @@
 {
   "key": "5e34511cda35a70818ea",
-  "latency_ms": 11521,
+  "latency_ms": 7403,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "currently on the Base Set Charizard",
-        "source_fact_id": "f4",
-        "type": "availability",
-        "value": "live"
-      },
-      {
-        "quote": "Champion's Path Charizard VMAX is up next",
-        "source_fact_id": "f5",
-        "type": "availability",
-        "value": "queued"
-      }
-    ],
+    "claims": [],
     "needs_clarification": false,
-    "reply_text": "I don't have a Skyridge card in what's live or queued for me, we're currently on the Base Set Charizard and Champion's Path Charizard VMAX is up next."
+    "reply_text": "I don't see a Skyridge card anywhere in our current live lot, the upcoming queue, or the shop restock, so it wasn't part of today's lineup."
   }
 }

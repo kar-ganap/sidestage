@@ -1,35 +1,41 @@
 {
   "key": "28860828ca358f3f58ed",
-  "latency_ms": 7370,
+  "latency_ms": 7848,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "next up is the Champion's Path Charizard VMAX PSA10",
+        "quote": "the Charizard live now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "the VMAX",
         "source_fact_id": "f5",
         "type": "availability",
         "value": "queued"
       },
       {
-        "quote": "then Blaziken ex PSA8",
+        "quote": "Blaziken",
         "source_fact_id": "f6",
         "type": "availability",
         "value": "queued"
       },
       {
-        "quote": "the shop has Gengar PSA9",
-        "source_fact_id": "f9",
+        "quote": "Dragonite",
+        "source_fact_id": "f7",
         "type": "availability",
-        "value": "shop, 1 available"
+        "value": "queued"
       },
       {
-        "quote": "and Mew Celebrations raw in stock",
-        "source_fact_id": "f10",
+        "quote": "Blastoise queued after",
+        "source_fact_id": "f8",
         "type": "availability",
-        "value": "shop, 3 available"
+        "value": "queued"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "No sealed promos or banned cards in the lineup right now, next up is the Champion's Path Charizard VMAX PSA10 then Blaziken ex PSA8, and the shop has Gengar PSA9 and Mew Celebrations raw in stock."
+    "reply_text": "Nothing sealed or on any banned list in this lineup right now, just singles like the Charizard live now and the VMAX, Blaziken, Dragonite and Blastoise queued after."
   }
 }

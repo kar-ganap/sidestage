@@ -1,0 +1,47 @@
+{
+  "key": "10a48fb31cd41ac928cf",
+  "latency_ms": 8638,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Blaziken ex PSA 8",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Shining Dragonite raw LP",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "1st Ed Blastoise PSA 8",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Gengar PSA 9",
+        "source_fact_id": "f10",
+        "type": "availability",
+        "value": "shop"
+      },
+      {
+        "quote": "Mew ex PSA 9",
+        "source_fact_id": "f12",
+        "type": "availability",
+        "value": "shop"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Nothing from Fossil or Jungle in this batch, but up next we have the Charizard VMAX Champion's Path PSA 10, then a Blaziken ex PSA 8, Shining Dragonite raw LP, and a 1st Ed Blastoise PSA 8, plus Gengar PSA 9 and Mew ex PSA 9 in the shop."
+  }
+}

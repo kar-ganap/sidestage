@@ -1,6 +1,6 @@
 {
   "key": "72b92b80e7a091dce27d",
-  "latency_ms": 1913,
+  "latency_ms": 1962,
   "model": "claude-sonnet-5",
   "output": {
     "confidence": 0.85,

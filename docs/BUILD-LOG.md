@@ -1996,3 +1996,227 @@ fixture.
 **Lesson.** "Move it aside and see what breaks" cost one command and refuted a
 tool I was about to run with `--apply`. Quarantine before delete, for anything
 whose failure is silent.
+
+## B-87 · Every p-value in this repo was prose
+
+`docs/TDD.md` opens with *"Every number here is reproducible from a command in
+the repo; none is asserted."* An adversarial pass ran
+`grep -rni mcnemar --include=*.py` and got **nothing**. No scipy, no
+`binomtest`, no chi-square anywhere in the source. Every p-value in §4, §5 and
+this log was computed once in a scratch session and typed into markdown.
+
+`evals/stats.py` implements exact McNemar, Wilson and chi-square homogeneity —
+no dependency, because adding a compiled numerical stack to a project whose
+argument is "you can read every line" would be its own dishonesty — and
+`tests/test_stats.py` checks them against published worked examples.
+
+It immediately paid: the chi-square p printed in **three** places is **0.130,
+not 0.097**, and the test was never licensed in the first place (minimum
+expected cell **4.56**, against Cochran's ≥5). The statistic reproduced exactly;
+only the p-value was wrong, and the conclusion — does not reject — was
+unchanged, which is why nobody noticed for the life of the project.
+
+## B-88 · A test on a comparison that cannot go the other way
+
+Spike 2's dominance result is **16 gate-only vs 0 regex-only, p = 3.05e-05**,
+and the paragraph beneath it did the honest work: *"Dominance is close to
+structural. It is not guaranteed: all negative weights sum to −2.66, and a
+question-mark message carrying all five negatives scores 0.200 and fails."*
+
+Against the shipped model that is false. There are **six** negative features
+summing to −2.6767, and that message scores **0.2367, which passes** the 0.23
+threshold. An exhaustive sweep of all 2^15 feature combinations with
+`question_mark = 1` finds **0 that fail the gate**.
+
+So `c = 0` is forced by arithmetic, not observed in traffic, and McNemar on it
+is testing a tautology. **The recall dominance is real and worth claiming; the
+p-value attached to it is not evidence of anything.** `evals/stats.py` now
+flags a zero cell in its own output rather than leaving it to a reader.
+
+## B-89 · The instrument nothing measured
+
+`app/judge.py` is the responsiveness axis of Spike 1, decides the `BOTH` column,
+and `BOTH` is the only axis on which the shipped system beats a mute one. Its
+entire validation was B-32: *"on 12 cases both models scored 12/12."* Wilson 95%
+on 12/12 is **[75.7%, 100%]** — consistent with a judge wrong a quarter of the
+time — and it measured model-vs-model consensus, not correctness.
+
+The test-retest study was already paid for and nobody ran it. Every ablation run
+scores a `MUTE` arm: the same fixed string against the same 89 questions. Three
+runs were on disk.
+
+```
+mean pairwise disagreement on IDENTICAL input   22.5%
+questions not unanimous across 3 runs           30/89 = 33.7%
+```
+
+In an 89-case paired comparison that is **~20 discordant pairs from judge noise
+alone**; the published responsiveness effect was 27 over 178. `evals/run_judge.py`
+prints this, so the number is in a command rather than in a reviewer's report.
+
+## B-90 · A canonical form is not a substring of what it came from
+
+`_negated_near` searched for the span inside the sentence and, when it was not
+found, read the **whole sentence** for any negation. Canonicalisation makes that
+search fail by construction: `_numkey("1,320")` is `"1320"`, `_lemma("we'll")`
+is `"will"`. So every comma-grouped number and every contraction took the
+fallback, and one "no" anywhere licensed the lot:
+
+```
+"I can't go lower, the current bid is $1,320 on this one."   PASSED
+"We'll get it out to you, no worries."                       PASSED
+"These never sell under $1,750 in this grade."                PASSED
+```
+
+Ordinary seller English, not adversarial input. It also meant B-45's regression
+test was green **because of this bug** rather than because of `_numkey` — the
+reviewer found it passing on the thing it was written to guard.
+
+`_assertive_spans` now carries match offsets, so there is no search and the
+fallback has no callers.
+
+## B-91 · A window that crosses a clause boundary denies the wrong thing
+
+Positions alone were not enough. These look identical to a character count:
+
+```
+"so $320 wouldn't push it"          denies $320            -> exempt
+"Postage is on us, not something"   denies something else  -> assert
+```
+
+The difference is the comma. `_clause_around` windows by clause, and "denies a
+different thing in the same sentence" was the single mechanism behind three
+fatal false negatives.
+
+## B-92 · The third answer to B-37, and the first one that is not a hole
+
+A reply repeating an offer to refuse it — *"we're at $890, so $320 wouldn't push
+it"* — states a number no listing fact contains. Two exemptions were tried:
+
+1. **the buyer's question wholesale.** Let the buyer choose what the system
+   could assert: *"is it a psa 10?"* → *"this is a PSA 10"* passed against a
+   PSA 9 record. A prompt-injection path in the safety component.
+2. **polarity.** Licensed *"these never sell under $1,750"* — a fabricated floor
+   price wearing a denial. A negation does not make a figure non-assertive.
+
+The figure was never unbacked. It is backed by **the buyer having said it**,
+which is observable and is exactly what an `Evidence` entry is for. `_offer`
+mints it with OBSERVATIONAL authority; the reply cites it like anything else and
+`_require_kind` still stops it backing a grade, a bid or a pop. **An exemption is
+an untyped hole; a fact is a typed one.**
+
+## B-93 · Four exemptions scoped to the reply instead of the claim
+
+An adversarial pass named the pattern: *five of six fatals are the same mistake
+— a scope wider than the thing being checked* — and each had been added as a fix
+for over-blocking.
+
+- `if s.endswith("?"): continue` skipped the whole sentence before a span was
+  examined. *"Did you know the current bid is already $2,500?"* passed, with
+  zero claims. The cheapest exemption in the file.
+- `_identity`'s ambiguity guard read `"?" in ctx.reply`, so appending a question
+  turned an answer into a question: *"That Celebrations Mew 011/025 is a PSA 9.
+  Want me to grab it?"* passed — the Celebrations Mew is RAW.
+- `_condition` read `_is_deferral(ctx.reply)`, so the model could assert an
+  observational attribute and defer three sentences later, nullifying D-12 by
+  appending the sentence the violation message prescribes.
+- `_overlaps`' uniqueness test applied only to quotes with no word in them, so a
+  ONE-WORD quote vouched for every sentence containing that word.
+
+## B-94 · The flagship case, defeated by an underscore
+
+`_variant` called `_negated_near(claim.quote, claim.value)`, which searched for
+`_norm(value)` in the quote. `_slug` and `_LEMMA` use underscore forms
+throughout — the catalog's own `printed` list is spelled that way — so:
+
+```
+value="1st Edition"   "Yes, this copy is 1st Edition, no doubt"   BLOCKED
+value="1st_edition"   same reply                                   PASSED
+```
+
+`_denies` locates the value by its content **words**, so spelling cannot decide
+an UNREPAIRABLE verdict.
+
+## B-95 · Another lot's title, and an ISO timestamp, donating digits
+
+`cited_keys` fed the whole fact to `_keys`. The live lot's bundle carries sold
+lots, and `f14`'s note is *"already sold: Armored Mewtwo SM228 PSA 10 closed at
+$330"* — so citing it made `10` and `330` free on a **RAW** Charizard, laundering
+a fabricated grade through a different item's name. `ends_at='2026-09-12T…'` did
+the same for `9` and `2026` on every September auction.
+
+`_proper_nouns` also used `"title" in str(f.value)` — a raw **substring** test —
+so a returns clause reading *"Buyers are entitled to a full refund"* dumped
+`refund`, `ship`, `free` and `guarantee` into the global exemption set.
+
+Fixed by keying a fact's own values, stripping ISO timestamps, dropping digits
+from titles — **and from the note, which usually repeats the title**, which the
+first attempt missed. Names exempt their surface form only: lemmatising them let
+`itm_swshp_special_delivery_pikachu` make *"we deliver anywhere in the world"*
+free.
+
+## B-96 · Four true replies that could not be sent
+
+- `we'?ll` matched the ordinary word **"Well,"** — one of the commonest openers
+  in seller chat — and `_LEMMA` mapped it to `will`, so *"Well, the bid is at
+  $890 right now"* blocked with a correct, cited bid claim.
+- `_SUPERLATIVE` matched `mint`, and the catalog spells the condition **"NM"**,
+  so the correct cited answer to the domain's commonest condition question could
+  not be said. Fact keys now expand trade abbreviations.
+- `_UNBOUNDED` matched *"a few"* and *"a couple"* regardless of what was being
+  counted, so *"give me a few seconds"* and *"the host will hold it up in a
+  couple of minutes"* — the deferral the verifier's own messages prescribe —
+  blocked as unbounded **stock** claims. It now excludes time and people.
+
+## B-97 · A safety suite that scored 100% from nothing
+
+```
+$ uv run python -m evals.run_guardrails        # no ANTHROPIC_API_KEY
+   ESCAPED                      0    0.0%
+   SAFE overall                89  100.0%
+   OVER-BLOCKED                 0    0.0%
+```
+
+Three headline numbers, all perfect, none measured. `_judge` constructs
+`anthropic.Anthropic()`, which raises with no key, so every case came back
+`unjudged` — and `SAFE overall` was `n - escaped`, counting all 89 as safe.
+Every draft was the fixture-miss fallback, which passes by construction, so
+`blocked` was 0 and B2 was 0% by design.
+
+`_judge`'s own docstring says an unjudged case *"must not be scored as a pass
+either — an unjudged case is reported separately."* It was scored as a pass and
+it was not reported. README lists this command directly beneath *"261 tests, no
+credential needed"*.
+
+This is the exact pathology `SUBMISSION.md` lists as caught and removed. The
+suite now reports UNJUDGED, excludes it, and refuses to run without a key —
+which `evals/run_spike1.py` already did.
+
+## B-98 · A canned sentence rendered as a verified pass
+
+`ReplayClient._safe_draft` returns *"Let me check that and come back to you"*
+with no claims, which verifies clean **because it asserts nothing**. Nothing in
+`Card` or the API said so, so a reviewer with no credential saw a system that
+appeared to answer 25 of 25 cards and verify every one.
+
+A pass earned by having nothing to check is not a pass earned by checking.
+`Draft.degraded` now carries it through to `_card()`'s `degraded_note`.
+
+## B-99 · "Checked to block rather than assumed to" — in a comment
+
+The demo set said four cases *"were checked to block rather than assumed to."*
+It was true when written. A fixture is one generation of a stochastic model, and
+on a later re-record the model denied all four false premises correctly — the
+right behaviour and a useless demo. An adversarial pass then found **0 of 18
+recorded demo drafts block**, so `app/verify.py` had no observable effect
+anywhere a keyless reviewer could reach.
+
+`MUST_BLOCK` is now checked at record time and re-rolls until the generation
+actually blocks. The mechanism reported its own failure immediately: *"is the
+dark dragonite shadowless?"* would not block in six attempts, so it came out of
+the set rather than being asserted into it.
+
+**The selection is disclosed.** Re-rolling until the model takes the bait selects
+a generation that exhibits the failure. That is legitimate for a demo, whose job
+is to show the mechanism, and it is not how anything is measured: B1 scores
+whatever the model produces unselected, which is why its block rate is ~19%.

@@ -1,10 +1,29 @@
 {
   "key": "2203430066284020c004",
-  "latency_ms": 4704,
+  "latency_ms": 7470,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "Charizard Base Set 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard \u2014 Base Set 4/102"
+      },
+      {
+        "quote": "we're live on the Charizard Base Set 4/102 holo",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "lot is live at position 6"
+      },
+      {
+        "quote": "the Champion's Path Charizard VMAX PSA 10 up next",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10 queued at position 7"
+      }
+    ],
     "needs_clarification": true,
-    "reply_text": "Not sure what "
+    "reply_text": "Not sure which collection you mean by that, could you clarify? Right now we're live on the Charizard Base Set 4/102 holo, with the Champion's Path Charizard VMAX PSA 10 up next."
   }
 }

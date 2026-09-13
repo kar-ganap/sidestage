@@ -21,7 +21,7 @@ uv run uvicorn app.main:app --reload       # → http://127.0.0.1:8000
 ```
 
 **No credential is required.** With `ANTHROPIC_API_KEY` unset the app runs in replay mode
-against 269 recorded fixtures and the full workflow still works, deterministically. Set a
+against 288 recorded fixtures and the full workflow still works, deterministically. Set a
 key in `.env` (copy `.env.example`) to run against live models. `GET /healthz` reports
 which mode you are in, the models, and the latency budgets — never the key.
 
@@ -112,7 +112,7 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 261 tests, no credential needed
+uv run pytest                          # 290 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls
@@ -145,7 +145,7 @@ app/
   main.py        FastAPI: REST, static console
 data/            seeded catalog, set records, comps, policies (modeled)
 static/          the operator console — no build step (DECISIONS.md D-07)
-fixtures/        269 recorded LLM responses for replay mode
+fixtures/        288 recorded LLM responses for replay mode
 evals/           the suites; `run_spike1.py` is the Spike 1 ablation
 ```
 

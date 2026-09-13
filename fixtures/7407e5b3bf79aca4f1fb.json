@@ -1,0 +1,23 @@
+{
+  "key": "7407e5b3bf79aca4f1fb",
+  "latency_ms": 9609,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "PSA 10",
+        "source_fact_id": "f4",
+        "type": "comp",
+        "value": "PSA 10"
+      },
+      {
+        "quote": "last 7 sold $1,390\u2013$1,690, past 90d",
+        "source_fact_id": "f4",
+        "type": "comp",
+        "value": "last 7 sold $1,390\u2013$1,690, past 90d"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "We don't have recent sales data for that grade, our comps are all PSA 10: last 7 sold $1,390\u2013$1,690, past 90d."
+  }
+}

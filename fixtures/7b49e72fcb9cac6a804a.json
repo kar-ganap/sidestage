@@ -1,0 +1,17 @@
+{
+  "key": "7b49e72fcb9cac6a804a",
+  "latency_ms": 13134,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "still live",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Thanks for that, the Charizard lot is still live so keep the bids coming."
+  }
+}

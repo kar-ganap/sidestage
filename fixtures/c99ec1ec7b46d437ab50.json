@@ -1,6 +1,6 @@
 {
   "key": "c99ec1ec7b46d437ab50",
-  "latency_ms": 5039,
+  "latency_ms": 4771,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
@@ -12,6 +12,6 @@
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Doing great, thanks for asking - we've got this Charizard sitting at $890 right now, come join in."
+    "reply_text": "Doing great, thanks for asking\u2014this Charizard's sitting at $890 right now and bidding's still live."
   }
 }

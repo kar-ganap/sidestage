@@ -1,11 +1,11 @@
 {
   "key": "bd1eefe23304857005c5",
-  "latency_ms": 2927,
+  "latency_ms": 2857,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "the Blaziken ex PSA 8 is coming up at lot 8",
+        "quote": "Blaziken ex FireRed & LeafGreen PSA 8 is coming up at lot 8",
         "source_fact_id": "f5",
         "type": "availability",
         "value": "queued, position 8"
@@ -18,6 +18,6 @@
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Yes, the Blaziken ex PSA 8 is coming up at lot 8, not open yet, opening bid will be $60."
+    "reply_text": "Yes, Blaziken ex FireRed & LeafGreen PSA 8 is coming up at lot 8, opening bid will be $60."
   }
 }

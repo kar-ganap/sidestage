@@ -1,17 +1,17 @@
 {
   "key": "b1943fbc1d91620c760a",
-  "latency_ms": 4392,
+  "latency_ms": 4688,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Next up is actually the Charizard VMAX Champion's Path 074/073 PSA 10",
+        "quote": "next up after this one is the Charizard VMAX Champion's Path PSA 10 at position 7",
         "source_fact_id": "f4",
         "type": "availability",
-        "value": "Charizard VMAX Champion's Path 074/073 PSA 10, position 7, queued"
+        "value": "queued"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Next up is actually the Charizard VMAX Champion's Path 074/073 PSA 10, no Lugia queued right now."
+    "reply_text": "No Lugia queued up right now \u2014 next up after this one is the Charizard VMAX Champion's Path PSA 10 at position 7."
   }
 }

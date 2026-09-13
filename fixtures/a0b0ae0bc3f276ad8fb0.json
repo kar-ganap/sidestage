@@ -1,23 +1,23 @@
 {
   "key": "a0b0ae0bc3f276ad8fb0",
-  "latency_ms": 2934,
+  "latency_ms": 3026,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Base Set Charizard 4/102",
+        "quote": "it's the Base Set Charizard 4/102, holo",
         "source_fact_id": "f1",
         "type": "identity",
-        "value": "Charizard, Base Set 4/102"
+        "value": "Charizard \u2014 Base Set 4/102"
       },
       {
-        "quote": "a shadowless copy",
+        "quote": "this copy is the shadowless variant",
         "source_fact_id": "f2",
         "type": "variant",
         "value": "shadowless"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Yes, this is Base Set Charizard 4/102, a shadowless copy."
+    "reply_text": "Yes, it's the Base Set Charizard 4/102, holo, and this copy is the shadowless variant."
   }
 }
