@@ -200,6 +200,14 @@ from the queue and does not make a model call at all. And the **draft** path's r
 constraint is a buyer's patience, not the auction clock, where 2.3 s is
 unremarkable. But the budget as written is not met, and the TDD says so.
 
+**Superseded 2026-09-12 by B-14 and B-15.** The hunch in the paragraph above — that
+the draft path's constraint is not the auction clock — was right, and it was left as
+a hunch. B-14 works it through: the 1.5 s figure was derived for the *nudge* and
+charged to the *draft*, and the path now carries two budgets split at the first
+readable token. B-15 then tested the obvious latency fix and rejected it: thinking
+off saves 520 ms and costs 4 points of over-blocking. **The remaining route is
+precomputation, not tuning.**
+
 ---
 
 ## B-09 · The model under-claims
@@ -305,3 +313,91 @@ gap, with the eval judge as the offline detector.
 
 **Status: open.** This is the most honest limitation in the system and it belongs
 in the TDD rather than in a backlog.
+
+---
+
+## B-14 · The latency budget was derived for one path and charged to another
+
+**What we found.** `DECISIONS.md` derives the sub-2-second figure honestly from
+auction mechanics: a ~5 s timer reset, minus ~3 s for a human to read a line and
+start speaking, leaves ~1.5–2.0 s for the system. That derivation governs the
+**nudge** — and the nudge is precomputed from the queue and makes no model call,
+so it meets the budget trivially.
+
+`config.py` then set `budget_draft_ms = 1500`: the same number, on a path with
+different mechanics, never re-derived. Checking what actually binds the draft
+path found nothing at 1.5 s:
+
+| candidate constraint | verdict |
+|---|---|
+| the lot clock | D-16 already showed nobody can type fast enough to ask about a 3–10 s lot; traffic is queue and catalog |
+| throughput | 0.15 msg/s × 16% needing a draft = 0.024 drafts/s. At 2.4 s each, **5.8% utilisation** on one worker |
+| buyer patience in a chat window | tens of seconds |
+
+**But the derivation also hides a serial assumption worth attacking.** It
+subtracts the human's reading time from the window as though reading begins after
+generation ends. It does not have to.
+
+**Fix.** The draft call streams. `DraftOutput` declares `reply_text` before
+`claims`, so the reply is complete on the wire while claims are still decoding.
+`LLMResult.ttft_ms` and `PipelineResult.ttft_ms` record when the operator can
+start **reading**; `total_ms` still records when they can **send**, because
+verification gates the send and needs every claim. Measured on one live case:
+**2080 ms to first token, 6298 ms to sendable** — 4.2 s of that is the operator
+reading rather than waiting.
+
+`on_text` is a plain `str -> None` callback on the `LLMClient` Protocol, not a
+provider stream type, so `ReplayClient` satisfies it by calling once with the
+finished text and nothing above the seam knows streaming exists (D-18).
+
+**Lesson.** A derived number is only derived for the path it was derived on.
+Copying it to a second path inherits the authority of the derivation without the
+argument. And when a budget is a subtraction, check whether the terms are really
+sequential — here one of them was the *user's* time, which can overlap ours.
+
+---
+
+## B-15 · Thinking was never chosen, and turning it off cost precision
+
+**What broke.** The draft call passed no `thinking` parameter, so it took the
+model default. A setting worth 520 ms of median latency and most of the tail was
+never a decision.
+
+**The experiment.** Paired Suite B runs, both arms in one session:
+
+| | B1 escapes (of 89) | B2 over-blocks (of 65) | median latency |
+|---|---|---|---:|
+| adaptive | 2, 4, 4 | 5, 6, 7 -> **9.2%** | 2935 ms |
+| disabled | 2, 4, 1 | 7, 9, 10 -> **13.3%** | **2415 ms** |
+
+**Read it carefully, because the two suites say different things.** B1 escapes
+overlap completely — 1 to 4 either way. At n=89 with single-digit events that is
+noise, and **no safety claim can be made in either direction**. B2 is where the
+signal is: the ranges are nearly disjoint and over-blocking rises ~4 points with
+thinking off.
+
+**Decision: keep adaptive, reject the latency win.** Over-blocking is the number
+the eval harness itself calls the one that matters — a verifier that blocks good
+replies is useless whatever its recall — and the budget being bought was the
+inherited one from B-14.
+
+**The interesting part is *what* thinking was buying.** Not safety. Precision:
+fewer unnecessary and mis-attributed claims. The over-blocks that appear with
+thinking off are `grade_on_raw_card`, `variant_not_on_copy`, `comp_not_quotable`
+— all cases where the model asserted something the cited fact does not establish.
+That is the same failure as **B-04** (citation choice is unstable) and **B-09**
+(one claim spanning two assertions). Choosing the fact that actually supports the
+sentence is the hard part of the claim contract, and it is the first thing to
+degrade when the model has no room to reason.
+
+**Consequence for the latency work.** The path to sub-second is not a cheaper
+model or a shorter reasoning budget — both trade away the mechanism. It is
+**precomputation** (draft and verify the top-k lot × intent pairs off the D-34
+queue lookahead, the same trick that already makes the nudge free) and **taking
+the repair round off the critical path**, since a repair doubles latency and the
+smoke case above spent 2876 ms of its 6298 ms there.
+
+**Lesson.** An unset parameter is a decision someone else made for you. And when
+an optimisation is evaluated on the suite that measures harm, it can look free —
+the cost showed up only on the control set, which is the suite that exists
+precisely because B1 cannot see its own false positives (B-10).

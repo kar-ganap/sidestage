@@ -29,6 +29,7 @@ import hashlib
 import json
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
@@ -95,6 +96,19 @@ class LLMResult:
     output: Any
     model: str
     latency_ms: int
+    ttft_ms: int = 0
+    """Time to the first token of `reply_text`, when the call was streamed.
+
+    Kept apart from `latency_ms` because the two answer different questions.
+    `latency_ms` is when the draft can be *sent* — it needs every claim, because
+    verification is what gates the send. `ttft_ms` is when the operator can start
+    *reading*, and the operator reading overlaps the model still writing.
+
+    The budget derivation in DECISIONS.md subtracts three seconds of human
+    reading from the window as though it happened after generation finished.
+    Streaming is what makes that subtraction honest. 0 means the call was not
+    streamed (replay, or the classify path) — not that the first token was free.
+    """
     input_tokens: int = 0
     output_tokens: int = 0
     cache_read_tokens: int = 0
@@ -343,10 +357,19 @@ are not sure about. Abstaining is cheap; a confident wrong answer is not.
 
 class LLMClient(Protocol):
     """The seam. Twenty lines, and it is the whole answer to "could you swap in
-    a different model?" — because the verifier checks output, not provenance."""
+    a different model?" — because the verifier checks output, not provenance.
+
+    `on_text` receives incremental text as it is generated, so a console can
+    render the reply while the claims are still decoding. It is deliberately a
+    plain `str -> None` callback rather than anything resembling a provider's
+    stream event: a client that cannot stream calls it once with the finished
+    text, and callers cannot tell the difference. Nothing above this line knows
+    that streaming exists.
+    """
 
     def draft(self, *, question: str, evidence: Evidence, intent: Intent,
-              repair: str | None = None) -> LLMResult: ...
+              repair: str | None = None,
+              on_text: Callable[[str], None] | None = None) -> LLMResult: ...
 
     def classify(self, *, message: str) -> LLMResult: ...
 
@@ -429,27 +452,52 @@ class AnthropicClient:
     # -- calls -----------------------------------------------------------
 
     def draft(self, *, question: str, evidence: Evidence, intent: Intent,
-              repair: str | None = None) -> LLMResult:
+              repair: str | None = None,
+              on_text: Callable[[str], None] | None = None) -> LLMResult:
+        """Streamed, and thinking is set explicitly rather than left to default.
+
+        **Streaming (B-14).** Not for throughput — for the metric. `DraftOutput`
+        declares `reply_text` before `claims`, so the reply is complete on the
+        wire while the claims are still decoding, and the operator can read it
+        then. Measuring only the blocking total prices the operator's read time
+        twice: once in the budget derivation and once in the wait.
+
+        **Thinking (B-15).** The old call passed no `thinking` parameter and took
+        the model default. It now says what it wants. The default turned out to
+        be the right value and the wrong way to get it: an A/B found that turning
+        thinking off saves 520 ms and raises over-blocking from 9.2% to 13.3%,
+        so the setting is load-bearing and was never chosen. Passed from config
+        so the comparison stays runnable rather than becoming a claim in a
+        comment.
+        """
         if self._degraded():
             return self._fallback.draft(question=question, evidence=evidence,
-                                        intent=intent, repair=repair)
+                                        intent=intent, repair=repair, on_text=on_text)
         msgs = _draft_messages(question, evidence, intent, repair)
         key = fixture_key(settings.draft_model, DRAFT_SYSTEM, msgs)
         t0 = time.perf_counter()
+        ttft = 0
         try:
-            r = self._c.messages.parse(
+            with self._c.messages.stream(
                 model=settings.draft_model,
                 max_tokens=2048,          # 1024 truncated mid-JSON on long claim lists (B-12)
                 system=_system_blocks(DRAFT_SYSTEM),
                 messages=msgs,
                 output_format=DraftOutput,
-            )
+                thinking={"type": settings.draft_thinking},
+            ) as stream:
+                for chunk in stream.text_stream:
+                    if not ttft:
+                        ttft = int((time.perf_counter() - t0) * 1000)
+                    if on_text is not None:
+                        on_text(chunk)
+                r = stream.get_final_message()
         except Exception as exc:
             self._note_failure(exc)
             return self._fallback.draft(question=question, evidence=evidence,
-                                        intent=intent, repair=repair)
+                                        intent=intent, repair=repair, on_text=on_text)
         self._note_success()
-        res = _envelope(r, settings.draft_model, t0, key)
+        res = _envelope(r, settings.draft_model, t0, key, ttft_ms=ttft)
         self._maybe_record(key, res)
         return res
 
@@ -485,12 +533,13 @@ class AnthropicClient:
             json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def _envelope(r: Any, model: str, t0: float, key: str) -> LLMResult:
+def _envelope(r: Any, model: str, t0: float, key: str, *, ttft_ms: int = 0) -> LLMResult:
     u = r.usage
     return LLMResult(
         output=r.parsed_output,
         model=model,
         latency_ms=int((time.perf_counter() - t0) * 1000),
+        ttft_ms=ttft_ms,
         input_tokens=getattr(u, "input_tokens", 0) or 0,
         output_tokens=getattr(u, "output_tokens", 0) or 0,
         cache_read_tokens=getattr(u, "cache_read_input_tokens", 0) or 0,
@@ -519,13 +568,20 @@ class ReplayClient:
         self.misses: list[str] = []
 
     def draft(self, *, question: str, evidence: Evidence, intent: Intent,
-              repair: str | None = None) -> LLMResult:
+              repair: str | None = None,
+              on_text: Callable[[str], None] | None = None) -> LLMResult:
         msgs = _draft_messages(question, evidence, intent, repair)
         key = fixture_key(settings.draft_model, DRAFT_SYSTEM, msgs)
         rec = self._load(key)
         if rec is None:
-            return self._safe_draft(key)
-        return LLMResult(output=DraftOutput(**rec["output"]), model=rec["model"],
+            return self._safe_draft(key, on_text)
+        out = DraftOutput(**rec["output"])
+        # One call with the finished text. A replayed draft did not stream, and
+        # pretending otherwise by chunking it would fake a TTFT that was never
+        # measured — `ttft_ms` stays 0, which is what "not streamed" means.
+        if on_text is not None:
+            on_text(out.reply_text)
+        return LLMResult(output=out, model=rec["model"],
                          latency_ms=rec.get("latency_ms", 0), replayed=True,
                          fixture_key=key)
 
@@ -553,16 +609,18 @@ class ReplayClient:
             raise FixtureMissing(key)
         return None
 
-    def _safe_draft(self, key: str) -> LLMResult:
+    def _safe_draft(self, key: str,
+                    on_text: Callable[[str], None] | None = None) -> LLMResult:
         """Degraded mode still has to be safe. An empty claim list means every
         sentence is unsourced, so this text is deliberately free of numbers,
         superlatives and commitments — it passes the verifier on its merits
         rather than by exemption."""
-        return LLMResult(
-            output=DraftOutput(
-                reply_text="Let me check that and come back to you.",
-                claims=[], needs_clarification=False),
-            model="replay-degraded", latency_ms=0, replayed=True, fixture_key=key)
+        out = DraftOutput(reply_text="Let me check that and come back to you.",
+                          claims=[], needs_clarification=False)
+        if on_text is not None:
+            on_text(out.reply_text)
+        return LLMResult(output=out, model="replay-degraded", latency_ms=0,
+                         replayed=True, fixture_key=key)
 
 
 class FixtureMissing(KeyError):

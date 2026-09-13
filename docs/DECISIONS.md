@@ -650,13 +650,15 @@ how this goes wrong.
 
 ## Latency budgets — provisional targets, to be replaced by measured p50/p95/p99
 
-| Path | Target |
-|---|---|
-| Ingest → triaged and queued (deterministic) | p95 ≤ 50 ms |
-| Ingest → triaged and queued (LLM-escalated) | p95 ≤ 600 ms |
-| Question card → verified draft on screen | p95 ≤ 1500 ms |
-| On-demand research query → answer | p95 ≤ 2000 ms *(the brief's stated target)* |
-| Answer-cache hit, end to end | ≤ 80 ms |
+| Path | Target | Derived from |
+|---|---|---|
+| Ingest → triaged and queued (deterministic) | p95 ≤ 50 ms | — |
+| Ingest → triaged and queued (LLM-escalated) | p95 ≤ 600 ms | — |
+| **Nudge on screen → seller can speak it** | **p95 ≤ 1500 ms** | **the auction mechanic below** |
+| Question card → **first readable token** | p95 ≤ 1500 ms | the same mechanic, honestly applied — see D-35 |
+| Question card → **sendable** (verified) | p95 ≤ 3000 ms | operator review cadence, not the lot clock |
+| On-demand research query → answer | p95 ≤ 2000 ms *(the brief's stated target)* | — |
+| Answer-cache hit, end to end | ≤ 80 ms | — |
 
 **Derived, not asserted — 2026-09-12.** The sub-2-second figure was originally taken from the
 brief and justified as "fast is good." Field observation supplies a real derivation.
@@ -681,6 +683,36 @@ Same number, earned. Two design constraints fall out of it, and both are load-be
 - **Early detection is mechanically necessary, not merely preferable.** Extension 3 carries
   three times the runway of extension 15, so the detection threshold must be low and the
   pipeline must not eat the window.
+
+---
+
+### D-35 · The draft budget is split at the first token — corrected 2026-09-12
+**The derivation above is sound and it governs the nudge.** The draft path inherited the
+number without re-deriving it, and re-deriving it finds nothing that binds at 1.5 s: the lot
+clock does not apply (D-16 — nobody types fast enough to ask about a 3–10 s lot), throughput
+is at 5.8% of one worker, and a buyer waiting in a chat window is a tens-of-seconds
+constraint. Recorded in full as **BUILD-LOG B-14**.
+
+**But the derivation hides a serial assumption.** `5 s window − 3 s human reading = 1.5–2 s
+system` prices the operator's reading time as though it begins after generation ends. It does
+not have to. `DraftOutput` declares `reply_text` before `claims`, so the reply is complete on
+the wire while claims are still decoding.
+
+**Decision.** Two budgets, not one, because they answer different questions:
+
+- **Time to first readable token** — when the operator can start reading. Keeps the 1500 ms
+  target, and the auction derivation genuinely applies to it.
+- **Time to sendable** — when verification has returned and SEND unlocks. Verification needs
+  every claim, so this cannot be streamed away. Governed by operator review cadence.
+
+`PipelineResult` carries both (`ttft_ms`, `total_ms`), held apart so the sum is not double
+counted. The gap between them is time the operator spends reading rather than waiting, and
+reporting only the second number charges that time twice.
+
+**What this does not license.** It is a truer metric, not a pass. Time-to-sendable is still
+2.4 s and the route below it is precomputation, not a cheaper model — B-15 measured what
+happens when you buy latency out of the model's reasoning budget: over-blocking rose from
+9.2% to 13.3% while safety stayed flat.
 
 ---
 

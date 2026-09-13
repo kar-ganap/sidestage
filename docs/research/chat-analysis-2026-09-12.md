@@ -181,11 +181,17 @@ better than the "no inter-rater check" this analysis previously had to concede.
 
 **This is the competitive baseline to beat, and it is now a number rather than an
 assertion.** It also reframes Spike 2: the task is not "detect questions" — a regex already
-does that at **41/69** — it is detecting *intent without interrogative syntax* and *filtering
-out chatter that happens to carry a question mark*. Those are two different failures and the
-classifier has to fix both; raising recall by loosening the threshold would make the
-precision worse, which is exactly why the operating point has to be argued rather than
-picked.
+does that at **53.6% recall / 80.4% precision** pooled — it is detecting *intent without
+interrogative syntax* and *filtering out chatter that happens to carry a question mark*.
+Those are two different failures and the classifier has to fix both; raising recall by
+loosening the threshold would make the precision worse, which is exactly why the operating
+point has to be argued rather than picked.
+
+**And the bar is not one number but two.** Because the incumbent's recall swings 40% → 41% →
+69% across segments on a detector that never changed, beating the pooled mean is necessary
+but not sufficient: a classifier that reads intent should also be **stable** where
+punctuation is not. Suite A therefore reports per-segment scores alongside the pooled figure,
+and treats the spread as a result in its own right.
 
 ### And detection is not the bottleneck anyway
 
@@ -269,7 +275,7 @@ Seventeen distinct failure modes for exact lookup, from twenty minutes of one sh
 | | |
 |---|---|
 | **D-15** | The cascade's justification moves from load-shedding to precision at low volume. 0.15 msg/s needs no backpressure. Keep the interpretable scorer; drop the throughput framing. |
-| **Spike 2** | Now has a measured incumbent to beat: **41% recall, 69% precision** from a punctuation heuristic. That is the baseline any classifier must exceed, and it is a far better empirical target than a synthetic PR curve. |
+| **Spike 2** | Now has a measured incumbent to beat: **53.6% recall, 80.4% precision** pooled over 477 messages, from a punctuation heuristic. That is the baseline any classifier must exceed — and because the same heuristic scores 40%/41%/69% recall segment to segment, **stability across segments is part of the bar**. A far better empirical target than a synthetic PR curve. |
 | **Spike 1** | Strengthened. Detection is solved and unhelpful; the answer is the gap. 15 instances of viewers supplying comps is the demand, stated. |
 | **D-13** | `market_comment` is 8% of traffic and was not in the taxonomy. Add it. |
 | **D-16** | Referents skew hard to catalog, closed lots and the shop — confirmed at larger n. |

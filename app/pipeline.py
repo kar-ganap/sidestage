@@ -21,6 +21,7 @@ permission to automate later (D-23).
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -57,6 +58,13 @@ class PipelineResult:
     verification: VerifyResult
     attempts: int
     latency_ms: dict[str, int]
+    ttft_ms: int = 0
+    """First readable token of the first attempt.
+
+    Held outside `latency_ms` deliberately: that dict is summed for `total_ms`,
+    and TTFT is a prefix of the draft step rather than a step of its own, so
+    putting it there would count the same milliseconds twice.
+    """
 
     @property
     def sendable(self) -> bool:
@@ -64,6 +72,10 @@ class PipelineResult:
 
     @property
     def total_ms(self) -> int:
+        """When the operator can *send* — verification gates the send, so this
+        includes every claim arriving. Compare against `ttft_ms`, which is when
+        they can start *reading*; the gap between the two is time the operator
+        spends reading rather than waiting."""
         return sum(self.latency_ms.values())
 
 
@@ -76,6 +88,7 @@ def draft_reply(
     resolver: EntityResolver | None = None,
     client: LLMClient | None = None,
     max_repairs: int = 1,
+    on_text: Callable[[str], None] | None = None,
 ) -> PipelineResult:
     cat = catalog or get_catalog()
     res_ = resolver or get_resolver()
@@ -92,12 +105,18 @@ def draft_reply(
     ev = assemble(intent=intent, resolution=resolution, catalog=cat, lot=lot)
     timing["assemble"] = _tock(t)
 
-    attempt, feedback, result = 0, None, None
+    attempt, feedback, result, ttft = 0, None, None, 0
     while True:
-        # 3 — draft
+        # 3 — draft. `on_text` is passed straight through, so a console can
+        # render the reply as it arrives while the claims are still decoding.
         t = _tick()
-        out = llm.draft(question=message, evidence=ev, intent=intent, repair=feedback)
+        out = llm.draft(question=message, evidence=ev, intent=intent,
+                        repair=feedback, on_text=on_text)
         timing[f"draft_{attempt}"] = _tock(t)
+        # First attempt only. A repair's first token lands after the operator has
+        # already read a draft we then threw away, so it is not "time to read".
+        if not attempt:
+            ttft = out.ttft_ms
 
         draft = _to_draft(out.output, ev, out.model, attempt)
 
@@ -133,7 +152,8 @@ def draft_reply(
 
     draft.latency_ms = dict(timing)
     return PipelineResult(draft=draft, evidence=ev, resolution=resolution,
-                          verification=result, attempts=attempt + 1, latency_ms=timing)
+                          verification=result, attempts=attempt + 1,
+                          latency_ms=timing, ttft_ms=ttft)
 
 
 def _to_draft(out: DraftOutput | None, ev: Evidence, model: str, attempt: int) -> Draft:

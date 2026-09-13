@@ -38,6 +38,7 @@ class Settings:
     anthropic_api_key: str | None
     draft_model: str
     triage_model: str
+    draft_thinking: str  # "disabled" | "adaptive"
     llm_mode: str  # "live" | "replay" | "auto"
 
     # --- latency budgets, milliseconds (DECISIONS.md § Latency) --------
@@ -73,6 +74,23 @@ settings = Settings(
     # prompt, so it pays full list price on every call while Sonnet pays 10% of
     # a larger list. Measured: $0.00098/call vs $0.00273, and marginally faster.
     triage_model=os.getenv("SIDESTAGE_TRIAGE_MODEL", "claude-sonnet-5"),
+    # Adaptive — now chosen rather than inherited, and the A/B is why.
+    #
+    # Disabling thinking is worth 520 ms of median latency and cuts the tail
+    # hard (a probe case went 13.8 s -> 2.1 s). It was rejected anyway: over
+    # three paired Suite B2 runs it raised over-blocking from 9.2% to 13.3%,
+    # while Suite B1 escapes stayed flat (1-4 either way, noise at n=89).
+    #
+    # So the thinking budget is not buying safety on this task — it is buying
+    # *citation discipline*, which is the mechanism Spike 1 rests on. Same root
+    # as B-04 and B-09: picking the fact that actually supports the sentence is
+    # the hard part, and it is the part that degrades first when the model has
+    # no room to reason. Trading it for latency on a budget that turns out to be
+    # inherited rather than derived is the wrong trade.
+    #
+    # Kept as a setting so the comparison stays re-runnable rather than becoming
+    # an assertion in a comment: SIDESTAGE_DRAFT_THINKING=disabled. See B-15.
+    draft_thinking=os.getenv("SIDESTAGE_DRAFT_THINKING", "adaptive"),
     llm_mode=os.getenv("SIDESTAGE_LLM_MODE", "auto"),
     budget_triage_fast_ms=_int("SIDESTAGE_BUDGET_TRIAGE_FAST_MS", 50),
     budget_triage_escalated_ms=_int("SIDESTAGE_BUDGET_TRIAGE_ESC_MS", 600),
