@@ -233,6 +233,14 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--arms", default="S0,S1,S2")
     ap.add_argument("--suite", default="both", choices=["b1", "b2", "both"])
+    ap.add_argument("--runs", type=int, default=1,
+                    help="repeat the whole suite N times and report the SPREAD. "
+                         "B-87: the first published ablation spliced two runs "
+                         "and reported a +2.3 effect that run-to-run variance "
+                         "swamps. A single run of a stochastic arm is a sample, "
+                         "not a rate.")
+    ap.add_argument("--tag", default="",
+                    help="suffix for the results file, so runs do not clobber")
     ap.add_argument("--draft-model", default=None,
                     help="override the drafting model for S0/S1/S2. The point: "
                          "if verification is a GUARANTEE rather than an accuracy "
@@ -300,7 +308,8 @@ def main() -> int:
     # Per model and per arm-set: a smoke test with `--arms S1,S2 -n 2` silently
     # overwrote a full 154-case run once, and the row-level data was gone.
     tag = settings.draft_model.replace("claude-", "").replace("-2025", "")
-    out = RESULTS / f"spike1_{tag}_{''.join(arms)}_{a.suite}.json"
+    suffix = f"_{a.tag}" if a.tag else ""
+    out = RESULTS / f"spike1_{tag}_{''.join(arms)}_{a.suite}{suffix}.json"
     out.write_text(json.dumps({
         "run_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "draft_model": settings.draft_model,

@@ -148,7 +148,7 @@ actions on BIN lots · an operator console · a seeded catalogue of 15 items
   $400" is a different answer mid-auction — but the copilot never modifies a bid.
   Ending an auction early is irreversible and would be the best stress test we
   have for the ledger; it is out because it risks the core.
-- **Real eBay API integration** (D-24). A mock adapter with 7 fault modes —
+- **Real eBay API integration** (D-24). A mock adapter with 6 fault modes —
   including lost responses and partial writes — proves more about the write path
   in the time available than a happy-path integration would.
 - **Autonomous sending, at launch.** See the ladder.
@@ -208,7 +208,7 @@ different data — which is the error this row exists to avoid.
 | unsafe replies reaching a buyer | 53.9% *(bare model)* | **3.4%** | 89 adversarial cases, ablated |
 | good replies wrongly blocked | — | **9.1%** | 77 control cases |
 | ambiguous reference answered by a guess | — | **0** | 36 grounding cases |
-| cost per classified message | — | **$0.00146** | measured |
+| cost per classified message | — | **$0.00098** | measured, `sonnet-5` (B-101) |
 
 **The safety number is now ablated rather than absolute.** It was quoted as
 "97.8% safe" against nothing at all, which was both unattributable — nobody

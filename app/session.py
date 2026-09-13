@@ -83,6 +83,13 @@ class Card:
     violations: list[dict] = field(default_factory=list)
     facts: list[dict] = field(default_factory=list)
     verdict: str = ""
+    degraded: bool = False
+    """No model answered this card — a replay miss or a tripped breaker (B-98).
+
+    Rendered beside the verdict, because a `pass` earned by asserting nothing is
+    not the same as a `pass` earned by checking, and a reviewer running with no
+    credential was previously shown the first as though it were the second.
+    """
     attempts: int = 0
     ttft_ms: int = 0
     total_ms: int = 0
@@ -318,6 +325,7 @@ class Session:
         card.violations = [{"code": v.code, "severity": v.severity.value,
                             "message": v.message} for v in res.draft.violations]
         card.verdict = res.draft.verdict.value
+        card.degraded = res.draft.degraded
         card.attempts = res.attempts
         card.ttft_ms = res.ttft_ms
         card.total_ms = res.total_ms

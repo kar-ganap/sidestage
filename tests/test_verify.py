@@ -236,35 +236,80 @@ def test_the_buyer_cannot_choose_what_the_system_may_assert():
         "widen what the draft is allowed to assert")
 
 
-def test_a_number_the_reply_refuses_needs_no_fact():
-    """B-37, and the reason dropping the question cost nothing.
+def test_the_buyers_own_figure_is_cited_not_exempted():
+    """B-92. The third and final answer to B-37.
 
     "We're at $890, so $320 wouldn't push it" repeats an offer in order to
-    decline it. No fact contains $320 and none ever could, so blocking it left
-    no repair available — the worst case the first adversarial pass found.
+    decline it. No listing fact contains $320 and none ever could.
 
-    The refusal is recognisable from the REPLY: the sentence denies the figure.
-    That is what `_negated_near` reads, and a denial cannot be smuggled in from
-    outside the draft the way a question could.
+    Two exemptions were tried and both were holes. Exempting everything in the
+    buyer's question let the buyer choose what the system could assert
+    ("is it a psa 10?" -> "this is a PSA 10"). Exempting by POLARITY licensed
+    *"these never sell under $1,750"* — a fabricated floor price wearing a
+    denial — because a negation does not make a figure non-assertive.
+
+    The figure is not unbacked. It is backed by **the buyer having said it**,
+    which is observable and is what an Evidence entry is for. `_offer` mints it
+    with OBSERVATIONAL authority, so the reply cites it like anything else and
+    every per-type rule still applies.
     """
-    e = ev(fact("f1", ClaimType.BID))
+    offer = fact("f2", ClaimType.PRICE,
+                 {"buyer_said": [320.0], "operator_only": False,
+                  "is_offer": True},
+                 authority=Authority.OBSERVATIONAL,
+                 note="the buyer named $320.00")
+    e = ev(fact("f1", ClaimType.BID), offer)
     d = draft("We're at $890, so $320 wouldn't push it.",
-              claim(ClaimType.BID, "890", "f1", "We're at $890"))
+              claim(ClaimType.BID, "890", "f1", "We're at $890"),
+              claim(ClaimType.PRICE, "320", "f2", "$320 wouldn't push it"))
     assert not blocked(d, e)
-    # ...but ASSERTING the same figure still needs a fact.
-    t2 = "We're at $890, and $320 is where this one closes."
-    assert blocked(draft(t2, claim(ClaimType.BID, "890", "f1", "We're at $890")), e)
+
+    # Without the citation it blocks — the exemption is gone, not widened.
+    bare = ev(fact("f1", ClaimType.BID))
+    assert blocked(draft("We're at $890, so $320 wouldn't push it.",
+                         claim(ClaimType.BID, "890", "f1", "We're at $890")), bare)
 
 
-@pytest.mark.parametrize("offered", ["320", "1,320", "1320"])
-def test_a_refusal_works_above_four_figures(offered: str):
-    """B-45. Spans kept their separators while the exemption set tokenised with
-    `[a-z0-9]+`, so "1,320" could never match anything: the headline case worked
-    only below four figures, as did every four-figure comp and pop in the
-    catalog. Numbers are canonicalised on both sides now (`_numkey`)."""
+def test_a_denial_does_not_make_a_figure_assertable():
+    """B-92, the bound. Polarity is not backing: a fabricated floor price is
+    still fabricated when it is phrased as a refusal."""
     e = ev(fact("f1", ClaimType.BID))
+    assert blocked(draft("These never sell under $1,750 in this grade."), e)
+    assert blocked(draft("I can't go lower, the current bid is $1,320."), e)
+
+
+def test_denying_a_commitment_is_still_not_making_one():
+    """The word side of the same rule keeps its exemption — there is no
+    fabricated promise in a refusal to promise."""
+    e = ev(fact("f1", ClaimType.SHIPPING))
+    assert not blocked(
+        draft("I don't have Canada shipping listed, so I can't confirm that."), e)
+
+
+@pytest.mark.parametrize("offered,key", [("320", "320"), ("1,320", "1320"),
+                                         ("1320", "1320")])
+def test_a_cited_figure_matches_however_it_is_punctuated(offered: str, key: str):
+    """B-45, retested against the mechanism it was supposed to pin.
+
+    Spans kept their separators while the exemption set tokenised with
+    `[a-z0-9]+`, so "1,320" could never match and every four-figure comp and pop
+    in the catalog was blocked. `_numkey` canonicalises both sides.
+
+    The previous version of this test asserted `not blocked` on an UNCITED
+    figure, so it was green because of the whole-sentence negation fallback
+    (B-90) rather than because of `_numkey` — an adversarial pass found it
+    passing on the bug it was meant to guard. It now cites the offer fact, which
+    is the only thing that makes the figure legitimate.
+    """
+    offer = fact("f2", ClaimType.PRICE,
+                 {"buyer_said": [float(key)], "operator_only": False,
+                  "is_offer": True},
+                 authority=Authority.OBSERVATIONAL,
+                 note=f"the buyer named ${float(key):,.2f}")
+    e = ev(fact("f1", ClaimType.BID), offer)
     d = draft(f"We're at $890, so ${offered} wouldn't push it.",
-              claim(ClaimType.BID, "890", "f1", "We're at $890"))
+              claim(ClaimType.BID, "890", "f1", "We're at $890"),
+              claim(ClaimType.PRICE, key, "f2", f"${offered} wouldn't push it"))
     assert not blocked(d, e)
 
 

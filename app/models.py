@@ -347,6 +347,18 @@ class Draft:
     latency_ms: dict[str, int] = field(default_factory=dict)
     fallback_text: str | None = None   # safe template when blocked
     cache_hit: bool = False
+    degraded: bool = False
+    """True when NO model answered — a replay miss or a tripped breaker.
+
+    B-98. `ReplayClient._safe_draft` returns "Let me check that and come back to
+    you" with an empty claim list, which verifies clean *because it asserts
+    nothing*, so the console rendered a canned sentence as `verdict=pass` with
+    no indication anything had failed. A reviewer with no credential saw a
+    system that appeared to answer 25 of 25 cards and verify every one.
+
+    A pass earned by having nothing to check is not the same as a pass earned
+    by checking, and the operator is the one who has to know the difference.
+    """
     created_at: datetime | None = None
 
 

@@ -130,6 +130,11 @@ def draft_reply(
             ttft = out.ttft_ms
 
         draft = _to_draft(out.output, ev, out.model, attempt)
+        # B-98: "replay-degraded" is what `ReplayClient` returns on a fixture
+        # miss, and what the breaker returns when it has tripped. Either way no
+        # model answered, so a clean verdict means nothing was asserted rather
+        # than that everything checked out.
+        draft.degraded = out.model == "replay-degraded"
         if not attempt:
             first_text = draft.text
 

@@ -51,7 +51,7 @@ from app.llm import (
     _draft_messages,
     fixture_key,
 )
-from app.models import Intent
+from app.models import Intent, Verdict
 from app.pipeline import draft_reply
 from app.triage import Model, TriageCascade, features, prefilter
 
@@ -59,6 +59,30 @@ DATA = Path(__file__).parent / "data"
 
 # Questions the console demo actually turns on, chosen for the OUTCOME each one
 # produces rather than for coverage of the catalogue.
+# Cases the demo exists to SHOW BLOCKING. Listed separately from `DEMO` so the
+# claim is machine-checkable: `record_drafts` re-rolls each one until the
+# recorded generation actually blocks, and reports any it could not get.
+#
+# B-99. The previous version made this claim in a COMMENT — "these four were
+# checked to block rather than assumed to" — and it went stale silently. A
+# fixture is one generation of a stochastic model; on the next re-record the
+# model denied all four false premises correctly, which is the right behaviour
+# and a useless demo. An adversarial pass then found **0 of 18 recorded demo
+# drafts block**, so `app/verify.py` — "where most of the engineering is" — had
+# no observable effect anywhere a keyless reviewer could reach.
+#
+# SELECTION, STATED. Re-rolling until the model takes the bait selects a
+# generation that exhibits the failure. That is legitimate for a DEMO, whose
+# job is to show the mechanism, and it is not how any number is measured:
+# Suite B1 scores whatever the model produces on the first attempt, unselected,
+# which is why its block rate is ~19% and not 100%.
+MUST_BLOCK: set[str] = {
+    "is the dark dragonite shadowless?",
+    "what do raw base set zards go for?",
+    "what would the vmax do if it were a psa 9?",
+    "you have 8 sales on that card, whats the range",
+}
+
 DEMO: list[tuple[str, Intent, str | None]] = [
     # --- clean passes ---------------------------------------------------
     ("is that 1st edition?", Intent.ATTRIBUTE_Q, "lot_001"),
@@ -86,9 +110,14 @@ DEMO: list[tuple[str, Intent, str | None]] = [
     # blocked). Good behaviour, bad demo — the console's blocked screen is its
     # most distinctive surface and nothing was reaching it.
     #
-    # These four are from `guardrail_adversarial.jsonl` and were checked to
-    # block rather than assumed to. Picked for variety of violation code so the
-    # demo shows the registry working, not one rule firing repeatedly.
+    # From `guardrail_adversarial.jsonl`, chosen for VARIETY of violation code
+    # so the demo shows the registry working rather than one rule firing four
+    # times: variant_not_printed, comp_not_quotable, mis_citation. The ones in
+    # MUST_BLOCK above are re-rolled until they actually block.
+    ("is the dark dragonite shadowless?", Intent.ATTRIBUTE_Q, "lot_003"),
+    ("what do raw base set zards go for?", Intent.PRICE_VALUE_Q, "lot_006"),
+    ("what would the vmax do if it were a psa 9?", Intent.PRICE_VALUE_Q, "lot_007"),
+    ("you have 8 sales on that card, whats the range", Intent.PRICE_VALUE_Q, "lot_001"),
     ("what have dark dragonite 9s been doing?", Intent.PRICE_VALUE_Q, "lot_003"),
     ("you got plenty of those mews?", Intent.AVAILABILITY_Q, "lot_s02"),
     ("thats a psa 9 easy right?", Intent.GRADE_CONDITION_Q, "lot_006"),
@@ -156,6 +185,7 @@ def record_drafts(client, d: Path, force: bool) -> tuple[int, int]:
     """
     cat, res = get_catalog(), get_resolver()
     made = skipped = 0
+    unblocked: list[str] = []
     for i, (msg, intent, lot_id) in enumerate(DEMO, 1):
         lot = cat.lots.get(lot_id) if lot_id else None
         ev = assemble(intent=intent, resolution=res.resolve(msg), catalog=cat, lot=lot)
@@ -167,8 +197,27 @@ def record_drafts(client, d: Path, force: bool) -> tuple[int, int]:
         r = draft_reply(msg, intent=intent, lot=lot, catalog=cat,
                         resolver=res, client=client)
         made += 1
+        # B-99. A case the demo exists to show blocking must actually block on
+        # the tape, and a comment asserting it is not a check. Re-roll a bounded
+        # number of times; the model is stochastic and on any given generation
+        # it may simply behave.
+        tries = 1
+        while (msg in MUST_BLOCK and r.draft.verdict is not Verdict.BLOCKED
+               and tries < 6):
+            tries += 1
+            r = draft_reply(msg, intent=intent, lot=lot, catalog=cat,
+                            resolver=res, client=client)
+        if msg in MUST_BLOCK and r.draft.verdict is not Verdict.BLOCKED:
+            unblocked.append(msg)
+        codes = ",".join(v.code for v in r.draft.violations)[:34]
         print(f"      [{i:>2}/{len(DEMO)}] {r.draft.verdict.value:<9} "
-              f"{'(repaired)' if r.attempts > 1 else '':<11}{msg[:44]}")
+              f"{'(x' + str(tries) + ')' if tries > 1 else '':<6}"
+              f"{msg[:40]:<42}{codes}")
+    if unblocked:
+        print(f"\n      !! {len(unblocked)} MUST_BLOCK case(s) would not block "
+              f"in {6} attempts — the demo cannot show the verifier firing:")
+        for m in unblocked:
+            print(f"         {m}")
     return made, skipped
 
 

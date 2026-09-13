@@ -22,6 +22,7 @@ a bid lands in that window — see `refresh()`.
 
 from __future__ import annotations
 
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -138,6 +139,7 @@ def assemble(
         facts += _market(mint, item, cat, now, want)
         facts += _observational(mint, item, cat, now, want)
 
+    facts += _offer(mint, resolution, now, want)
     facts += _policy(mint, subject, cat, now, want)
     facts += _queue(mint, resolution, cat, now, want, subject)
 
@@ -148,6 +150,55 @@ def assemble(
         built_at=now,
         assembly_ms=int((datetime.now(UTC) - t0).total_seconds() * 1000),
     )
+
+
+_OFFER = re.compile(r"\$?\b(\d[\d,]*(?:\.\d{1,2})?)\b")
+
+
+def _offer(m, res: Resolution, now, want) -> list[Fact]:
+    """What the BUYER just said a figure was (B-92).
+
+    A reply that repeats an offer in order to refuse it — *"we're at $890, so
+    $320 wouldn't push it"* — states a number no record contains and none ever
+    could. B-37 handled that by EXEMPTING it, first from the buyer's question
+    wholesale (which let a buyer choose what the system could assert), then by
+    polarity (which licensed *"these never sell under $1,750"*, a fabricated
+    floor wearing a denial).
+
+    Both failed for the same reason: an exemption is an untyped hole. The figure
+    is not unbacked — it is backed by *the buyer having said it*, which is a
+    fact about the conversation, observable, and exactly what an `Evidence`
+    entry is for. Minting it means the reply CITES it and every per-type rule
+    still applies: `_require_kind` rejects it for a price, a grade, a bid or a
+    pop, so it can only ever back the figure it actually is.
+
+    OBSERVATIONAL authority, because the buyer saying a number does not make it
+    true about anything. A claim asserting the offer is *correct*; a claim using
+    it to assert a fact about the card mis-cites and blocks.
+    """
+    if ClaimType.PRICE not in want and ClaimType.BID not in want:
+        return []
+    seen: list[float] = []
+    for raw in _OFFER.findall(res.text or ""):
+        try:
+            v = float(raw.replace(",", ""))
+        except ValueError:
+            continue
+        # Year-shaped and rank-shaped numbers are not offers.
+        if v < 1 or v > 1_000_000 or (1900 <= v <= 2100 and "." not in raw):
+            continue
+        if v not in seen:
+            seen.append(v)
+    if not seen:
+        return []
+    return [Fact(
+        id=m(), kind=ClaimType.PRICE, subject="buyer",
+        value={"buyer_said": seen, "operator_only": False, "is_offer": True},
+        authority=Authority.OBSERVATIONAL, source="chat.message", as_of=now,
+        note=("the buyer named " +
+              ", ".join(f"${v:,.2f}" for v in seen) +
+              " — what they SAID, not what anything is worth"),
+    )]
 
 
 def _candidate(item: Item, cat: Catalog) -> dict:

@@ -183,6 +183,23 @@ def sweep(rows: list[dict], model: Model) -> list[tuple[float, dict]]:
     return out
 
 
+def _save(arms: dict[str, dict], extra: dict | None = None) -> None:
+    """Write what was measured so the docs can cite a file, not a memory.
+
+    B-101. Every Spike 2 figure in the README, the TDD and SUBMISSION was
+    computed against a weights file that was refit before those documents were
+    written — `A1 42.9% / 57.8%` against a shipped `46.2% / 60.8%`, and a
+    "37 false positives" the shipped gate cannot produce because it emits 33.
+    The arms are deterministic and model-free up to A2, so this was not
+    stochasticity: it was a table copied forward past a refit.
+    """
+    import json as _json
+    out = Path(__file__).parent / "results"
+    out.mkdir(exist_ok=True)
+    (out / "triage.json").write_text(_json.dumps(
+        {"arms": arms, **(extra or {})}, indent=1), encoding="utf-8")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-llm", action="store_true", help="skip the cascade arm")
@@ -221,6 +238,13 @@ def main() -> int:
         pred, intents, esc = arm_cascade(rows, thr, a.workers)
         casc = score(rows, pred)
         print(row("A2  + classification", casc))
+
+    _save({"A0": {k: inc[k] for k in ("r", "p", "f1", "tp", "fp", "fn")},
+           "A1": {k: gate[k] for k in ("r", "p", "f1", "tp", "fp", "fn")},
+           **({"A2": {k: casc[k] for k in ("r", "p", "f1", "tp", "fp", "fn")}}
+              if casc else {})},
+          {"threshold": thr, "n_test": len(rows),
+           "weights_fit_at": model.fitted_on, "n_train": model.n_train})
 
     print(f"\n   deltas vs incumbent      recall {gate['r']-inc['r']:+.1%}"
           f"   precision {gate['p']-inc['p']:+.1%}   F1 {gate['f1']-inc['f1']:+.1%}   (A1)")

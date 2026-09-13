@@ -22,7 +22,7 @@ the test segment. So this measures generalisation across time within one show,
 not across shows. It is a genuine weakness and it belongs in the TDD.
 
 WHY NOT sklearn. Twenty lines of gradient descent has no dependency, runs in
-milliseconds on 676 rows, and — the actual reason — can be explained line by line
+milliseconds on 609 rows, and — the actual reason — can be explained line by line
 when someone asks how the model was trained. Importing a fit from a library
 answers that question with a shrug.
 """

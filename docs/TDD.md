@@ -6,7 +6,7 @@ decides which messages deserve the seller's attention, drafts replies that are
 showcase actions through a ledger that records how to undo them.
 
 > **How to read this.** `DECISIONS.md` holds 44 decisions with their rejected
-> alternatives. `BUILD-LOG.md` holds 31 entries on what building it taught us —
+> alternatives. `BUILD-LOG.md` holds 60 entries on what building it taught us —
 > mostly things we got wrong. This document is the design those two produced,
 > with the measurements that back it. Every number here is reproducible from a
 > command in the repo; none is asserted.
@@ -291,54 +291,55 @@ which is the entire point of an ablation. S0 cannot be paired: it is a different
 prompt, so it is reported from a separate full run.
 
 ```
-B1, 89 adversarial cases           SAFE   RESPONSIVE    BOTH   blocked
-  S0  bare model (sonnet-5)       46.1%       93.3%   43.8%      0%
-  S1  + grounding                 94.3%       98.9%   93.3%      0%
-  S2  + verification              96.6%       91.0%   85.4%   19.1%
+B1, 89 adversarial cases — FOUR runs, sonnet-5 drafting
+                                    SAFE                RESPONSIVE
+  S0  bare model         49.4% [48.3% - 49.4%]   93.3% [84.3% - 95.5%]
+  S1  + grounding        96.6% [94.3% - 97.8%]   97.8% [94.4% - 98.9%]
+  S2  + verification     96.6% [95.5% - 97.8%]   92.1% [87.6% - 92.1%]
+  CONTROL (mute)        100.0%                   59.6% [58.4% - 61.8%]
 
-  same, drafting with haiku-4.5
-  S1  + grounding                 88.8%       88.8%   79.8%      0%
-  S2  + verification              95.5%       79.8%   75.3%   27.0%
-
-  CONTROL — only ever says the safe fallback
-                                 100.0%       59.6%   59.6%    100%
+  S1 -> S2 safety,         per run:  +0.0%  +1.2%  -1.1%  +2.2%
+  S1 -> S2 responsiveness, per run:  -5.6%  -5.6%  -6.7%  -7.9%
 ```
 
-**What the evidence contract buys is large and unambiguous.** S0 -> S1 is
-**+48.2 points of safety**. A bare model asserts the falsehood in over half of
-these cases. That is Spike 1's real result and it was never measured before.
+Reproduce with `uv run python -m evals.report_spike1`, which reads every
+recorded run rather than one of them.
 
-**What verification buys is smaller, real, and comes with a bill.** Paired
-McNemar over both models (178 case-model pairs, each a trial of the same
-question):
+**What the evidence contract buys is large and robust.** S0 -> S1 is about
+**+47 points of safety**, and the S0 arm varies by barely a point across runs. A
+bare model asserts the falsehood in roughly half of these cases. That is Spike
+1's real result.
 
-| | verifier caught | verifier lost | McNemar exact |
-|---|---:|---:|---:|
-| safety | 8 | 1 | **p = 0.039** |
-| responsiveness | 6 | 21 | **p = 0.006** |
+**What verification buys is not measurable on this suite.** The safety delta
+changes SIGN across runs — +0.0, +1.2, -1.1, +2.2 — and paired over all four it
+is 4 vs 2 discordant, exact p = 0.69, on six discordant pairs. The honest
+statement is that the effect, if there is one, is smaller than the run-to-run
+variance of the arm.
 
-Both effects are real; **the cost is better established than the benefit.** On
-the shipped model alone the only significant effect is the cost — 7
-responsiveness losses against 0 gains, p = 0.016 — and the 2:0 safety gain does
-not reach significance.
+**What it costs is measurable, and it is the larger effect.** Responsiveness
+drops in every run, by 5.6 to 7.9 points; paired, 3 vs 26 discordant,
+p < 0.0001. On the combined axis S1 beats S2 in all four runs.
 
-**What it catches is specific, which matters more than the aggregate.** Pooled,
-the eight catches are `pop_missing_as_of` x4 (a population figure quoted with no
-read date), `unbacked_claim` x2, `identity_mismatch`, `authenticity_value_gate`
-(promising marketplace authentication on a lot below the $250 gate), and
-`variant_not_on_copy`. These are named domain rules firing on real replies that
-grounding alone shipped. An aggregate of 96.6 vs 94.3 hides that.
+**An earlier version of this table reported +2.3 and p = 0.039** (B-100). It was
+a splice: the S0 row came from one run, the S1/S2 rows from another taken
+seventeen minutes later, and in the run S0 actually came from S2 scored *below*
+S1. There was no aggregation step, so building the table meant copying by hand
+from two logs — and the hand copied the favourable pair. `report_spike1.py`
+exists so no hand ever does that again.
 
-**The safety gain is larger on the weaker model** — 6:1 on Haiku against 2:0 on
-Sonnet — which is what a *guarantee* should look like: its value appears when
-the model behaves worse. Neither per-model test reaches significance, so this is
-a direction the data is consistent with, not a finding.
+**Why the suite cannot settle it.** S1 alone reaches 96.6%, so at most 3.4
+points are available for any verifier to win, and only a handful of cases can
+discriminate. Suite B1 is **saturated** — the same reason the original 97.8% was
+unattributable. Measuring this needs adversarial cases where grounding alone
+fails.
 
-**Why the suite cannot settle it.** S1 alone reaches 94.3% on Sonnet, so at most
-5.7 points are available for any verifier to win and only a handful of cases can
-discriminate. Suite B1 is **saturated**, which is the same reason the original
-97.8% was unattributable. Measuring this properly needs adversarial cases where
-grounding alone fails; that is item 2 of what I would do next.
+**So the defensible claim for the verifier is not that it makes replies safer.**
+It is that it is a *guarantee*: nothing unbacked ships regardless of how the
+model behaved, with an audit trail saying which fact backed which clause. That
+is a property, and this suite measures accuracy. The gain does look larger on
+the weaker drafting model (both haiku runs positive, +0.1% and +6.7%, p = 0.30)
+— the shape a guarantee should have — but two runs and six discordant pairs do
+not establish it.
 
 **The responsiveness axis is judged by `app/judge.py`, which nothing measures.**
 Every responsiveness number above inherits that error. Stated here rather than
@@ -395,7 +396,7 @@ runtime needs no numpy. Every drop carries the features that moved it, which is
 the property an embedding score cannot provide and the reason the console can
 show *why* a message was dropped.
 
-**Method, stated because it went wrong first.** Weights are fit on 676 messages
+**Method, stated because it went wrong first.** Weights are fit on 609 messages
 (352 synthetic + two real Whatnot segments). **Everything that is not a weight —
 which features, which threshold — is chosen by 5-fold cross-validation on
 training data**, after an early version read the threshold off a sweep over the
@@ -411,8 +412,8 @@ Held-out Whatnot segment (161 messages, 27 seller-directed):
 | arm | recall | precision | F1 |
 |---|---|---|---:|
 | A0 question-mark regex *(the incumbent)* | 40.7% | 68.8% | 51.2% |
-| A1 + stage-1 gate | 88.9% | 42.9% | 57.8% |
-| A2 + classification | 77.8% | 91.3% | 84.0% |
+| A1 + stage-1 gate | 88.9% | 46.2% | 60.8% |
+| A2 + classification | 77.8% | 80.8% | 79.2% |
 
 **The architecture claim, on 189 held-out messages from *two platforms*:**
 
@@ -453,17 +454,32 @@ four segments gives **p = 0.097**. It does not reject. Withdrawn — and note th
 the fourth of those segments is the eBay Live `?` baseline rather than an
 incumbent, so the test was pooling two different things even to reach a null.
 
-**Survives:** paired McNemar over the 37 held-out seller-directed messages from
-both platforms — the gate catches **16** the regex misses and the regex catches
-**0** the gate misses, **p = 3.05e-05**. Strict dominance on recall.
+**Survives, but not as a statistical result.** Paired McNemar over the 37
+held-out seller-directed messages from both platforms: the gate catches **16**
+the regex misses and the regex catches **0** the gate misses, p = 3.05e-05.
 
-> Stated with the caveat that makes it honest: the gate **subsumes** the
-> incumbent — `question_mark` is one of its fifteen features with the largest
-> weight (+2.48 against a bias of −1.20), so a message whose only active feature
-> is a question mark scores 0.78 against a 0.24 threshold. Dominance is close to
-> structural. It is not guaranteed: all negative weights sum to −2.66, and a
-> question-mark message carrying all five negatives scores 0.200 and fails. The
-> superset property is an empirical result about real traffic, not arithmetic.
+> **The caveat used to say dominance was "close to structural… not guaranteed",
+> and against the shipped model that is false — it is structural** (B-101).
+> `question_mark` carries the largest weight, **+2.7602** against a bias of
+> **−1.2543**, so a message whose only active feature is a question mark scores
+> **0.8185** against a **0.23** threshold. The escape hatch the paragraph
+> offered — "all negative weights sum to −2.66, and a question-mark message
+> carrying all five negatives scores 0.200 and fails" — does not exist: there
+> are **six** negative features summing to −2.6767, and that message scores
+> **0.2367, which passes.** An exhaustive sweep of all 2^14 feature
+> combinations with `question_mark = 1` finds **0 that fail the gate**.
+>
+> So `c = 0` is not an empirical finding about real traffic. It is forced by
+> the arithmetic, and a McNemar test on a comparison that cannot go the other
+> way is testing a tautology. **The recall dominance is real and worth
+> claiming; the p-value attached to it is not evidence of anything.**
+>
+> The old numbers (+2.48 / −1.20 / 0.78 / 0.24 / five negatives / 0.200) came
+> from a weights file refit in `dd68f1e`, before this paragraph was written.
+> The arms are deterministic and model-free up to A2, so nothing here was
+> stochastic — the table was copied forward past a refit. `evals/run_triage.py`
+> now writes `evals/results/triage.json` and `tools/check_docs.py` reads it, so
+> a refit breaks the doc check instead of the argument.
 
 ---
 
@@ -478,7 +494,7 @@ data ready.
 | **B1** adversarial guardrails | nothing unsafe reaches the buyer | 96.6% safe against 46.1% for a bare model (ablated, §4) |
 | **B2** false-positive control | the verifier is calibrated, not paranoid | 9.1% over-blocked; **7.9-point responsiveness cost, p = 0.016** |
 | **C** grounding & abstention | asks "which Mew?" exactly when it should | 36/36 curated; **77% under chat noise, and every loss is a silence, not a wrong card** |
-| **D** unit + golden replay | deterministic, CI-safe, no key | 199 fixtures; the tape raises on prompt drift |
+| **D** unit + golden replay | deterministic, CI-safe, no key | 269 fixtures; the tape raises on prompt drift |
 | **E** moment detection | hot/stalled/normal on 10 real labelled lots | 10/10 — **and so do 215 other threshold pairs** |
 
 **Train on synthetic, test on real**, with `triage_test.jsonl` never fit or tuned
@@ -528,7 +544,7 @@ precision the control set could see:
 Haiku** for triage, because Haiku's minimum cacheable prefix sits above our
 2,229-token prompt so it pays full list on every call. Price per token is the
 wrong unit; price per call *after cache eligibility* is the right one, and
-eligibility is a step function (B-03, D-17b). Measured $0.00146/call.
+eligibility is a step function (B-03, D-17b). Measured **$0.00098**/call for `sonnet-5` against $0.00273 for `haiku-4.5` — the 2.8x ratio quoted above (B-101; $0.00146 appeared in two places and is consistent with neither arm).
 
 ---
 
@@ -583,7 +599,7 @@ it never changes whether verification happens.**
 
 ## 9. What we got wrong
 
-`BUILD-LOG.md` has 25 entries. These are the ones that changed the design.
+`BUILD-LOG.md` has 60 entries. These are the ones that changed the design.
 
 **B-01 · The headline demo was silently broken.** The two-Mew abstention — "which
 Mew?" — never fired, because the resolver indexed on full card names. Nothing

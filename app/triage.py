@@ -47,7 +47,7 @@ it drags in a dependency that triples reviewer install (D-15).
 The weights are FIT, not hand-tuned — `evals/fit_triage.py`, on the synthetic
 train set plus the two real segments that are not the held-out test. Hand-tuning
 would perform about as well and would not be defensible: "we chose 0.4" is not an
-argument, and "fit on 676 labelled messages, reported on 161 held out" is.
+argument, and "fit on 609 labelled messages, reported on 161 held out" is.
 """
 
 from __future__ import annotations

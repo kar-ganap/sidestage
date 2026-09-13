@@ -67,7 +67,7 @@ _SUPERLATIVE = re.compile(
     r"\b(best|rarest|cleanest|perfect(?:ly)?|flawless|mint|gem|pristine|"
     r"immaculate|finest|guarantee[sd]?|certainly|definitely|absolutely)\b", re.I)
 _COMMITMENT = re.compile(
-    r"\b(will|we'?ll|i'?ll|shall|promise[sd]?|guarantee[sd]?|refund(?:s|ed)?|"
+    r"\b(will|we'll|i'll|shall|promise[sd]?|guarantee[sd]?|refund(?:s|ed)?|"
     r"replace[sd]?|ship(?:s|ped|ping)?|deliver(?:s|ed|y)?|honou?r[sd]?|"
     r"cover[sd]?|final|postage|dispatch(?:es|ed)?|send(?:s|ing)?|tracked|"
     r"free)\b", re.I)
@@ -82,7 +82,13 @@ _SENTENCE = re.compile(r"(?:[^.!?]|(?<=\d)\.(?=\d))+[.!?]?")
 # Quantifiers that assert stock without a number.
 _UNBOUNDED = re.compile(
     r"\b(plenty|tons?|loads?|lots|heaps|stacks|as many as you want|"
-    r"more than enough|a (?:handful|few|couple)|several)\b", re.I)
+    r"more than enough|a (?:handful|few|couple)|several)"
+    # ...but not when the thing being quantified is TIME. B-96: "give me a few
+    # seconds", "the host will hold it up in a couple of minutes" and "several
+    # people have asked" are the deferral the verifier's own messages prescribe,
+    # and all three blocked as unbounded STOCK claims.
+    r"(?!\s+(?:of\s+)?(?:seconds?|minutes?|hours?|days?|weeks?|moments?|people|"
+    r"viewers?|folks|others?|times?))\b", re.I)
 
 # Numbers written as words. `_NUMBER` only ever saw digits, so "We have twenty
 # of these left" against a quantity of zero was not an assertion at all (B-43).
@@ -283,7 +289,7 @@ def _variant(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     #
     # `\bno\b` inside "no doubt" did it too. Negation has to be read where the
     # claimed value actually sits, not anywhere in the sentence.
-    negated = _negated_near(claim.quote, claim.value)   # before only (B-46)
+    negated = _denies(claim.quote, claim.value)         # B-46, B-94
 
     if fact.authority is Authority.CATALOG:
         printed = [_slug(p) for p in fact.value.get("printed", ())]
@@ -474,7 +480,12 @@ def _identity(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     # Mew 011/025 is a PSA 9" passed — the Celebrations Mew is RAW; the PSA 9 is
     # the other card.
     if isinstance(fact.value, dict) and fact.value.get("ambiguous"):
-        return [] if "?" in ctx.reply else [Violation(
+        # B-93. Scoped to what this claim QUOTES, not to the whole reply.
+        # `"?" in ctx.reply` meant appending a question anywhere turned an
+        # answer into a question: "That Celebrations Mew 011/025 is a PSA 9.
+        # Want me to grab it for you?" passed, and the Celebrations Mew is RAW
+        # — the PSA 9 is the other candidate.
+        return [] if "?" in (claim.quote or "") else [Violation(
             code="answered_an_ambiguous_reference", severity=Severity.UNREPAIRABLE,
             message=("the reference is ambiguous — ask which one rather than "
                      "answering about one of them."),
@@ -559,13 +570,19 @@ def _condition(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if (v := _require_kind(claim, fact, ClaimType.CONDITION, "a condition claim must cite a condition fact")):
         return v
     if fact.authority is Authority.OBSERVATIONAL:
-        # B-64. This read `claim.quote`. The recorded reply for "is the back
-        # clean on the charizard" — one of the three demo cases for "a refusal
-        # has to be citable, not improvised" — defers in the sentence AFTER the
-        # one it quotes, so it blocked UNREPAIRABLY and went straight to the
-        # fallback. Widening the quote by a few words flipped the verdict, which
-        # is not a property a safety rule may have.
-        if _is_deferral(ctx.reply):
+        # B-64 widened this from `claim.quote` to `ctx.reply`, because the
+        # recorded refusal defers in the sentence AFTER the one it quotes.
+        # B-93: reply scope went too far the other way — the model could ASSERT
+        # an observational attribute and defer in a later sentence:
+        #
+        #   "Yes, the back is spotless with sharp corners."            BLOCKED
+        #   ...+ " I'll have the host show it on camera too."          PASSED
+        #
+        # D-12 nullified by appending the very sentence the violation prescribes.
+        # The middle ground is the SENTENCE the claim quotes, plus the one after
+        # it: enough for a refusal that defers next, not enough to launder an
+        # assertion made three sentences earlier.
+        if _is_deferral(_near_quote(ctx.reply, claim.quote)):
             return []
         return [Violation(
             code="observational_assertion", severity=Severity.UNREPAIRABLE,
@@ -597,7 +614,7 @@ def _centering(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     sub = fact.value if isinstance(fact.value, dict) else {}
     recorded = _keys(sub.get("centering", "")) if "centering" in sub \
         else _keys(f"{fact.value} {fact.note}")
-    stated = [sp for sp in _assertive_spans(_norm(claim.value))
+    stated = [sp for sp, _, _ in _assertive_spans(_norm(claim.value))
               if sp not in recorded]
     if stated:
         return [Violation(
@@ -796,7 +813,7 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
     def cited_keys(fact_id: str) -> set[str]:
         if fact_id not in fkeys:
             f = ctx.evidence.by_id(fact_id)
-            fkeys[fact_id] = _keys(f"{f.value} {f.note}") if f is not None else set()
+            fkeys[fact_id] = _fact_keys(f) if f is not None else set()
         return fkeys[fact_id]
 
     quoted = [(c, _norm(c.quote)) for c in draft.claims if c.quote.strip()]
@@ -805,11 +822,17 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
         s = raw.strip()
         if not s or not _asserts(s):
             continue
-        # Asking is not asserting. The clarifier D-14 exists to produce is a
-        # question, and it has to name the attributes that tell the candidates
-        # apart in order to be worth asking.
-        if s.endswith("?"):
-            continue
+        # B-93. This used to `continue` on any sentence ending in "?", before a
+        # single span was examined — the cheapest exemption in the file, and a
+        # rhetorical question asserts anything:
+        #
+        #   "Did you know the current bid is already $2,500?"  -> PASSED
+        #   "Fancy a PSA 10 that ships free tomorrow?"         -> PASSED
+        #
+        # The clarifier D-14 exists to produce does need to name the attributes
+        # that tell its candidates apart — but those attributes are IN the
+        # ambiguity fact it cites, so they come through `cited_keys` like any
+        # other backed figure. It never needed an exemption of its own.
         n = _norm(s)
 
         # The facts cited by claims that speak to THIS sentence. Scope is the
@@ -827,24 +850,37 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
             # in the whole reply. `"$24.00"` quoted against the one sentence
             # holding it is a legitimate price highlight; `"305"` against a
             # reply where 305 appears twice does not identify a sentence at all.
-            if (not _WORD_ONLY.search(c.quote)
+            # B-93. The uniqueness test used to apply only to quotes with NO
+            # word in them, so a ONE-WORD quote — `quote="The"` — skipped it and
+            # vouched for every sentence containing that word, handing its
+            # fact's whole key set to each. Per-sentence scoping was opt-out.
+            # Any short quote must now identify one sentence unambiguously.
+            if (len(_norm(c.quote)) < 24
                     and _norm(draft.text).count(_norm(c.quote)) != 1):
                 continue
             exempt |= cited_keys(c.source_fact_id)
 
-        uncovered = []
-        for sp in dict.fromkeys(_assertive_spans(n)):
-            if sp in exempt:
+        uncovered: list[str] = []
+        seen: set[str] = set()
+        deferred = _deferred(n)
+        for sp, start, end in _assertive_spans(n):
+            surface = n[start:end]
+            if sp in seen or sp in exempt or sp in deferred or surface in proper:
                 continue
-            # A span the sentence is DENYING is not a span it is asserting.
-            # "I can't confirm Canada shipping" must not need a shipping fact.
-            # A span the sentence is DENYING is not a span it is asserting:
-            # "I can't confirm Canada shipping" must not need a shipping fact,
-            # and "so $320 wouldn't push it" must not need a fact for $320.
-            if _negated_near(n, sp, window=48, after_window=16):
+            # Denying a COMMITMENT is not making one: "I can't confirm Canada
+            # shipping" must not need a shipping fact. Clause-scoped (B-91), so
+            # a denial about something else in the same sentence cannot reach.
+            #
+            # A NUMBER gets no such exemption (B-92). Polarity does not make a
+            # figure non-assertive — "these never sell under $1,750" is a
+            # fabricated floor price wearing a denial, and it passed. The case
+            # that motivated the exemption, repeating the buyer's own offer to
+            # refuse it, is now a CITABLE FACT rather than a hole: `_offer`
+            # mints what the buyer said, so the reply names its source like
+            # anything else.
+            if not sp.replace(".", "").isdigit() and _negated_at(n, start, end):
                 continue
-            if sp in _deferred(n):
-                continue
+            seen.add(sp)
             uncovered.append(sp)
         if not uncovered:
             continue
@@ -958,6 +994,44 @@ def _keys(text: object) -> set[str]:
     return keys
 
 
+# Things inside a fact that are NOT figures about the lot in hand: another
+# lot's title, and any ISO timestamp. B-95 — both donated digits to the exempt
+# set. `f14` on the live lot is "already sold: Armored Mewtwo SM228 PSA 10
+# closed at $330", so citing it made 10 and 330 free on a RAW Charizard; and
+# `ends_at='2026-09-12T...'` made 9 and 2026 free on every September auction.
+_ISO = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ][\d:.+\-]+)?")
+
+
+# The record spells conditions as trade abbreviations; a seller says them in
+# full. B-96: a grade fact whose condition is "NM" could not back the words
+# "Near Mint", so the correct, cited answer to the commonest condition question
+# in the domain blocked on `_SUPERLATIVE` matching `mint`.
+_CONDITION_WORDS = {
+    "nm": "near mint", "mt": "mint", "gem": "gem mint", "lp": "light played",
+    "mp": "moderately played", "hp": "heavily played", "dmg": "damaged",
+    "ex": "excellent", "vg": "very good", "nmmt": "near mint mint",
+}
+
+
+def _fact_keys(f: Fact) -> set[str]:
+    """What a fact can vouch for — its own values, not its prose furniture."""
+    value = f.value
+    if isinstance(value, dict):
+        # A `title` is another lot's NAME. Its words are legitimate (that is
+        # B-57), its digits are not: they belong to a different item.
+        value = {k: v for k, v in value.items() if k != "title"}
+        titles = " ".join(str(v) for k, v in f.value.items() if k == "title")
+    else:
+        titles = ""
+    blob = _ISO.sub(" ", f"{value} {f.note}")
+    keys = _keys(blob)
+    keys |= {w for w in _WORD.findall(_norm(titles)) if not w.isdigit()}
+    for abbrev, spelled in _CONDITION_WORDS.items():
+        if abbrev in keys:
+            keys |= set(spelled.split())
+    return keys
+
+
 def _proper_nouns(ctx: VerifyContext) -> set[str]:
     """Words that are NAMES in the record, not claims about the world.
 
@@ -979,7 +1053,12 @@ def _proper_nouns(ctx: VerifyContext) -> set[str]:
                 out.add(_lemma(w))
 
     for f in ctx.evidence.facts:
-        if f.kind is ClaimType.IDENTITY or "title" in str(f.value):
+        # B-95: this was `"title" in str(f.value)` — a raw SUBSTRING test, so a
+        # returns clause reading "Buyers are entitled to a full refund" dumped
+        # every word of the policy into the global exemption set, including
+        # `refund`, `ship`, `free` and `guarantee`. A dict key, not a substring.
+        if f.kind is ClaimType.IDENTITY or (
+                isinstance(f.value, dict) and "title" in f.value):
             take(str(f.value))
     if ctx.lot is not None:
         take(ctx.lot.title or "")
@@ -1007,14 +1086,128 @@ def _deferred(sentence: str) -> set[str]:
     return {"will"}
 
 
-def _assertive_spans(sentence: str) -> list[str]:
-    """The substrings that made `_asserts` demand backing, in `_keys`' form."""
-    out = [_numkey(m.group(0)) for m in _NUMBER_RUN.finditer(sentence)]
-    out += [_numkey(str(_NUMWORDS[m.group(0).lower()]))
-            for m in _NUMWORD.finditer(sentence)]
+def _assertive_spans(sentence: str) -> list[tuple[str, int, int]]:
+    """The substrings that made `_asserts` demand backing — WITH POSITIONS.
+
+    B-90. This used to return canonical strings only, and `_negated_near` then
+    searched for them in the raw sentence. Canonicalisation makes that search
+    fail by construction: `_numkey("1,320")` is `"1320"` and `_lemma("we'll")`
+    is `"will"`, neither of which is a substring of the text they came from. The
+    search returned -1 and fell through to a fallback that read the WHOLE
+    sentence for any negation — so one "no" anywhere exempted every figure:
+
+        "I can't go lower, the current bid is $1,320 on this one."   -> PASS
+        "We'll get it out to you, no worries."                      -> PASS
+        "These never sell under $1,750 in this grade."               -> PASS
+
+    Ordinary seller English, not adversarial input: any comma-grouped number and
+    any contraction took that path. It also meant B-45's regression test was
+    green because of this bug rather than because of `_numkey`.
+
+    Carrying the match offsets removes the search entirely, so the window is
+    always anchored on the real position and the fallback has no callers left.
+    """
+    out: list[tuple[str, int, int]] = []
+    for m in _NUMBER_RUN.finditer(sentence):
+        out.append((_numkey(m.group(0)), m.start(), m.end()))
+    for m in _NUMWORD.finditer(sentence):
+        out.append((_numkey(str(_NUMWORDS[m.group(0).lower()])),
+                    m.start(), m.end()))
     for pat in (_SUPERLATIVE, _COMMITMENT, _UNBOUNDED):
-        out += [_lemma(m.group(0).lower()) for m in pat.finditer(sentence)]
+        for m in pat.finditer(sentence):
+            out.append((_lemma(m.group(0).lower()), m.start(), m.end()))
     return out
+
+
+# Where one clause stops and the next begins. A negation on the far side of one
+# of these is denying something else (B-91).
+_CLAUSE = re.compile(r"[,;:—–]|\b(?:and|but|so|though|although|while|however)\b")
+
+
+def _denies(quote: str, value: str) -> bool:
+    """Does this quote deny the claimed VALUE specifically? (B-94)
+
+    `_negated_near` searched for `_norm(value)` inside the quote and, when it
+    was not found, read the whole quote for any negation. `_slug` and `_LEMMA`
+    use underscore forms throughout, so a model emitting `value="1st_edition"`
+    — which the catalog's own `printed` list is spelled in — took that path and
+    reopened B-46 exactly:
+
+        value="1st Edition"   "Yes, this copy is 1st Edition, no doubt"  BLOCKED
+        value="1st_edition"   same reply                                 PASSED
+
+    The flagship unrepairable case, defeated by an underscore. Locating the
+    value by its content WORDS removes the spelling dependency, and a value
+    whose words are not in the quote is not denied by it — `_structural`
+    already requires the quote to be in the reply, so there is nothing to be
+    permissive about.
+    """
+    q = _norm(quote)
+    words = [w for w in _WORD.findall(_norm(value)) if len(w) > 1]
+    if not words:
+        return False
+    hits = [q.find(w) for w in words if q.find(w) >= 0]
+    if not hits:
+        return False
+    return _negated_at(q, min(hits), max(hits) + 1)
+
+
+def _near_quote(reply: str, quote: str, lookahead: int = 1) -> str:
+    """The sentence a claim quotes, plus the next one (B-93).
+
+    A refusal legitimately defers in the following sentence — "that's raw, so I
+    can't speak to the back. I'll have the host flip it over" — so quote scope
+    alone was too tight (B-64). Whole-reply scope was too loose: it let an
+    assertion be laundered by a deferral three sentences later. Two sentences is
+    the span a human reads as one thought.
+    """
+    sentences = [x for x in _SENTENCE.findall(reply) if x.strip()]
+    q = _norm(quote or "").strip()
+    if not q:
+        return reply
+    for i, sen in enumerate(sentences):
+        if q in _norm(sen) or _norm(sen).strip() in q:
+            return " ".join(sentences[i:i + 1 + lookahead])
+    return reply
+
+
+def _clause_around(sentence: str, start: int, end: int) -> str:
+    """The clause the span sits in, not the sentence.
+
+    B-91. A positional window still reached across clause boundaries, and the
+    two cases that matter look identical to a character count:
+
+        "so $320 wouldn't push it"          the negation denies $320   -> exempt
+        "Postage is on us, not something"   it denies something else   -> assert
+
+    The difference is the comma. Windowing by distance cannot see it; windowing
+    by clause can, and "denies a different thing in the same sentence" was the
+    single mechanism behind three of the fatal false negatives — a fabricated
+    bid of $1,320, a fabricated postage promise, and a fabricated floor price,
+    all licensed by a negation that had nothing to do with them.
+    """
+    lo = 0
+    for m in _CLAUSE.finditer(sentence, 0, start):
+        lo = m.end()
+    hi = len(sentence)
+    m = _CLAUSE.search(sentence, end)
+    if m:
+        hi = m.start()
+    return sentence[lo:hi]
+
+
+def _negated_at(sentence: str, start: int, end: int) -> bool:
+    """Is the span at [start, end) the thing this sentence denies? (B-90)
+
+    Positional, so it cannot be defeated by a span whose canonical form differs
+    from its surface form — which is what let every comma-grouped number and
+    every contraction fall through to reading the whole sentence.
+
+    Clause-scoped (B-91) rather than character-windowed, because "denies a
+    different thing in the same sentence" is exactly what a fixed window cannot
+    distinguish from "denies this thing".
+    """
+    return bool(_NEGATION.search(_clause_around(sentence, start, end)))
 
 
 def _asserts(sentence: str) -> bool:

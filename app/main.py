@@ -78,6 +78,13 @@ def _card(c: Card) -> dict:
     d = asdict(c)
     d["at"] = c.at.isoformat(timespec="seconds")
     d["intent"] = c.intent.value
+    # B-98. Say it in words as well as a flag: the console and any reviewer
+    # reading raw JSON both need to know a clean verdict can mean "nothing was
+    # asserted" rather than "everything checked out".
+    if c.degraded:
+        d["degraded_note"] = ("no model answered — replay fixture miss or "
+                              "tripped breaker. This reply asserts nothing, so "
+                              "it verifies clean by default, not by checking.")
     return d
 
 

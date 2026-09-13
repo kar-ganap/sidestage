@@ -76,8 +76,8 @@ classification pass, then clustering and ranking. The ablation is the point:
 | arm | recall | precision | F1 |
 |---|---|---|---:|
 | A0 question-mark regex *(the incumbent)* | 40.7% | 68.8% | 51.2% |
-| A1 + stage-1 gate | 88.9% | 42.9% | 57.8% |
-| A2 + classification | 77.8% | 91.3% | 84.0% |
+| A1 + stage-1 gate | 88.9% | 46.2% | 60.8% |
+| A2 + classification | 77.8% | 80.8% | 79.2% |
 
 Stage 2 removes 35 of 37 false positives (95%) for 3–4 true positives. McNemar on
 errors, p < 0.0001. **Neither arm alone does both**, which is the argument for a cascade
