@@ -458,6 +458,13 @@ class Lot:
     current_bid: float | None = None
     reserve: float | None = None
     ends_at: datetime | None = None
+    # --- auction endgame, for moment detection (D-26b) ------------------
+    # Extension count measures the CONTESTED CLOSE rather than total demand:
+    # observed lot 9 took 22 bids across 11 extensions (half landed late),
+    # lot 6 took 16 bids across 1 (6% late). Similar interest, opposite
+    # endgames, and only this number separates them.
+    extensions: int = 0
+    bid_at_first_extension: float | None = None
 
 
 # =====================================================================

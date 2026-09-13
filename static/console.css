@@ -116,6 +116,21 @@ header {
 .lot .money { color: var(--ink-dim); font-family: var(--mono); font-size: 12px; }
 .spacer { flex: 1; }
 
+/* The nudge: loud enough to catch a glance, quiet enough not to be the page. */
+.nudge {
+  display: flex; align-items: center; gap: 9px;
+  padding: 5px 12px; border-radius: 6px; font-family: var(--mono);
+  font-size: 13px; border: 1px solid var(--accent); background: var(--accent-wash);
+  color: var(--ink);
+}
+.nudge.stalled { border-color: var(--warn); background: var(--warn-wash); }
+.nudge .tag {
+  font: 600 9.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .1em;
+  color: var(--accent);
+}
+.nudge.stalled .tag { color: var(--warn); }
+.nudge b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
 .counters { display: flex; gap: 16px; font-family: var(--mono); font-size: 12px; }
 .counters div { text-align: right; }
 .counters b { display: block; font-size: 16px; font-weight: 600;

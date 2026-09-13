@@ -951,3 +951,67 @@ written*, and those are different sets. The test caught it only because it
 asserted the round-trip against the real adapter instead of against the ledger's
 own idea of reversibility — checking a component against itself would have
 passed.
+
+---
+
+## B-28 · The nudge would have silently never fired
+
+**What broke.** Wiring moment detection into the live session, the first version
+read the auction fields defensively:
+
+```python
+extensions=getattr(lot, "extensions", 0) or 0,
+bid_at_first_extension=getattr(lot, "bid_at_first_extension", None),
+```
+
+`Lot` has neither field. `catalog.json` carries `extensions` and
+`bid_at_first_extension` on every auction row, and the loader never passed them
+through — so every lot would have reported **zero extensions**, every
+classification would have been `normal`, and the nudge layer would have returned
+`None` forever while looking perfectly healthy.
+
+**Same shape as B-01 and B-25.** A `getattr` default is a silent assertion, the
+same way `_dt(None) -> now()` was: it converts "this field does not exist" into a
+plausible value and removes the crash that would have named the problem. The
+headline feature of D-05 would have shipped inert.
+
+**Fix.** Add the fields to `Lot`, load them, and read them **directly** — no
+`getattr`, no default. A missing field is now an `AttributeError` on the first
+state read, which is exactly what should happen.
+
+**Lesson, third time this session.** Defensive access around data you control is
+not caution, it is a way of not finding out. `getattr(x, "f", default)` is right
+for genuinely optional foreign data and wrong for a field your own loader is
+supposed to populate — there, the crash is the feature.
+
+---
+
+## B-29 · A threshold sweep where everything passes is not validation
+
+Suite E scores 10/10, and the sweep shows extensions 3-6 crossed with movement
+5-30% **all** scoring 10/10. The first version of the runner reported that as
+*"a band rather than a point means the thresholds were placed by the data's
+shape, not fitted to it."*
+
+That reads well and is backwards. The observed extension counts are
+**1, 2, 3, 3, 6, 7, 7, 11, 15, 24** — nothing sits between 3 and 6, so *any*
+cutoff inside that gap separates the same two groups. A sweep where every
+setting passes is not evidence the shipped setting is right; it is evidence the
+suite **cannot tell the settings apart**.
+
+What Suite E actually validates is the *shape* of the rule — that a gap exists,
+and that extension count rather than bid count finds it. Whether 5 beats 4 is a
+question ten lots cannot answer, and the runner now says so where it prints the
+sweep.
+
+**Also corrected: an over-claimed corroboration.** D-26b noted the stall branch
+rested on a single observation, so the eBay Live capture was checked for a
+second. It reported two — lots 257 and 263. Lot 257 is not a stall: the capture
+begins with **two seconds on its clock**, so a flat price across every frame
+means we joined a lot that had already run, not that nobody bid. Only lot 263
+(first seen at 0:16, never moved) is evidence. The filter now requires the lot to
+have been observed with real time remaining.
+
+**Lesson.** Reaching for corroboration of a weak branch is exactly when the bar
+should go up, not down — a second instance that turns out to be an artefact is
+worse than having one instance and saying so.

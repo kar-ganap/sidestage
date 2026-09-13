@@ -102,6 +102,7 @@ def state() -> JSONResponse:
     s = get_session()
     return JSONResponse({
         "lot": _lot(s.active_lot),
+        "nudge": s.nudge(),
         "lots": [_lot(l) for l in s.catalog.lots.values()],
         "log": [_msg(m) for m in reversed(s.log)],
         "queue": [_card(c) for c in s.queue()],

@@ -174,6 +174,8 @@ class Catalog:
                 starting_bid=lo.get("starting_bid"), current_bid=lo.get("current_bid"),
                 reserve=lo.get("reserve"),
                 ends_at=_dt(lo.get("ends_at")),
+                extensions=lo.get("extensions", 0),
+                bid_at_first_extension=lo.get("bid_at_first_extension"),
             )
 
     def _load_comps(self, raw: dict[str, Any]) -> None:

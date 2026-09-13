@@ -30,6 +30,7 @@ from app.catalog import Catalog, get_catalog
 from app.entities import get_resolver
 from app.llm import LLMClient, get_client
 from app.models import Draft, Intent, Lot, Verdict
+from app.moments import MomentCall, classify as classify_moment, nudge as build_nudge
 from app.pipeline import PipelineResult, draft_reply
 from app.triage import Route, TriageCascade, TriageResult, _shingle
 
@@ -131,6 +132,41 @@ class Session:
     @property
     def active_lot(self) -> Lot | None:
         return self.catalog.lots.get(self.active_lot_id or "")
+
+    # -- the nudge (D-05, Suite E) ---------------------------------------
+
+    def moment(self) -> MomentCall | None:
+        """Classify the live lot. Arithmetic on two numbers — no model call.
+
+        This is why the nudge path meets the 1.5 s budget the draft path misses
+        (B-14): there is nothing to wait for. It is recomputed on every state
+        read rather than cached, because it costs microseconds and a cached
+        moment is a stale one.
+        """
+        lot = self.active_lot
+        if lot is None:
+            return None
+        # Direct attribute access, not getattr with a default. A `getattr(lot,
+        # "extensions", 0)` here would have made a missing field look like a lot
+        # with no extensions — the nudge would never fire and nothing would say
+        # so. That is B-01's shape exactly, and it was the first version of this
+        # method.
+        return classify_moment(
+            extensions=lot.extensions,
+            bid_at_first_extension=lot.bid_at_first_extension,
+            current_bid=lot.current_bid)
+
+    def nudge(self) -> dict | None:
+        """One glanceable line, or nothing. Nothing is the common case."""
+        c = self.moment()
+        if c is None:
+            return None
+        lot = self.active_lot
+        text = build_nudge(c, lot_title=lot.title if lot else "")
+        if text is None:
+            return None
+        return {"text": text, "moment": c.moment.value, "why": c.why,
+                "extensions": c.extensions, "delta": c.delta}
 
     def set_active_lot(self, lot_id: str) -> bool:
         if lot_id not in self.catalog.lots:

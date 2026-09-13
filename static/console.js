@@ -66,7 +66,21 @@ function ThemeToggle() {
 
 /* ---------------------------------------------------------------- header */
 
-function Header({ stats, lot, busy, onReplay, onReset }) {
+/* The nudge. Rendered beside the lot rather than in a panel, because the whole
+   point is that it is absorbed at a glance while the seller is talking (D-35:
+   ~5 s of reset window minus ~3 s to read and begin speaking). Absent most of
+   the time, which is the design — a nudge layer that always has something to
+   say is one the operator learns to ignore. */
+function Nudge({ nudge }) {
+  if (!nudge) return null;
+  return html`
+    <div class=${"nudge " + nudge.moment} title=${nudge.why}>
+      <span class="tag">${nudge.moment}</span>
+      <b>${nudge.text}</b>
+    </div>`;
+}
+
+function Header({ stats, lot, nudge, busy, onReplay, onReset }) {
   return html`
     <header>
       <div class="brand">Side<span>Stage</span></div>
@@ -79,6 +93,7 @@ function Header({ stats, lot, busy, onReplay, onReset }) {
               : lot.price != null ? `$${lot.price}` : "—"}
           </span>
         </div>`}
+      <${Nudge} nudge=${nudge} />
       <div class="spacer"></div>
       <div class="counters">
         <div><b>${stats.seen}</b><span>seen</span></div>
@@ -323,7 +338,7 @@ function App() {
 
   return html`
     <div class="shell">
-      <${Header} stats=${st.stats} lot=${st.lot} busy=${busy}
+      <${Header} stats=${st.stats} lot=${st.lot} nudge=${st.nudge} busy=${busy}
                  onReplay=${replay} onReset=${reset} />
       <div class="cols">
         <${ChatLog} log=${st.log} />
