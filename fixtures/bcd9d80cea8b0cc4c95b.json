@@ -1,0 +1,23 @@
+{
+  "key": "bcd9d80cea8b0cc4c95b",
+  "latency_ms": 2841,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Last 5 sold $305\u2013$370, past 90 days",
+        "source_fact_id": "f3",
+        "type": "comp",
+        "value": "last 5 sold $305\u2013$370, past 90d"
+      },
+      {
+        "quote": "currently at $330 on this one",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "330.00"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Last 5 sold $305\u2013$370, past 90 days, and we're currently at $330 on this one."
+  }
+}

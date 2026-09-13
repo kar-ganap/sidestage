@@ -1,0 +1,17 @@
+{
+  "key": "6ef7245b1d5d49f38af1",
+  "latency_ms": 4813,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Next up after this one is the Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10, position 7, starting bid $400"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Next up after this one is the Charizard VMAX Champion's Path PSA 10, no Lugia in the queue right now."
+  }
+}

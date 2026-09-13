@@ -1,0 +1,10 @@
+{
+  "key": "20b1ed19a41d6a7e7e06",
+  "latency_ms": 5542,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "No Jirachi in the current lineup or the shop right now, sorry."
+  }
+}

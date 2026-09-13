@@ -394,16 +394,33 @@ def _read(path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
-def _dt(raw: str | None) -> datetime:
-    """Parse a date or datetime into an aware UTC datetime.
+def _dt(raw: str | None) -> datetime | None:
+    """Parse a date or datetime into an aware UTC datetime. None stays None.
 
     Seed dates are plain `YYYY-MM-DD`; lot timestamps are ISO with a zone.
     Everything downstream compares against `datetime.now(UTC)`, so a naive
     value here would raise at the worst possible moment — inside evidence
-    assembly, on the critical path.
+    assembly, on the critical path. Hence the tz coercion.
+
+    **It used to return `datetime.now(UTC)` for a missing value**, as a defensive
+    default against exactly that crash. That silently fabricated data (B-25):
+    only one lot in `catalog.json` carries an `ends_at`, so every other lot —
+    including five BIN *shop* listings that have no auction and five that had
+    already sold — was handed an auction end time equal to process start.
+
+    Two consequences, and the second is the one that matters. It put a
+    microsecond wall-clock into the evidence block, so the draft prompt differed
+    between processes and no recorded fixture could ever be replayed. And it
+    asserted, to the model, that a fixed-price shop listing was an auction
+    closing shortly — a domain falsehood introduced by a default rather than by
+    the data.
+
+    `Lot.ends_at` is `datetime | None` precisely so absence is representable.
+    Absence is now preserved; the required fields (`sold_at`, `as_of`) index
+    rather than `.get()`, so they always receive a string.
     """
     if raw is None:
-        return datetime.now(UTC)
+        return None
     d = datetime.fromisoformat(raw.replace("Z", "+00:00"))
     return d if d.tzinfo else d.replace(tzinfo=UTC)
 

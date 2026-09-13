@@ -1,0 +1,23 @@
+{
+  "key": "30ddd05b36f95d985fdc",
+  "latency_ms": 3101,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard, 4/102, holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
+      },
+      {
+        "quote": "this copy is the shadowless print",
+        "source_fact_id": "f2",
+        "type": "variant",
+        "value": "shadowless"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's the Base Set Charizard, 4/102, holo, and this copy is the shadowless print."
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "key": "a0a0498893c45ae563fd",
+  "latency_ms": 9324,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard Base Set 4/102",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard Base Set 4/102"
+      },
+      {
+        "quote": "live",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "Charizard VMAX Champion's Path",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10 queued"
+      },
+      {
+        "quote": "Blaziken ex",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Blaziken ex FireRed & LeafGreen PSA 8 queued"
+      },
+      {
+        "quote": "Shining Dragonite",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Shining Dragonite Neo Destiny raw LP queued"
+      },
+      {
+        "quote": "Base Set Blastoise",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "Base Set Blastoise 1st Edition PSA 8 queued"
+      },
+      {
+        "quote": "Gengar",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "Gengar FireRed & LeafGreen PSA 9 in shop"
+      },
+      {
+        "quote": "Mew Celebrations",
+        "source_fact_id": "f10",
+        "type": "availability",
+        "value": "Mew Celebrations 011/025 raw NM in shop"
+      },
+      {
+        "quote": "Mew ex",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9 in shop"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Right now we've got Charizard Base Set 4/102 live, then Charizard VMAX Champion's Path, Blaziken ex, Shining Dragonite, and Base Set Blastoise queued up, plus Gengar, Mew Celebrations, and Mew ex in the shop."
+  }
+}

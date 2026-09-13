@@ -1,0 +1,17 @@
+{
+  "key": "372fc9f8ac75da7c54e3",
+  "latency_ms": 3664,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "It's raw, not graded - listed as NM condition.",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "raw, NM"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's raw, not graded - listed as NM condition."
+  }
+}

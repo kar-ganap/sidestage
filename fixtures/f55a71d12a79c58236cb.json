@@ -1,0 +1,17 @@
+{
+  "key": "f55a71d12a79c58236cb",
+  "latency_ms": 4314,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard 4/102",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard \u2014 Base Set 4/102"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "The card we have details on here is the Base Set Charizard 4/102, not a Pikachu, so I'll need you to clarify which Pikachu you're asking about."
+  }
+}

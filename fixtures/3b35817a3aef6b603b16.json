@@ -1,0 +1,23 @@
+{
+  "key": "3b35817a3aef6b603b16",
+  "latency_ms": 6441,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "already sold for $360",
+        "source_fact_id": "f6",
+        "type": "price",
+        "value": "$360"
+      },
+      {
+        "quote": "coming up next at lot 9",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "Just to confirm, do you mean the Dark Dragonite 1st Ed PSA 9 that already sold for $360, or the Shining Dragonite Neo Destiny raw LP coming up next at lot 9?"
+  }
+}

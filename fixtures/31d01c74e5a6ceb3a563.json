@@ -1,0 +1,10 @@
+{
+  "key": "31d01c74e5a6ceb3a563",
+  "latency_ms": 2351,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "We've got two Mew options in the shop right now, the Celebrations 011/025 raw NM or the Mew ex FireRed & LeafGreen PSA 9 \u2014 which one are you asking about?"
+  }
+}

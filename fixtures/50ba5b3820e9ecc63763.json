@@ -1,0 +1,17 @@
+{
+  "key": "50ba5b3820e9ecc63763",
+  "latency_ms": 5190,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "current lot is the Base Set Charizard holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Nothing Team Rocket lined up right now, current lot is the Base Set Charizard holo."
+  }
+}

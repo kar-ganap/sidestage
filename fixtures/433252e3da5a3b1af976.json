@@ -1,0 +1,10 @@
+{
+  "key": "433252e3da5a3b1af976",
+  "latency_ms": 4776,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "Centering isn't graded on this raw copy, so the host will check it under the light on camera for you."
+  }
+}

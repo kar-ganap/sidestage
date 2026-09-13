@@ -1,0 +1,23 @@
+{
+  "key": "b28dfd68e02015d6431d",
+  "latency_ms": 2902,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "raw NM Base Set Charizard",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "NM"
+      },
+      {
+        "quote": "back condition is something the host will need to check on camera for you",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "back_condition not assertable, defer to host"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's a raw NM Base Set Charizard, but back condition is something the host will need to check on camera for you."
+  }
+}

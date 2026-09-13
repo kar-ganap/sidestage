@@ -1,0 +1,17 @@
+{
+  "key": "99960575a76667d14cda",
+  "latency_ms": 5201,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Blastoise 1st Edition PSA 8 is coming up at position 10",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "queued, position 10"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't see a Venasaur 151 in tonight's lineup or the shop, but Base Set Blastoise 1st Edition PSA 8 is coming up at position 10."
+  }
+}

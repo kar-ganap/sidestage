@@ -1,0 +1,17 @@
+{
+  "key": "a786fbc86c690a256c52",
+  "latency_ms": 2602,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "unlimited print",
+        "source_fact_id": "f3",
+        "type": "variant",
+        "value": "unlimited"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This one is unlimited print, Champion's Path Charizard VMAX wasn't released as a 1st edition."
+  }
+}

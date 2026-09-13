@@ -1,0 +1,10 @@
+{
+  "key": "398138b7faa91d58c32e",
+  "latency_ms": 3683,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "I don't see an Arbok 151 in tonight's lineup or the shop stock, so that's not something we have listed right now."
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "key": "3a0c81375f86a6f35b59",
+  "latency_ms": 4665,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "the Charizard, Base Set 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102"
+      },
+      {
+        "quote": "we don't have enough comps yet to quote a range",
+        "source_fact_id": "f2",
+        "type": "comp",
+        "value": "not enough comps to quote"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This one up is the Charizard, Base Set 4/102 holo, not the Mewtwo \u2014 and on recent sales, we don't have enough comps yet to quote a range."
+  }
+}
