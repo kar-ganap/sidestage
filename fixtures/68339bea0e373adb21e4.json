@@ -1,0 +1,35 @@
+{
+  "key": "68339bea0e373adb21e4",
+  "latency_ms": 5531,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard VMAX Champion's Path",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10"
+      },
+      {
+        "quote": "Blaziken ex",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Blaziken ex FireRed & LeafGreen PSA 8"
+      },
+      {
+        "quote": "Shining Dragonite",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Shining Dragonite Neo Destiny raw LP"
+      },
+      {
+        "quote": "Blastoise 1st Edition",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Base Set Blastoise 1st Edition PSA 8"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't see that one queued up right now - next up is the Charizard VMAX Champion's Path, then Blaziken ex, Shining Dragonite, and the Blastoise 1st Edition."
+  }
+}

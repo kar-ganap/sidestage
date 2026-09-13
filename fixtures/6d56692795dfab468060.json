@@ -1,0 +1,17 @@
+{
+  "key": "6d56692795dfab468060",
+  "latency_ms": 4164,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard 4/102",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Base Set Charizard 4/102"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't have sales data on that here, this listing is the Base Set Charizard 4/102."
+  }
+}

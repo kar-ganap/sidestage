@@ -1,0 +1,23 @@
+{
+  "key": "dbc251e450acac6fd091",
+  "latency_ms": 7026,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "the live lot is the Base Set Charizard holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
+      },
+      {
+        "quote": "the live lot is the Base Set Charizard holo",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Nothing Team Rocket in what I've got up right now, the live lot is the Base Set Charizard holo."
+  }
+}

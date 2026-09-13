@@ -1,0 +1,17 @@
+{
+  "key": "dae2f939168c295bef1a",
+  "latency_ms": 8445,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "it's live now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "got it, noted for the Charizard base set 4/102 - it's live now."
+  }
+}

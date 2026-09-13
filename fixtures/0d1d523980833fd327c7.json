@@ -1,0 +1,23 @@
+{
+  "key": "0d1d523980833fd327c7",
+  "latency_ms": 2707,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "$890",
+        "source_fact_id": "f5",
+        "type": "bid",
+        "value": "890.00"
+      },
+      {
+        "quote": "still live",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Ha, no flash deals here, the shadowless Charizard is at $890 right now and still live."
+  }
+}

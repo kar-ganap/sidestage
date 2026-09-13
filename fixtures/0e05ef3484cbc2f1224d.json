@@ -1,0 +1,29 @@
+{
+  "key": "0e05ef3484cbc2f1224d",
+  "latency_ms": 10267,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "a Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10, queued at position 7"
+      },
+      {
+        "quote": "a Blaziken ex PSA 8",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Blaziken ex FireRed & LeafGreen PSA 8, queued at position 8"
+      },
+      {
+        "quote": "a Mew Celebrations raw NM for $24",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew Celebrations 011/025 raw NM, $24, 3 available in shop"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "No sealed promos or banned cards in this lineup, but next up we've got a Charizard VMAX Champion's Path PSA 10 and a Blaziken ex PSA 8, and in the shop right now there's a Mew Celebrations raw NM for $24."
+  }
+}

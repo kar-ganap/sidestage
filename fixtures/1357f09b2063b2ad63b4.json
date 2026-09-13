@@ -1,17 +1,10 @@
 {
   "key": "1357f09b2063b2ad63b4",
-  "latency_ms": 4303,
+  "latency_ms": 3656,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "this listing is for the reverse holo Pikachu from EX FireRed & LeafGreen",
-        "source_fact_id": "f1",
-        "type": "identity",
-        "value": "Pikachu, EX FireRed & LeafGreen 70/112, reverse holo"
-      }
-    ],
+    "claims": [],
     "needs_clarification": false,
-    "reply_text": "I don't have recent sales data on that card, this listing is for the reverse holo Pikachu from EX FireRed & LeafGreen."
+    "reply_text": "I don't have any sales data on Dark Dragonite for this lot, sorry - happy to check on the Pikachu FRLG comps if that's useful."
   }
 }

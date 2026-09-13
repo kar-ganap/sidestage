@@ -1,0 +1,17 @@
+{
+  "key": "d07fadb6e908fcf7c96b",
+  "latency_ms": 5003,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Just the one Blastoise coming up, a Base Set 1st Edition PSA 8 at lot position 10.",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "queued, position 10, Base Set Blastoise 1st Edition PSA 8"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Just the one Blastoise coming up, a Base Set 1st Edition PSA 8 at lot position 10."
+  }
+}

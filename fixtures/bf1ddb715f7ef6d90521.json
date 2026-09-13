@@ -1,10 +1,23 @@
 {
   "key": "bf1ddb715f7ef6d90521",
-  "latency_ms": 4395,
+  "latency_ms": 7975,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
-    "needs_clarification": true,
-    "reply_text": "Don't have anything by that name in today's lineup, only what's queued up and in the shop right now \u2014 did you mean one of the listed lots?"
+    "claims": [
+      {
+        "quote": "Base Set Charizard holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
+      },
+      {
+        "quote": "we're live on the Base Set Charizard holo right now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Don't have a Gallade tourney promo listed here - we're live on the Base Set Charizard holo right now, and nothing like that in the upcoming queue either."
   }
 }

@@ -1,0 +1,23 @@
+{
+  "key": "7ca37934331f3705e7e6",
+  "latency_ms": 3415,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Shining Dragonite Neo Destiny coming up next as lot 9",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued, position 9"
+      },
+      {
+        "quote": "Dark Dragonite 1st Ed PSA 9 that already sold",
+        "source_fact_id": "f6",
+        "type": "price",
+        "value": "360.0"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "Which Dragonite do you mean, the Shining Dragonite Neo Destiny coming up next as lot 9, or the Dark Dragonite 1st Ed PSA 9 that already sold?"
+  }
+}

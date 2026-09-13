@@ -1,0 +1,23 @@
+{
+  "key": "b4349161fd1fb1a74224",
+  "latency_ms": 5861,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Mew Celebrations 011/025 raw NM",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Mew Celebrations 011/025 raw NM, $24, 3 available"
+      },
+      {
+        "quote": "Mew ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9, $240, 1 available"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "We don't have anything listed as a bubble Mew right now, just Mew Celebrations 011/025 raw NM and Mew ex FireRed & LeafGreen PSA 9 in the shop, is one of those what you meant?"
+  }
+}

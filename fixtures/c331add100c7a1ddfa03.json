@@ -1,0 +1,23 @@
+{
+  "key": "c331add100c7a1ddfa03",
+  "latency_ms": 2616,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Current bid is at $890 right now",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "890.00"
+      },
+      {
+        "quote": "we don't have enough recent sales yet to quote a solid comp range",
+        "source_fact_id": "f4",
+        "type": "comp",
+        "value": "not quotable"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Current bid is at $890 right now, and we don't have enough recent sales yet to quote a solid comp range."
+  }
+}

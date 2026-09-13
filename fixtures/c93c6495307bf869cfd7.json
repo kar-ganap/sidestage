@@ -1,0 +1,10 @@
+{
+  "key": "c93c6495307bf869cfd7",
+  "latency_ms": 8711,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "No Jirachi in this lot or up next, and none in the shop right now."
+  }
+}

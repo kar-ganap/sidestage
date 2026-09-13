@@ -1,0 +1,17 @@
+{
+  "key": "e656f3ee23558cd8358a",
+  "latency_ms": 4448,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "that one doesn't have enough recent sales to quote a range yet",
+        "source_fact_id": "f5",
+        "type": "comp",
+        "value": "not enough sales to quote"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't have any sales data on a Gengar Fire Read card, only on the Charizard Base Set holo up right now, and that one doesn't have enough recent sales to quote a range yet."
+  }
+}

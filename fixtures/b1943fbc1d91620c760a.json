@@ -1,0 +1,23 @@
+{
+  "key": "b1943fbc1d91620c760a",
+  "latency_ms": 5660,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "next up is the Charizard VMAX Champion's Path PSA 10 at 7",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "then Blaziken ex PSA 8 at 8",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Don't have a Lugia queued up right now, next up is the Charizard VMAX Champion's Path PSA 10 at 7, then Blaziken ex PSA 8 at 8."
+  }
+}

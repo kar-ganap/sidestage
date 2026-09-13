@@ -1,0 +1,23 @@
+{
+  "key": "30ee401f92c9c84f676f",
+  "latency_ms": 4752,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Current bid's at $890",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "$890.00"
+      },
+      {
+        "quote": "we don't have enough recent sales to quote a solid range yet",
+        "source_fact_id": "f4",
+        "type": "comp",
+        "value": "insufficient data - only 3 sales in 90 days, need 5 to quote a range"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Current bid's at $890, and honestly we don't have enough recent sales to quote a solid range yet."
+  }
+}

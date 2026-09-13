@@ -1,23 +1,10 @@
 {
   "key": "b969b61c284471064fd7",
-  "latency_ms": 9335,
+  "latency_ms": 3358,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "This listing is the Base Set Charizard 4/102",
-        "source_fact_id": "f1",
-        "type": "identity",
-        "value": "Charizard, Base Set 4/102, holo"
-      },
-      {
-        "quote": "raw and graded NM by us",
-        "source_fact_id": "f2",
-        "type": "grade",
-        "value": "raw, NM"
-      }
-    ],
+    "claims": [],
     "needs_clarification": true,
-    "reply_text": "This listing is the Base Set Charizard 4/102, raw and graded NM by us - if you meant a different card let us know which one, and for surface, edges, and centering the host will check it live on camera."
+    "reply_text": "I don't have that card pulled up right now, can you confirm which listing you mean, is it the Base Set Charizard on screen?"
   }
 }

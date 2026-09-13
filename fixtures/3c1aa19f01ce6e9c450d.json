@@ -1,17 +1,23 @@
 {
   "key": "3c1aa19f01ce6e9c450d",
-  "latency_ms": 2598,
+  "latency_ms": 2741,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Current bid on the Charizard is $890",
+        "quote": "Current bid on the Charizard is $890 right now",
         "source_fact_id": "f2",
         "type": "bid",
         "value": "$890.00"
+      },
+      {
+        "quote": "reserve not met yet",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "reserve_met: false"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Current bid on the Charizard is $890."
+    "reply_text": "Current bid on the Charizard is $890 right now, reserve not met yet."
   }
 }

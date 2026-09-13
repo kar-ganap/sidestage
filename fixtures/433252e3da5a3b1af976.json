@@ -1,10 +1,17 @@
 {
   "key": "433252e3da5a3b1af976",
-  "latency_ms": 4776,
+  "latency_ms": 2334,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "Centering's not graded on this one, it's raw, so I'll have the host check it on camera for you.",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "centering not assertable, observational only"
+      }
+    ],
     "needs_clarification": false,
-    "reply_text": "Centering isn't graded on this raw copy, so the host will check it under the light on camera for you."
+    "reply_text": "Centering's not graded on this one, it's raw, so I'll have the host check it on camera for you."
   }
 }

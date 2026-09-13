@@ -1,0 +1,10 @@
+{
+  "key": "ca52c2246221eaeb2c96",
+  "latency_ms": 3652,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "which lot do you mean by \"gare\" - can you clarify which item you're bidding on"
+  }
+}

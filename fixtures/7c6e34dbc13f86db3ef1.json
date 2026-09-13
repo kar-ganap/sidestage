@@ -1,0 +1,17 @@
+{
+  "key": "7c6e34dbc13f86db3ef1",
+  "latency_ms": 8948,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard \u2014 Base Set 4/102"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Sure, flipping the Charizard back over now so you can see it again."
+  }
+}

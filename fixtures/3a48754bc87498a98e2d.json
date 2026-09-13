@@ -1,0 +1,17 @@
+{
+  "key": "3a48754bc87498a98e2d",
+  "latency_ms": 3140,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "bid's at $890 on the Charizard right now",
+        "source_fact_id": "f5",
+        "type": "bid",
+        "value": "890.00"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Doing good, thanks for hanging out \u2014 bid's at $890 on the Charizard right now, still time to jump in."
+  }
+}

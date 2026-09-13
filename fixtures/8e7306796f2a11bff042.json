@@ -1,11 +1,11 @@
 {
   "key": "8e7306796f2a11bff042",
-  "latency_ms": 3232,
+  "latency_ms": 2464,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Blaziken ex FireRed & LeafGreen PSA 8 is queued up at position 8",
+        "quote": "Blaziken ex FireRed & LeafGreen PSA 8 is coming up at lot 8",
         "source_fact_id": "f5",
         "type": "availability",
         "value": "queued, position 8"
@@ -13,11 +13,11 @@
       {
         "quote": "starting bid $60",
         "source_fact_id": "f5",
-        "type": "bid",
+        "type": "price",
         "value": "60.0"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Yes, Blaziken ex FireRed & LeafGreen PSA 8 is queued up at position 8, starting bid $60."
+    "reply_text": "Yes, Blaziken ex FireRed & LeafGreen PSA 8 is coming up at lot 8, starting bid $60."
   }
 }

@@ -1,29 +1,29 @@
 {
   "key": "3442dc12b7a6f8967a0d",
-  "latency_ms": 2790,
+  "latency_ms": 3904,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "The Mew Celebrations 011/025",
+        "quote": "Celebrations Mew 011/025",
         "source_fact_id": "f1",
         "type": "identity",
         "value": "Mew \u2014 Celebrations 011/025"
       },
       {
-        "quote": "is priced at $24",
+        "quote": "$24.00",
         "source_fact_id": "f2",
         "type": "price",
-        "value": "24.00 USD"
+        "value": "24.00"
       },
       {
-        "quote": "I don't have enough recent sales to quote comps on it",
+        "quote": "I don't have enough recent sales on this one to give you a comp range",
         "source_fact_id": "f3",
         "type": "comp",
         "value": "not quotable"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "The Mew Celebrations 011/025 is priced at $24, and I don't have enough recent sales to quote comps on it."
+    "reply_text": "The Celebrations Mew 011/025 is listed at $24.00 right now, and I don't have enough recent sales on this one to give you a comp range."
   }
 }

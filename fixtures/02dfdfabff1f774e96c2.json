@@ -1,0 +1,17 @@
+{
+  "key": "02dfdfabff1f774e96c2",
+  "latency_ms": 3602,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "next up after this Charizard is the Charizard VMAX Champion's Path PSA 10 at position 7",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "No Lugia queued up right now, next up after this Charizard is the Charizard VMAX Champion's Path PSA 10 at position 7."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "key": "bcf717118bf5e946d892",
-  "latency_ms": 3117,
+  "latency_ms": 3008,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
@@ -18,6 +18,6 @@
       }
     ],
     "needs_clarification": true,
-    "reply_text": "Which Mew are you after\u2014the Mew Celebrations 011/025 raw NM at $24, or the Mew ex FireRed & LeafGreen PSA 9 at $240?"
+    "reply_text": "Which Mew do you mean \u2014 the Mew Celebrations 011/025 raw NM at $24, or the Mew ex FireRed & LeafGreen PSA 9 at $240?"
   }
 }

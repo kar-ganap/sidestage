@@ -1,17 +1,17 @@
 {
   "key": "ccc737553b5e78bade71",
-  "latency_ms": 3453,
+  "latency_ms": 3279,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "listed raw at NM",
+        "quote": "listed as raw NM overall",
         "source_fact_id": "f2",
         "type": "grade",
-        "value": "NM"
+        "value": "raw, NM"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "It's listed raw at NM, but back condition is something I'll have the host show on camera rather than me calling it out here."
+    "reply_text": "It's listed as raw NM overall, but I'll have the host flip it over on camera to check the back condition for you."
   }
 }

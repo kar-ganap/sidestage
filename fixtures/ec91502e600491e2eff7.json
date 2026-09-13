@@ -1,0 +1,29 @@
+{
+  "key": "ec91502e600491e2eff7",
+  "latency_ms": 5600,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "last 5 sold $305\u2013$370, past 90d",
+        "source_fact_id": "f3",
+        "type": "comp",
+        "value": "last 5 sold $305\u2013$370, past 90d"
+      },
+      {
+        "quote": "Current bid is $330.00",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "330.00"
+      },
+      {
+        "quote": "PSA 10 pop is 2,967, 0 higher",
+        "source_fact_id": "f4",
+        "type": "pop",
+        "value": "2967, 0 higher"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Can't call it an investment, but recent sales show last 5 sold $305\u2013$370, past 90d. Current bid is $330.00. PSA 10 pop is 2,967, 0 higher."
+  }
+}

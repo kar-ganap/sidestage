@@ -1,0 +1,23 @@
+{
+  "key": "376de97a0915a338cc24",
+  "latency_ms": 3957,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Celebrations 011/025 raw NM",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Mew Celebrations 011/025 raw NM, $24, 3 available"
+      },
+      {
+        "quote": "Mew ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9, $240, 1 available"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "We have two Mew items in the shop right now, the Celebrations 011/025 raw NM and the Mew ex FireRed & LeafGreen PSA 9, which one did you mean?"
+  }
+}

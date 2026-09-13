@@ -1,0 +1,17 @@
+{
+  "key": "30505ab0a563e61610de",
+  "latency_ms": 2622,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "It's raw",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "raw"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's raw so there's no graded centering on it, I'll have the host check it on camera for you."
+  }
+}

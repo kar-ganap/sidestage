@@ -1,17 +1,17 @@
 {
   "key": "a786fbc86c690a256c52",
-  "latency_ms": 2602,
+  "latency_ms": 2991,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "unlimited print",
+        "quote": "the unlimited print run, not 1st edition - Champion's Path only came out unlimited",
         "source_fact_id": "f3",
         "type": "variant",
         "value": "unlimited"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "This one is unlimited print, Champion's Path Charizard VMAX wasn't released as a 1st edition."
+    "reply_text": "This one's the unlimited print run, not 1st edition - Champion's Path only came out unlimited."
   }
 }

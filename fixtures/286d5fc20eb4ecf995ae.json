@@ -1,0 +1,17 @@
+{
+  "key": "286d5fc20eb4ecf995ae",
+  "latency_ms": 2976,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "listed as raw NM condition",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "raw NM"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This is listed as raw NM condition, but I'll have the host check centering, edges, and surface on camera for a closer look."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "key": "8da41c1b0f01ad1b120d",
+  "latency_ms": 3287,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "No Psyduck in this lineup or the shop right now, sorry."
+  }
+}

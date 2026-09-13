@@ -1,0 +1,17 @@
+{
+  "key": "8fa4924d119c2b838b8a",
+  "latency_ms": 2570,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Back condition isn't something I can call from here, the host will flip it over on camera so you can see it live.",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "back_condition is observational, host will show on camera"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Back condition isn't something I can call from here, the host will flip it over on camera so you can see it live."
+  }
+}

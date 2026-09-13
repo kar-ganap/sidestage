@@ -1,41 +1,35 @@
 {
   "key": "c4d302cea3982d450711",
-  "latency_ms": 8485,
+  "latency_ms": 6808,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Charizard Base Set holo live now",
-        "source_fact_id": "f4",
+        "quote": "Gengar PSA 9",
+        "source_fact_id": "f9",
         "type": "availability",
-        "value": "live"
+        "value": "Gengar FireRed & LeafGreen PSA 9, $185, 1 available"
       },
       {
-        "quote": "Champion's Path Charizard VMAX PSA10",
+        "quote": "Mew ex PSA 9",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9, $240, 1 available"
+      },
+      {
+        "quote": "Charizard VMAX PSA 10",
         "source_fact_id": "f5",
         "type": "availability",
-        "value": "queued"
+        "value": "queued at position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
       },
       {
-        "quote": "Blaziken PSA8",
-        "source_fact_id": "f6",
-        "type": "availability",
-        "value": "queued"
-      },
-      {
-        "quote": "Shining Dragonite",
-        "source_fact_id": "f7",
-        "type": "availability",
-        "value": "queued"
-      },
-      {
-        "quote": "Base Set Blastoise PSA8",
+        "quote": "Blastoise 1st Ed PSA 8",
         "source_fact_id": "f8",
         "type": "availability",
-        "value": "queued"
+        "value": "queued at position 10: Base Set Blastoise 1st Edition PSA 8"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Nothing sealed or banned in tonight's queue, we've got the Charizard Base Set holo live now, then a Champion's Path Charizard VMAX PSA10, Blaziken PSA8, Shining Dragonite, and Base Set Blastoise PSA8 coming up."
+    "reply_text": "Nothing like that in this lineup, but we've got Gengar PSA 9 and Mew ex PSA 9 in the shop right now, and Charizard VMAX PSA 10 and Blastoise 1st Ed PSA 8 coming up next in the auction."
   }
 }

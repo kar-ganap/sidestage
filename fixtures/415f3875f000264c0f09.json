@@ -1,0 +1,10 @@
+{
+  "key": "415f3875f000264c0f09",
+  "latency_ms": 1963,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "Which Charizard do you mean - the Base Set raw one or the Charizard VMAX?"
+  }
+}

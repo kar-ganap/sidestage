@@ -1,0 +1,41 @@
+{
+  "key": "a7b9cd509449c16b15e4",
+  "latency_ms": 5249,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard Base Set 4/102 holo"
+      },
+      {
+        "quote": "is live right now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "Base Set Blastoise 1st Edition PSA 8 is coming up",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "queued position 10"
+      },
+      {
+        "quote": "Mew ex PSA 9",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "shop, 1 available"
+      },
+      {
+        "quote": "Gengar PSA 9 in the shop",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "shop, 1 available"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "No Fossil or Jungle sets in this lineup, but the Base Set Charizard holo is live right now, a Base Set Blastoise 1st Edition PSA 8 is coming up, and we have a Mew ex PSA 9 and a Gengar PSA 9 in the shop."
+  }
+}

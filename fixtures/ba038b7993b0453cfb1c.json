@@ -1,0 +1,17 @@
+{
+  "key": "ba038b7993b0453cfb1c",
+  "latency_ms": 2646,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Blaziken ex Fire Red & Leaf Green PSA 8 is queued up next at lot 8",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued, position 8"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Yes, Blaziken ex Fire Red & Leaf Green PSA 8 is queued up next at lot 8."
+  }
+}

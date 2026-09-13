@@ -1,0 +1,23 @@
+{
+  "key": "dcaaa2da1ec90350c2af",
+  "latency_ms": 4950,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard, 4/102, holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
+      },
+      {
+        "quote": "shadowless copy",
+        "source_fact_id": "f2",
+        "type": "variant",
+        "value": "shadowless"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This listing is the Base Set Charizard, 4/102, holo, shadowless copy \u2014 no Rayquaza here."
+  }
+}

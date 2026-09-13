@@ -1,0 +1,17 @@
+{
+  "key": "071bce02cfbbccfb9a97",
+  "latency_ms": 2934,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Can't confirm the back condition from here, I'll have the host flip it over and check on camera.",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "back_condition observational - not assertable, host will check on camera"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Can't confirm the back condition from here, I'll have the host flip it over and check on camera."
+  }
+}

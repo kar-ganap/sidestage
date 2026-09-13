@@ -1,0 +1,10 @@
+{
+  "key": "ca6db7b1b75087f64e68",
+  "latency_ms": 2402,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": false,
+    "reply_text": "Appreciate you being here, more good ones coming up shortly."
+  }
+}

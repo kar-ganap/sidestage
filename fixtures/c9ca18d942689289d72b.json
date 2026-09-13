@@ -1,0 +1,35 @@
+{
+  "key": "c9ca18d942689289d72b",
+  "latency_ms": 11468,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Blaziken ex",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Shining Dragonite",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Base Set Blastoise 1st Ed PSA 8",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Don't have a Venusaur 151 lined up for this stream \u2014 next up we've got the Charizard VMAX Champion's Path PSA 10, then Blaziken ex, Shining Dragonite, and Base Set Blastoise 1st Ed PSA 8."
+  }
+}

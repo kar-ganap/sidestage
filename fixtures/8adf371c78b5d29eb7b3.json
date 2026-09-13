@@ -1,0 +1,23 @@
+{
+  "key": "8adf371c78b5d29eb7b3",
+  "latency_ms": 7643,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
+      },
+      {
+        "quote": "we're currently live",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't have a Lugia Unseen Force lot in tonight's list, we're currently live on the Base Set Charizard 4/102 holo."
+  }
+}

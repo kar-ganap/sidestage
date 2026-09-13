@@ -1,0 +1,23 @@
+{
+  "key": "a0b0ae0bc3f276ad8fb0",
+  "latency_ms": 3049,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard 4/102",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102"
+      },
+      {
+        "quote": "shadowless variant",
+        "source_fact_id": "f2",
+        "type": "variant",
+        "value": "shadowless"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Yep, this is the Base Set Charizard 4/102, and this copy is the shadowless variant."
+  }
+}

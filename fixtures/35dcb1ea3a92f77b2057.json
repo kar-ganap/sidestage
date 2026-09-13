@@ -1,0 +1,23 @@
+{
+  "key": "35dcb1ea3a92f77b2057",
+  "latency_ms": 4084,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Celebrations 011/025",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Mew Celebrations 011/025"
+      },
+      {
+        "quote": "ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f6",
+        "type": "identity",
+        "value": "Mew ex FireRed & LeafGreen PSA 9"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "Which Mew do you mean, the Celebrations 011/025 or the ex FireRed & LeafGreen PSA 9?"
+  }
+}

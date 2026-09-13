@@ -1,23 +1,10 @@
 {
   "key": "f835a706cb1be8d608cd",
-  "latency_ms": 5556,
+  "latency_ms": 5077,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "orders ship within 2 business days of payment clearing",
-        "source_fact_id": "f1",
-        "type": "shipping",
-        "value": "Orders ship within 2 business days of payment clearing."
-      },
-      {
-        "quote": "wins from the same show combine into one shipment",
-        "source_fact_id": "f2",
-        "type": "shipping",
-        "value": "Wins from the same live show combine into one shipment at no extra cost."
-      }
-    ],
+    "claims": [],
     "needs_clarification": false,
-    "reply_text": "I don't have anything on file about shipping to Canada specifically, but domestically orders ship within 2 business days of payment clearing and wins from the same show combine into one shipment."
+    "reply_text": "I don't have Canada shipping listed here, so I can't confirm that for you."
   }
 }

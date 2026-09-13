@@ -1,0 +1,23 @@
+{
+  "key": "52c280ab740b98ab95df",
+  "latency_ms": 3328,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "queued at position 8",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued, position 8"
+      },
+      {
+        "quote": "opening bid of $60",
+        "source_fact_id": "f6",
+        "type": "bid",
+        "value": "60.0"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Yes, the Blaziken ex PSA 8 is queued at position 8 with an opening bid of $60."
+  }
+}

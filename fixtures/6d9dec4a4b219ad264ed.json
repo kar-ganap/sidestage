@@ -1,0 +1,17 @@
+{
+  "key": "6d9dec4a4b219ad264ed",
+  "latency_ms": 7156,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "We have a Shining Dragonite Neo Destiny raw LP coming up soon.",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued, position 9: Shining Dragonite Neo Destiny raw LP"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "Just to check, do you mean the Shining Dragonite or the Dark Dragonite? We have a Shining Dragonite Neo Destiny raw LP coming up soon."
+  }
+}

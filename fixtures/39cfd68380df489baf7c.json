@@ -1,0 +1,11 @@
+{
+  "key": "39cfd68380df489baf7c",
+  "latency_ms": 1438,
+  "model": "claude-sonnet-5",
+  "output": {
+    "confidence": 0.8,
+    "intent": "availability_q",
+    "referent": "catalog",
+    "seller_directed": true
+  }
+}

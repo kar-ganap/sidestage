@@ -1,17 +1,17 @@
 {
   "key": "0acdf402b4e6d4789374",
-  "latency_ms": 6881,
+  "latency_ms": 4204,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "listed as NM",
+        "quote": "listed NM raw",
         "source_fact_id": "f2",
         "type": "grade",
         "value": "NM"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "It's raw, listed as NM; the host will check centering and surface on camera before it goes up for bid."
+    "reply_text": "It's raw, listed NM, but for exact centering and surface details I'll have the host check it on camera."
   }
 }

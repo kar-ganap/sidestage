@@ -1359,9 +1359,10 @@ claim in the draft; B-62 `_centering` compared against a flat key set, so the
 *edges* subgrade stood in for centring; B-63 the ambiguity exemption applied
 even when the reply **answered** rather than asked; B-65 `_overlaps` was
 substring-either-way, so a three-character quote spoke for every sentence
-containing it and restored finding 2 verbatim; B-66 no `PRICE` fact was minted
-for a queued auction lot's starting bid, so `_price`'s repair instruction was
-unsatisfiable — an evidence-shape gap reported as a model error; B-67 the
+containing it and restored finding 2 verbatim; B-66 a queued auction lot's starting bid had no citable
+fact, so `_price`'s repair instruction was unsatisfiable — an evidence-shape gap
+reported as a model error (the first fix minted a second `PRICE` fact and made
+things worse; see **B-71**); B-67 the
 negation window was symmetric, so a denial about a *different* thing later in
 the sentence exempted an earlier assertion (*"All sales are final and returns
 are not accepted"*); B-68 `_proper_nouns` used `[a-z0-9]+` and silently exempted
@@ -1451,7 +1452,35 @@ referenced in the source to where it is written up.
 | B-63 | the ambiguity exemption applied to answers, not just questions | B-56 |
 | B-64 | `_condition` read the quote — a fragment flipped the verdict | B-56 |
 | B-65 | `_overlaps` substring-either-way; a 3-char quote spoke for all | B-56 |
-| B-66 | no `PRICE` fact for a queued lot's starting bid | B-56 |
+| B-66 | no citable fact for a queued lot's starting bid — *superseded by B-71*, which fixed it by removing the duplicate rather than adding a second `PRICE` fact | B-56 |
 | B-67 | the negation window was symmetric | B-56 |
 | B-68 | `_proper_nouns` exempted digits | B-56 |
 | B-69 | `_grade` fell back to the quote for the stated grade | B-56 |
+
+## B-71 · One assertable value, one fact, one kind
+
+The queue facts carried `starting_bid` and `price` **inside** an `availability`
+fact, so a money figure existed in two facts of two kinds at once. Asked *"how
+many blastoise do you have left, loads right?"*, the model answered correctly —
+*"...at lot position 10 with a $900 starting bid"* — emitted a `price` claim,
+cited the availability fact, and was blocked for mis-citation.
+
+It had picked one of the two places the number was, and both were right. That is
+not a model error; it is an evidence-shape error being reported as one, which is
+the same mistake as B-66.
+
+**The invariant now: each assertable value lives in exactly one fact, of the kind
+that can assert it.** An opening bid is bid state, so a queued lot gets a `bid`
+fact — the same kind `_pricing` gives the lot on camera, so the model does not
+have to guess which kind a figure is depending on whether it is the live one.
+Shop lots get a `price` fact. The availability fact keeps status, position,
+title and quantity.
+
+`tests/test_evidence.py::test_an_assertable_value_lives_in_exactly_one_fact_kind`
+asserts it across five intents, so the next fact family added cannot quietly
+reintroduce the duplication.
+
+Gated on the buyer having named something: *"is the umbreon coming up?"* wants a
+position, not the opening bid of eight other lots, and every fact minted is
+prompt the model pays for on a latency-bound path. Fact count on that question
+went 19 -> 18, not 19 -> 27.

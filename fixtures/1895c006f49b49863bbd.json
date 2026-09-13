@@ -1,0 +1,29 @@
+{
+  "key": "1895c006f49b49863bbd",
+  "latency_ms": 2694,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "The Celebrations Mew 011/025",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Mew \u2014 Celebrations 011/025"
+      },
+      {
+        "quote": "listed at $24",
+        "source_fact_id": "f2",
+        "type": "price",
+        "value": "24.00"
+      },
+      {
+        "quote": "I don't have enough recent sales on record to quote a comp for it",
+        "source_fact_id": "f3",
+        "type": "comp",
+        "value": "not quotable"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "The Celebrations Mew 011/025 is listed at $24, and I don't have enough recent sales on record to quote a comp for it."
+  }
+}

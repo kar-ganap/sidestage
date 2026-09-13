@@ -1,0 +1,11 @@
+{
+  "key": "2a24f9445b69a531de5b",
+  "latency_ms": 1965,
+  "model": "claude-sonnet-5",
+  "output": {
+    "confidence": 0.85,
+    "intent": "hype_noise",
+    "referent": "none",
+    "seller_directed": false
+  }
+}

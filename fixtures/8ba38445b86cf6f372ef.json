@@ -1,0 +1,29 @@
+{
+  "key": "8ba38445b86cf6f372ef",
+  "latency_ms": 4490,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Charizard Base Set 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard Base Set 4/102 holo"
+      },
+      {
+        "quote": "live on the Charizard Base Set 4/102 holo at position 6",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "live at position 6"
+      },
+      {
+        "quote": "up next is the Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path PSA 10 queued at position 7"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "We're still live on the Charizard Base Set 4/102 holo at position 6, and up next is the Charizard VMAX Champion's Path PSA 10."
+  }
+}

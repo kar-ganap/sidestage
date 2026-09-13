@@ -1,0 +1,29 @@
+{
+  "key": "2cba6b9fe3280428b342",
+  "latency_ms": 11576,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "raw Base Set Charizard 4/102",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard Base Set 4/102"
+      },
+      {
+        "quote": "the next lot up is a PSA 10 Champion's Path VMAX",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "PSA 10 Champion's Path VMAX",
+        "source_fact_id": "f5",
+        "type": "grade",
+        "value": "PSA 10"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This one is the raw Base Set Charizard 4/102, not graded, and the next lot up is a PSA 10 Champion's Path VMAX \u2014 we don't have an 8 in the queue right now."
+  }
+}

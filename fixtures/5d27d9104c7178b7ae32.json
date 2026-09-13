@@ -1,0 +1,10 @@
+{
+  "key": "5d27d9104c7178b7ae32",
+  "latency_ms": 1887,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "Which one do you mean - the Celebrations Mew or the Mew ex from FireRed & LeafGreen?"
+  }
+}

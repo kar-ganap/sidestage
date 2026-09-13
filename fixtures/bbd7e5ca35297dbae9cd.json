@@ -1,10 +1,10 @@
 {
   "key": "bbd7e5ca35297dbae9cd",
-  "latency_ms": 1885,
+  "latency_ms": 1984,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [],
     "needs_clarification": true,
-    "reply_text": "Quick check - do you mean the Mew Celebrations or the Mew ex FireRed & LeafGreen?"
+    "reply_text": "Just to confirm, do you mean the Mew or the Mew ex?"
   }
 }

@@ -1,0 +1,35 @@
+{
+  "key": "8c41c18cfc18af0daf97",
+  "latency_ms": 7805,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "a Gengar PSA 9",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "Gengar FireRed & LeafGreen PSA 9 in shop"
+      },
+      {
+        "quote": "a Mew ex PSA 9",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9 in shop"
+      },
+      {
+        "quote": "a Charizard VMAX PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10 queued next"
+      },
+      {
+        "quote": "a Blastoise 1st Ed PSA 8",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "Base Set Blastoise 1st Edition PSA 8 queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Nothing like that in this lineup, but we do have a Gengar PSA 9 and a Mew ex PSA 9 in the shop, plus a Charizard VMAX PSA 10 and a Blastoise 1st Ed PSA 8 coming up next in the auction."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "key": "4091a4d49b7e4cd23f8d",
+  "latency_ms": 9056,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizark",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard \u2014 Base Set 4/102"
+      },
+      {
+        "quote": "current lot is the Base Set Charizark",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "queued position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
+      },
+      {
+        "quote": "Blaziken ex PSA 8",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued position 8: Blaziken ex FireRed & LeafGreen PSA 8"
+      },
+      {
+        "quote": "Shining Dragonite raw",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued position 9: Shining Dragonite Neo Destiny raw LP"
+      },
+      {
+        "quote": "Blastoise 1st Ed PSA 8",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "queued position 10: Base Set Blastoise 1st Edition PSA 8"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't see a Lugia in this lineup, sorry \u2014 current lot is the Base Set Charizark, then up next are Charizard VMAX Champion's Path PSA 10, Blaziken ex PSA 8, Shining Dragonite raw, and Blastoise 1st Ed PSA 8."
+  }
+}

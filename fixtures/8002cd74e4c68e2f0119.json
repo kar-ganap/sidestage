@@ -1,0 +1,10 @@
+{
+  "key": "8002cd74e4c68e2f0119",
+  "latency_ms": 20230,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "Not sure which item you mean, can you give me the lot number or card name so I can check the price for you."
+  }
+}

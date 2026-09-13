@@ -1,0 +1,23 @@
+{
+  "key": "c4ce04e728a8ae6ec65c",
+  "latency_ms": 2776,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "It's raw, not graded, seller-assessed as NM",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "raw, NM"
+      },
+      {
+        "quote": "I'll have the host pull it up on camera so you can check surface and centering yourself.",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "surface and centering are observational, deferred to host"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's raw, not graded, seller-assessed as NM \u2014 I'll have the host pull it up on camera so you can check surface and centering yourself."
+  }
+}

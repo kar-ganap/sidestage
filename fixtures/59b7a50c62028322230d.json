@@ -1,0 +1,41 @@
+{
+  "key": "59b7a50c62028322230d",
+  "latency_ms": 8569,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Base Set Charizard 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102"
+      },
+      {
+        "quote": "Charizard VMAX",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
+      },
+      {
+        "quote": "Blaziken",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued position 8: Blaziken ex FireRed & LeafGreen PSA 8"
+      },
+      {
+        "quote": "Shining Dragonite",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "queued position 9: Shining Dragonite Neo Destiny raw LP"
+      },
+      {
+        "quote": "Blastoise",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "queued position 10: Base Set Blastoise 1st Edition PSA 8"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't have a Lugia lot in this auction or the queue right now, sorry - current lot is the Base Set Charizard 4/102 holo, then Charizard VMAX, Blaziken, Shining Dragonite and Blastoise are lined up."
+  }
+}

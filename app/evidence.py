@@ -139,7 +139,7 @@ def assemble(
         facts += _observational(mint, item, cat, now, want)
 
     facts += _policy(mint, subject, cat, now, want)
-    facts += _queue(mint, resolution, cat, now, want)
+    facts += _queue(mint, resolution, cat, now, want, subject)
 
     return Evidence(
         id=f"ev_{uuid.uuid4().hex[:10]}",
@@ -297,24 +297,6 @@ def _pricing(m, lot: Lot, now, want) -> list[Fact]:
                 note=(f"auction, current bid ${lot.current_bid:,.2f}"
                       if lot.current_bid else "auction, no bids yet"),
             ))
-        # B-66. A queued auction lot's STARTING bid had no citable price fact —
-        # the number lives inside an availability fact, and the only PRICE fact
-        # on such a lot is the operator-only reserve. So "what's the opening on
-        # the Blastoise?" produced a price claim, `_price` answered
-        # `mis_citation`, and the bounded retry could not satisfy it because
-        # there was nothing to cite. An evidence-shape gap the verifier was
-        # reporting as a model error.
-        if (lot.starting_bid is not None and ClaimType.PRICE in want
-                and lot.status in ("queued", "live")):
-            out.append(Fact(
-                id=m(), kind=ClaimType.PRICE, subject=lot.id,
-                value={"price": lot.starting_bid, "currency": "USD",
-                       "is_starting_bid": True},
-                authority=Authority.RECORD,
-                source=f"lots.{lot.id}.starting_bid", as_of=now,
-                note=f"opening bid ${lot.starting_bid:,.2f}",
-            ))
-
         # The reserve is real and checkable, but it is the SELLER'S number and
         # saying it out loud destroys their position. Marked so the verifier can
         # let the operator see it while blocking any claim that quotes it.
@@ -445,7 +427,8 @@ _POLICY_KIND = {
 }
 
 
-def _queue(m, res: Resolution, cat: Catalog, now, want) -> list[Fact]:
+def _queue(m, res: Resolution, cat: Catalog, now, want,
+           subject: Lot | None = None) -> list[Fact]:
     """Where things sit in the show.
 
     D-34: the queue is knowable before lots go live, which is why "is the
@@ -458,26 +441,60 @@ def _queue(m, res: Resolution, cat: Catalog, now, want) -> list[Fact]:
     out: list[Fact] = []
     named = {i.id for i in res.items}
 
+    # B-71. These used to carry `starting_bid` and `price` INSIDE the
+    # availability fact, so a money figure lived in two facts of two kinds at
+    # once — and the model, asked "how many blastoise do you have left", cited
+    # the availability fact for its price claim and was blocked for
+    # mis-citation. It had picked one of the two places the number was.
+    #
+    # The invariant now: **each assertable value lives in exactly one fact, of
+    # the kind that can assert it.** Duplication across kinds is how B-04
+    # mis-citation happens, and the model is not at fault for choosing wrong
+    # between two right answers.
+    here = subject.id if subject else None
+
     for lot in cat.queue(limit=8):
-        if named and lot.item_id not in named:
-            continue
+        if (named and lot.item_id not in named) or lot.id == here:
+            continue        # the subject lot is already covered by _pricing
         out.append(Fact(
             id=m(), kind=ClaimType.AVAILABILITY, subject=lot.id,
-            value={"status": "queued", "position": lot.position, "title": lot.title,
-                   "starting_bid": lot.starting_bid},
+            value={"status": "queued", "position": lot.position, "title": lot.title},
             authority=Authority.RECORD, source=f"lots.{lot.id}", as_of=now,
             note=f"coming up at position {lot.position}: {lot.title}",
         ))
+        # An opening bid is BID state, not a price — the same kind `_pricing`
+        # gives the subject lot, so the model does not have to guess which kind
+        # a queued lot's figure is depending on whether it is the one on camera.
+        # Only when the buyer named something. "Is the umbreon coming up?" wants
+        # a position, not the opening bid of eight other lots — and every fact
+        # minted is prompt the model pays for on a latency-bound path.
+        if named and lot.starting_bid is not None and ClaimType.BID in want:
+            out.append(Fact(
+                id=m(), kind=ClaimType.BID, subject=lot.id,
+                value={"current_bid": None, "starting_bid": lot.starting_bid,
+                       "reserve_met": False, "ends_at": None},
+                authority=Authority.RECORD,
+                source=f"lots.{lot.id}.starting_bid", as_of=now,
+                note=f"{lot.title}: not open yet, opening bid "
+                     f"${lot.starting_bid:,.2f}",
+            ))
     for lot in cat.shop():
-        if named and lot.item_id not in named:
+        if (named and lot.item_id not in named) or lot.id == here:
             continue
         out.append(Fact(
             id=m(), kind=ClaimType.AVAILABILITY, subject=lot.id,
-            value={"status": "shop", "price": lot.price, "quantity": lot.quantity,
-                   "title": lot.title},
+            value={"status": "shop", "quantity": lot.quantity, "title": lot.title},
             authority=Authority.RECORD, source=f"lots.{lot.id}", as_of=now,
-            note=f"in the shop: {lot.title}, ${lot.price:,.0f}, {lot.quantity} available",
+            note=f"in the shop: {lot.title}, {lot.quantity} available",
         ))
+        if named and lot.price is not None and ClaimType.PRICE in want:
+            out.append(Fact(
+                id=m(), kind=ClaimType.PRICE, subject=lot.id,
+                value={"price": lot.price, "currency": "USD"},
+                authority=Authority.RECORD, source=f"lots.{lot.id}.price",
+                as_of=now, ttl_s=_LIVE_TTL_S,
+                note=f"{lot.title}: ${lot.price:,.2f}",
+            ))
     for lot in cat.sold():
         if named and lot.item_id not in named:
             continue

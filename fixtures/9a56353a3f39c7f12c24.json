@@ -1,47 +1,10 @@
 {
   "key": "9a56353a3f39c7f12c24",
-  "latency_ms": 11585,
+  "latency_ms": 2968,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "Base Set Charizard holo",
-        "source_fact_id": "f1",
-        "type": "identity",
-        "value": "Charizard, Base Set 4/102, holo"
-      },
-      {
-        "quote": "live on the Base Set Charizard holo now",
-        "source_fact_id": "f4",
-        "type": "availability",
-        "value": "live, position 6"
-      },
-      {
-        "quote": "Champion's Path Charizard VMAX",
-        "source_fact_id": "f5",
-        "type": "availability",
-        "value": "queued, position 7"
-      },
-      {
-        "quote": "Blaziken ex",
-        "source_fact_id": "f6",
-        "type": "availability",
-        "value": "queued, position 8"
-      },
-      {
-        "quote": "Shining Dragonite",
-        "source_fact_id": "f7",
-        "type": "availability",
-        "value": "queued, position 9"
-      },
-      {
-        "quote": "Blastoise coming up next",
-        "source_fact_id": "f8",
-        "type": "availability",
-        "value": "queued, position 10"
-      }
-    ],
+    "claims": [],
     "needs_clarification": false,
-    "reply_text": "Don't have a 151 Venusaur in tonight's lineup - we're live on the Base Set Charizard holo now, with Champion's Path Charizard VMAX, Blaziken ex, Shining Dragonite, and Blastoise queued up next."
+    "reply_text": "I don't see a Venusaur 151 in tonight's lineup or shop stock, sorry."
   }
 }

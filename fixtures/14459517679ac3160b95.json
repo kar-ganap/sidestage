@@ -1,35 +1,35 @@
 {
   "key": "14459517679ac3160b95",
-  "latency_ms": 7416,
+  "latency_ms": 16391,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "current lot",
-        "source_fact_id": "f4",
-        "type": "availability",
-        "value": "live"
+        "quote": "Base Set Charizard",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard, Base Set 4/102, holo"
       },
       {
-        "quote": "shop has FireRed & LeafGreen",
-        "source_fact_id": "f9",
+        "quote": "1st Edition Blastoise PSA 8",
+        "source_fact_id": "f8",
         "type": "availability",
-        "value": "Gengar FireRed & LeafGreen PSA 9, $185, 1 available"
+        "value": "queued, position 10, Base Set Blastoise 1st Edition PSA 8"
       },
       {
-        "quote": "FireRed & LeafGreen",
+        "quote": "Mew ex",
         "source_fact_id": "f11",
         "type": "availability",
-        "value": "Mew ex FireRed & LeafGreen PSA 9, $240, 1 available"
+        "value": "shop, 1 available, Mew ex FireRed & LeafGreen PSA 9"
       },
       {
-        "quote": "Celebrations cards",
-        "source_fact_id": "f10",
+        "quote": "Gengar",
+        "source_fact_id": "f9",
         "type": "availability",
-        "value": "Mew Celebrations 011/025 raw NM, $24, 3 available"
+        "value": "shop, 1 available, Gengar FireRed & LeafGreen PSA 9"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Nothing from Fossil or Jungle in this lineup or the shop right now, current line up is mostly modern/Base Set and shop has FireRed & LeafGreen and Celebrations cards."
+    "reply_text": "No Fossil or Jungle sets in the lineup right now, but the Base Set Charizard is live, a 1st Edition Blastoise PSA 8 is coming up, and we\u2019ve got Mew ex and Gengar in the shop."
   }
 }

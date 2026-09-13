@@ -1,17 +1,23 @@
 {
   "key": "de5e75b79059a85b3ed5",
-  "latency_ms": 3663,
+  "latency_ms": 4018,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "this is the SM Black Star Promos promo print, that's the only version this set was printed in",
+        "quote": "that set only came in the promo variant",
         "source_fact_id": "f3",
         "type": "variant",
         "value": "promo"
+      },
+      {
+        "quote": "This one is the SM Black Star Promos print",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "SM Black Star Promos SM228"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "No first edition here, this is the SM Black Star Promos promo print, that's the only version this set was printed in."
+    "reply_text": "This one is the SM Black Star Promos print, not a 1st edition - that set only came in the promo variant."
   }
 }

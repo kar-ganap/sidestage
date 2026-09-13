@@ -1,0 +1,29 @@
+{
+  "key": "3653f24e474a421442e4",
+  "latency_ms": 6289,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Mew Celebrations",
+        "source_fact_id": "f10",
+        "type": "availability",
+        "value": "Mew Celebrations 011/025 raw NM, 3 available"
+      },
+      {
+        "quote": "Mew ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9, 1 available"
+      },
+      {
+        "quote": "Gengar FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "Gengar FireRed & LeafGreen PSA 9, 1 available"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Nothing from Fossil or Jungle right now, but we do have Mew Celebrations, Mew ex FireRed & LeafGreen PSA 9, and Gengar FireRed & LeafGreen PSA 9 in the shop."
+  }
+}

@@ -1,17 +1,17 @@
 {
   "key": "93957bc4b729aec52cfc",
-  "latency_ms": 3851,
+  "latency_ms": 5913,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "I'll have the host flip it and check on camera",
+        "quote": "Back condition is something the host will check on camera for you",
         "source_fact_id": "f3",
         "type": "condition",
-        "value": "observational, not assertable"
+        "value": "observational - not asserted, host will check on camera"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "That's raw so I can't say for sure on the back, I'll have the host flip it and check on camera."
+    "reply_text": "Back condition is something the host will check on camera for you, one sec."
   }
 }

@@ -1,0 +1,35 @@
+{
+  "key": "76be4797e76753227b83",
+  "latency_ms": 17009,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "raw Base Set Charizard",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Base Set 4/102"
+      },
+      {
+        "quote": "live now at $890",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "890.00"
+      },
+      {
+        "quote": "it's live now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "there's a different Charizard lot queued up next",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This one's the raw Base Set Charizard, not a graded copy, so I can't confirm an 8 on it; it's live now at $890, and there's a different Charizard lot queued up next."
+  }
+}

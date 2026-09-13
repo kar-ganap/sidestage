@@ -1,0 +1,29 @@
+{
+  "key": "011089c017cdd51705b5",
+  "latency_ms": 19782,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Next up after this lot is the Charizard VMAX Champion's Path 074/073 PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
+      },
+      {
+        "quote": "a Mew Celebrations 011/025 raw NM for $24",
+        "source_fact_id": "f10",
+        "type": "availability",
+        "value": "shop item Mew Celebrations 011/025 raw NM, $24, 3 available"
+      },
+      {
+        "quote": "a Mew ex FireRed & LeafGreen PSA 9 for $240",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "shop item Mew ex FireRed & LeafGreen PSA 9, $240, 1 available"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Next up after this lot is the Charizard VMAX Champion's Path 074/073 PSA 10, and in the shop right now we have a Mew Celebrations 011/025 raw NM for $24 and a Mew ex FireRed & LeafGreen PSA 9 for $240."
+  }
+}

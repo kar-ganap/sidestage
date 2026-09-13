@@ -1,0 +1,35 @@
+{
+  "key": "900def35bb05d8d2e992",
+  "latency_ms": 8252,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "the VMAX 074/073 PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Blaziken ex PSA 8",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Shining Dragonite raw",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "Blastoise 1st Ed PSA 8",
+        "source_fact_id": "f8",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I don't have an Arbok 151 in tonight's lineup or the shop stock, next up after this Charizard are the VMAX 074/073 PSA 10, Blaziken ex PSA 8, Shining Dragonite raw, and Blastoise 1st Ed PSA 8."
+  }
+}

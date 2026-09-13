@@ -204,3 +204,43 @@ def test_stale_facts_do_not_silently_update(cat, res):
         assert bid_fact.value["current_bid"] == original, "evidence must be immutable"
     finally:
         lot.current_bid = original
+
+
+def test_an_assertable_value_lives_in_exactly_one_fact_kind():
+    """B-71. The queue facts used to carry `starting_bid` and `price` INSIDE an
+    availability fact, so a money figure existed in two facts of two kinds at
+    once. Asked "how many blastoise do you have left", the model cited the
+    availability fact for its price claim and was blocked for mis-citation — it
+    had picked one of the two places the number was, and both were right.
+
+    Duplication across kinds is how B-04 mis-citation happens, and the model is
+    not at fault for choosing wrong between two correct answers. The invariant:
+    each assertable value lives in one fact, of the kind that can assert it.
+    """
+    from collections import defaultdict
+    from app.catalog import get_catalog
+    from app.entities import get_resolver
+    from app.evidence import assemble
+    from app.models import Intent
+
+    cat, res = get_catalog(), get_resolver()
+    probes = [
+        ("how many blastoise do you have left", Intent.AVAILABILITY_Q),
+        ("is the umbreon coming up", Intent.AVAILABILITY_Q),
+        ("whats the bid at", Intent.PRICE_VALUE_Q),
+        ("do you ship to canada", Intent.SHIPPING_RETURNS_Q),
+        ("what do these go for", Intent.MARKET_COMMENT),
+    ]
+    for question, intent in probes:
+        ev = assemble(intent=intent, resolution=res.resolve(question), catalog=cat)
+        where: dict[float, set[str]] = defaultdict(set)
+        for f in ev.facts:
+            if not isinstance(f.value, dict):
+                continue
+            for v in f.value.values():
+                # >20 skips positions, quantities and grades, which legitimately
+                # recur; money is what a claim gets mis-typed about.
+                if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 20:
+                    where[float(v)].add(f.kind.value)
+        dupes = {n: sorted(k) for n, k in where.items() if len(k) > 1}
+        assert not dupes, f"{question!r}: same figure in two fact kinds: {dupes}"

@@ -1,17 +1,17 @@
 {
   "key": "01bdd79841b81d61bf31",
-  "latency_ms": 4637,
+  "latency_ms": 4402,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "raw, not graded, listed at NM by us",
+        "quote": "listed as NM, not graded",
         "source_fact_id": "f2",
         "type": "grade",
-        "value": "raw, NM"
+        "value": "NM"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "It's raw, not graded, listed at NM by us, so I can't promise a PSA 9 - centering and surface are things the host can check on camera."
+    "reply_text": "It's raw and listed as NM, not graded, so I can't call it a PSA 9 - centering and surface would need the host to check on camera."
   }
 }

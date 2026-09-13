@@ -1,17 +1,23 @@
 {
   "key": "aa7764a59426dce34d81",
-  "latency_ms": 5788,
+  "latency_ms": 5019,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "we just have the one Base Set Blastoise 1st Edition PSA 8 coming up at lot 10",
+        "quote": "Just the one Blastoise coming up, a Base Set 1st Edition PSA 8 at lot position 10",
         "source_fact_id": "f4",
         "type": "availability",
         "value": "queued, position 10"
+      },
+      {
+        "quote": "a $900 starting bid",
+        "source_fact_id": "f4",
+        "type": "price",
+        "value": "900.0"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Looks like we just have the one Base Set Blastoise 1st Edition PSA 8 coming up at lot 10, not a stack of them."
+    "reply_text": "Just the one Blastoise coming up, a Base Set 1st Edition PSA 8 at lot position 10 with a $900 starting bid."
   }
 }

@@ -1,0 +1,17 @@
+{
+  "key": "431c956b6b45b2ef58ec",
+  "latency_ms": 2874,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "sitting at $890 right now",
+        "source_fact_id": "f5",
+        "type": "bid",
+        "value": "890.00"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Ha, no flash deals here, the shadowless Charizard is sitting at $890 right now and still climbing."
+  }
+}

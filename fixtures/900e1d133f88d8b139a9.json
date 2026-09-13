@@ -1,0 +1,23 @@
+{
+  "key": "900e1d133f88d8b139a9",
+  "latency_ms": 3163,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "The Dark one already sold",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "sold"
+      },
+      {
+        "quote": "the Shining one is coming up soon",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "Which Dragonite do you mean, the Dark Dragonite 1st Ed PSA 9 or the Shining Dragonite from Neo Destiny? The Dark one already sold and the Shining one is coming up soon."
+  }
+}

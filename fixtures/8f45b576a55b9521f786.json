@@ -1,23 +1,35 @@
 {
   "key": "8f45b576a55b9521f786",
-  "latency_ms": 6044,
+  "latency_ms": 8778,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Base Set Charizard 4/102",
-        "source_fact_id": "f1",
-        "type": "identity",
-        "value": "Charizard Base Set 4/102"
+        "quote": "the Charizard VMAX Champion's Path",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "Charizard VMAX Champion's Path 074/073 PSA 10 queued at position 7"
       },
       {
-        "quote": "we're live on the Base Set Charizard 4/102 at position 6",
-        "source_fact_id": "f3",
+        "quote": "then Blaziken ex",
+        "source_fact_id": "f5",
         "type": "availability",
-        "value": "live, position 6"
+        "value": "Blaziken ex FireRed & LeafGreen PSA 8 queued at position 8"
+      },
+      {
+        "quote": "Shining Dragonite",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "Shining Dragonite Neo Destiny raw LP queued at position 9"
+      },
+      {
+        "quote": "the Blastoise 1st Edition",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Base Set Blastoise 1st Edition PSA 8 queued at position 10"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "I don't have a Lugia Unseen Force lot in the queue right now, we're live on the Base Set Charizard 4/102 at position 6."
+    "reply_text": "I don't have a Lugia Unseen Force lot in the queue right now, so I can't re run it - next up after this one is the Charizard VMAX Champion's Path, then Blaziken ex, Shining Dragonite, and the Blastoise 1st Edition."
   }
 }
