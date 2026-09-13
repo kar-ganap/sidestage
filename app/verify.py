@@ -673,13 +673,23 @@ def _price(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if fact.value.get("is_offer"):
         said = {float(x) for x in fact.value.get("buyer_said", [])}
         stated = _numbers(claim.value)
+        if not stated:
+            # B-117. `any(... for x in [])` is vacuously false and `_denies` was
+            # trivially true, so a claim whose value carried no digits smuggled
+            # the figure through: "These are not cheap; $6,200.00 is the going
+            # rate." A claim citing an offer must name the figure it declines.
+            return [Violation(
+                code="offer_misquoted", severity=Severity.REPAIRABLE,
+                message=("cite the figure you are declining — this claim names "
+                         "none, so nothing connects it to what the buyer said."),
+                expected=sorted(said), actual=claim.value)]
         if any(x not in said for x in stated):
             return [Violation(
                 code="offer_misquoted", severity=Severity.REPAIRABLE,
                 message=(f"the buyer named {', '.join(f'${x:,.2f}' for x in sorted(said))}"
                          f" — cite only what they said."),
                 expected=sorted(said), actual=claim.value)]
-        if not _denies(claim.quote, claim.value):
+        if not _refuses(claim.quote, claim.value):
             return [Violation(
                 code="offer_asserted_as_price", severity=Severity.UNREPAIRABLE,
                 message=("that figure is what the BUYER said, not what the "
@@ -903,6 +913,20 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
             # Any short quote must now identify one sentence unambiguously.
             if (len(_norm(c.quote)) < 24
                     and _norm(draft.text).count(_norm(c.quote)) != 1):
+                continue
+            f = ctx.evidence.by_id(c.source_fact_id)
+            if f is not None and isinstance(f.value, dict) and f.value.get("is_offer"):
+                # B-117. An offer fact holds EVERY figure the buyer mentioned,
+                # and folding its whole key set in let one legitimate decline
+                # license all the others:
+                #
+                #   "I can't do $300.00, but these go for $6,200.00."  -> PASSED
+                #
+                # A decline vouches for the figure it declines and nothing else,
+                # so the exemption is the claim's own validated value — `_price`
+                # has already checked that it is one the buyer actually said and
+                # that this claim declines it.
+                exempt |= _keys(c.value)
                 continue
             exempt |= cited_keys(c.source_fact_id)
 
@@ -1176,7 +1200,57 @@ def _assertive_spans(sentence: str) -> list[tuple[str, int, int]]:
 
 # Where one clause stops and the next begins. A negation on the far side of one
 # of these is denying something else (B-91).
-_CLAUSE = re.compile(r"[,;:—–]|\b(?:and|but|so|though|although|while|however)\b")
+# Every dash a person can type, not the two that happened to be tested. B-118:
+# `_soft` preserved `—` and `–` and the class here listed only those, so the
+# ASCII hyphen — which is what someone actually types — still erased the
+# boundary, along with U+2011, U+2012, U+2015 and U+2212. Six of eight dash
+# forms defeated the flagship UNREPAIRABLE case; the fix covered two.
+_DASHES = "‐‑‒–—―−-"
+_CLAUSE = re.compile(
+    r"[,;:" + _DASHES + r"]{1,3}|\b(?:and|but|so|though|although|while)\b")
+
+
+# A refusal of the FIGURE, not merely a negation in its vicinity. B-117:
+# `_denies` is `bool(_NEGATION.search(clause))`, so an endorsement carrying a
+# negation token read as a decline —
+#
+#   "I can't argue with $6,200.00 as the going rate."      -> PASSED
+#   "No question about it, $6,200.00 is the going rate."   -> PASSED
+#
+# Both refuse something; neither refuses the price. Lexically these are hard to
+# tell from "I can't do $300", so this is deliberately CONSERVATIVE: it accepts
+# a false block over a false pass, because the false block costs one reply and
+# the false pass puts a number the seller never agreed to in front of a buyer.
+_REFUSE_BEFORE = re.compile(
+    r"\b(?:do|go|take|accept|make|part with|let (?:it|that) go(?: for)?|"
+    r"come down to|drop to)\s*(?:it\s*)?(?:for\s*)?\$?$", re.I)
+_REFUSE_AFTER = re.compile(
+    r"^\s*\$?[\d,.]*\s*(?:wouldn'?t|won'?t|isn'?t|is not|ain'?t|doesn'?t)\b"
+    r"|^\s*\$?[\d,.]*\s*(?:is\s+)?(?:too low|below|under|short)\b", re.I)
+
+
+def _refuses(quote: str, value: str) -> bool:
+    """Is this quote declining THIS figure? (B-117)
+
+    Two shapes, because English puts the refusal on either side:
+
+        "I can't do $300"          the figure is the object of the refusal
+        "$320 wouldn't push it"    the refusal follows the figure
+
+    Anything else — including a sentence that negates something adjacent — is
+    treated as an assertion, which is the safe direction to be wrong in.
+    """
+    q = _soft(quote)
+    nums = {_numkey(m.group(0)) for m in _NUMBER_RUN.finditer(_soft(value))}
+    for m in _NUMBER_RUN.finditer(q):
+        if _numkey(m.group(0)) not in nums:
+            continue
+        before, after = q[:m.start()], q[m.end():]
+        if not _NEGATION.search(_clause_around(q, m.start(), m.end())):
+            continue
+        if _REFUSE_BEFORE.search(before[-28:]) or _REFUSE_AFTER.search(after):
+            return True
+    return False
 
 
 def _denies(quote: str, value: str) -> bool:
@@ -1207,10 +1281,25 @@ def _denies(quote: str, value: str) -> bool:
              if _numkey(m.group(0)) in want_nums]
     words = [w for w in _WORD.findall(_soft(value))
              if len(w) > 1 and not w.isdigit()]
-    spans += [(q.find(w), q.find(w) + len(w)) for w in words if q.find(w) >= 0]
+    # EVERY occurrence, not the first. `q.find(w)` returned only the earliest,
+    # so repeating the value's words in an earlier negated clause decided the
+    # verdict for a later affirming one (B-118).
+    for w in words:
+        spans += [(m.start(), m.end()) for m in re.finditer(re.escape(w), q)]
     if not spans:
         return False
-    return _negated_at(q, min(a for a, _ in spans), max(b for _, b in spans))
+    # B-118. This used to take the min..max ENVELOPE, which spans any clause
+    # boundary between the first and last matched token — `_clause_around` only
+    # looks for delimiters outside [start, end), never inside — so repeating the
+    # value's own words in an earlier negated clause restored whole-sentence
+    # scope: "No 1st Edition copies were reprinted so this 1st Edition is
+    # genuine." passed. Each occurrence is judged in its own clause instead, and
+    # EVERY occurrence must be denied, not merely one. A sentence that denies
+    # the value once and asserts it again is an assertion — "No 1st Edition
+    # copies were reprinted so this 1st Edition is genuine" — and `any` read the
+    # first clause and stopped. `all` is also the safe direction to be wrong in:
+    # it can block a convoluted true refusal, never pass a fabricated variant.
+    return all(_negated_at(q, a, b) for a, b in spans)
 
 
 def _near_quote(reply: str, quote: str, lookahead: int = 1) -> str:
@@ -1238,9 +1327,23 @@ def _near_quote(reply: str, quote: str, lookahead: int = 1) -> str:
 # correct refusal as an UNREPAIRABLE fabricated variant (B-110).
 #
 # Replaced with spaces of the SAME LENGTH so every span offset stays valid.
+#
+# B-118. The first version matched `, however,` unconditionally, which blanked a
+# GENUINE clause join: "We can't cover postage, however, the card is mint."
+# There the negation in clause one exempted the uncited superlative in clause
+# two — the exact mechanism B-91 removes — so the over-blocking fix opened a
+# false negative. An A/B across the two commits showed `pass` where wave 2 gave
+# `blocked`.
+#
+# The discriminator is whether a VERB follows: a conjunctive adverb joins two
+# predicates ("however, the card IS mint"), while an appositive interjection is
+# parenthetical ("it is not, however, 1st Edition"). Crude, and deliberately so
+# — it decides only whether a comma splits, and the conservative direction is
+# to split.
 _INTERJECTION = re.compile(
-    r",\s*(?:however|though|mind you|honestly|actually|frankly|to be fair)\s*,",
-    re.I)
+    r",\s*(?:however|though|mind you|honestly|actually|frankly|of course|"
+    r"in fact|i think|sadly|to be fair)\s*,(?!\s*(?:the|this|that|these|those|"
+    r"it|we|i|you|they|he|she)\b)", re.I)
 
 
 def _clause_around(sentence: str, start: int, end: int) -> str:
@@ -1412,7 +1515,7 @@ def _soft(s: str) -> str:
         "This copy is 1st Edition, no doubt."      BLOCKED
         "This is 1st Edition — no doubt about it."  PASSED
     """
-    return re.sub(r"[^\w\s$.,';:—–-]", "", s.lower()).strip()
+    return re.sub(r"[^\w\s$.,';:" + _DASHES + r"]", "", s.lower()).strip()
 
 
 def _slug(v: object) -> str:

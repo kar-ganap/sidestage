@@ -97,7 +97,10 @@ def main() -> int:
             if arm not in per_arm:
                 continue
             s = Spread(per_arm[arm]["safe"]) if per_arm[arm]["safe"] else None
-            r = Spread(per_arm[arm]["responsive"])
+            # B-119: unguarded, and an arm whose judge failed on every row gives
+            # an empty list -> IndexError inside `Spread.mid`. A reporting tool
+            # that crashes on a degraded run is a tool that hides degraded runs.
+            r = Spread(per_arm[arm]["responsive"]) if per_arm[arm]["responsive"] else None
             # B-113: an arm present in fewer runs than the group must say so,
             # rather than printing a one-element "range" that looks measured.
             def cell(sp: Spread | None) -> str:

@@ -85,7 +85,7 @@ rather than one classifier.
 
 Two claims were tested on a second platform and **withdrawn**: "the cascade beats the
 incumbent on a new platform" (a wash, F1 79.4% vs 80.0%) and "the incumbent is unstable"
-(chi-square homogeneity p = 0.097, does not reject). What survives cross-platform is
+(chi-square homogeneity p = 0.130, does not reject). What survives cross-platform is
 strict dominance on recall: the gate catches 16 the regex misses, the regex catches 0 the
 gate misses, p = 3.05e-05.
 
@@ -112,7 +112,7 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 292 tests, no credential needed
+uv run pytest                          # 306 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls

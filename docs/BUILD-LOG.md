@@ -2447,3 +2447,154 @@ Also: `evals/bench.py` crashed keyless on `statistics.mean` of an empty sample
 list — the TTFT samples are empty because replay does not stream — so the form
 its own docstring advertises as "everything" failed on a clean clone while the
 README's `--paths free` form worked.
+
+## B-115 · A number a test disproves and three documents still state
+
+`evals/stats.py` computed the homogeneity p as **0.130**, `tests/test_stats.py`
+asserted it, and B-87 wrote it up. **0.097 stayed in `README.md`,
+`docs/TDD.md` and `docs/SUBMISSION.md`.** The wave that found the error
+corrected the log entry and not the claims.
+
+That is worse than an unchecked number: the repo now contradicted itself in
+public, and `tools/check_docs.py` — whose wave-2 selling point was that it
+"covers the contested numbers" — had no Fact for the most contested number in
+the project. It does now, computed from the four per-segment recalls rather than
+typed, and the Cochran violation is stated alongside.
+
+## B-116 · Tests written from the intent cover the cases you intended
+
+An adversarial pass grepped `tests/` for `offer_asserted_as_price`,
+`offer_misquoted`, `_INTERJECTION`, `_soft`, `Spread` and `_require_key` and
+found **no file mentioning any of them**. Every safety behaviour added across
+two waves could be deleted with the suite green. The only two tests touching
+offer facts both asserted `not blocked` — the permissive direction only. Nothing
+anywhere asserted that a buyer-supplied figure *asserted as a price* blocks.
+
+`tests/test_offer.py` is written from the ATTACK: every test is one of that
+reviewer's surviving mutants turned into an assertion. Three of them failed on
+the first run, which is the point — see B-117.
+
+## B-117 · The offer fix had three holes, and the tests found them before I did
+
+1. **One decline licensed every other figure.** `_price` checks `claim.value`,
+   but `_coverage` folded the offer fact's *whole* key set into the exemption —
+   and an offer fact holds every number the buyer mentioned:
+
+   ```
+   "I can't do $300.00, but these go for $6,200.00."   -> PASSED
+   ```
+
+   One legitimate refusal, one fabricated price, zero violations. A decline now
+   vouches for the figure it declines and nothing else.
+
+2. **A claim with no digits smuggled one.** `stated = _numbers(claim.value)` is
+   empty when the value is prose, so the misquote check was vacuously satisfied
+   and `_denies` trivially true: *"These are not cheap; $6,200.00 is the going
+   rate."* passed.
+
+3. **A negation token is not a decline.** `_denies` is
+   `bool(_NEGATION.search(clause))`, so an endorsement carrying a negation read
+   as a refusal — *"I can't argue with $6,200.00 as the going rate."* Both
+   sentences refuse something; only one refuses the price.
+
+`_refuses` replaces it: the figure must be the object of a refusal
+(`can't do/go/take/accept…`) or be followed by one (`$320 wouldn't push it`).
+Deliberately conservative — it accepts a false block over a false pass, because
+a false block costs one reply and a false pass puts a number the seller never
+agreed to in front of a buyer.
+
+## B-118 · Two of eight dashes, and an interjection rule that broke a real one
+
+- **`_soft` preserved `—` and `–`, and `_CLAUSE` listed only those.** The ASCII
+  hyphen — what a person actually types — still erased the clause boundary,
+  along with U+2011, U+2012, U+2015 and U+2212. **Six of eight dash forms
+  defeated the flagship UNREPAIRABLE case; B-110 fixed two and reported the
+  case closed.**
+- **`_INTERJECTION` erased a genuine clause join.** `, however,` is an
+  appositive in *"it is not, however, 1st Edition"* and a conjunctive adverb in
+  *"we can't cover postage, however, the card is mint"*. Blanking both let the
+  negation in clause one exempt the uncited superlative in clause two — the
+  mechanism B-91 exists to remove, reopened by B-110's patch. An A/B across the
+  two commits showed `pass` where the previous commit gave `blocked`. A
+  following verb now distinguishes them.
+- **`_denies` took the min..max envelope** across every matched token, and
+  `_clause_around` never looks for delimiters *inside* that span — so repeating
+  the value's own words in an earlier negated clause restored whole-sentence
+  scope: *"No 1st Edition copies were reprinted so this 1st Edition is
+  genuine."* passed. Each occurrence is judged in its own clause now, and
+  **every** one must be denied: a sentence that denies the value once and
+  asserts it again is an assertion.
+
+## B-119 · The tooling had the same bug it was built to catch
+
+- `tools/check_docs.py` grouped ablation runs by `(model, arms)` while
+  `report_spike1` groups by `(model, arms, case count)` — so the two-case smoke
+  run B-113 names as the hazard still polluted the checker, which then reported
+  the published range as stale and told a reader to write **0.0%**.
+- **`--fix` rewrote a measurement.** `"observed messages"` was in
+  `_DERIVED_COUNTS`, and one of its claim sites is `pooled 69/485`. Growing the
+  corpus made `--fix` rewrite the 485 and leave the 69, silently moving a
+  published rate from 14.2% to 13.8% under a sentence still saying 14%. Its own
+  help text promised *"a measurement is never auto-edited."*
+- `report_spike1` crashed inside `Spread.mid` on an arm whose judge failed on
+  every row. A reporting tool that crashes on a degraded run hides degraded runs.
+- `chi_square_homogeneity([])` reported `licensed = True` — `min_exp` started at
+  `inf` and was never reset when the loop body did not run, so an empty input
+  satisfied Cochran's rule with no data at all.
+
+## B-120 · A guard that checked the wrong thing
+
+`_require_key` tested that `ANTHROPIC_API_KEY` was non-empty. So
+`ANTHROPIC_API_KEY=junk SIDESTAGE_LLM_MODE=replay` produced a fully offline run
+that still printed **`OVER-BLOCKED 0 0.0% <- the number that matters`** — the
+exact string B-108's docstring names as the bug. It checks `use_live_llm` now,
+which accounts for the replay override as well as the key.
+
+The B2 arithmetic was wrong in both directions too: `by['passed'] - deg`
+subtracted *all* degraded cases from the passed bucket, while a degraded case
+can land in `over_blocked`. Both rows are computed over the measured cases, and
+a run with nothing measured says so instead of printing a rate.
+
+## B-121 · The mutation harness graded its own blind spot
+
+`tools/mutate.py` reported **32/32 killed**. An independent reviewer wrote 19
+mutants it does not define and **15 survived** — including deleting the entire
+`_price` offer branch, which flips the flagship repro from blocked to pass.
+
+That is the same sentence this harness's own docstring uses to condemn the one
+before it: *"B-70's 15/15 was true of the fifteen mutants that pass happened to
+define."* Written by whoever wrote the fixes, a mutant list covers the rules
+they were thinking about.
+
+Its survivors are adopted verbatim, and `SUITE` is the whole `tests/` directory
+rather than two files — scoping it narrower made it report kills it had not
+earned. **The lesson is not that the list is now complete.** It is that the list
+has to keep coming from somewhere other than the person it is grading, which is
+an argument for the wave discipline rather than for a better harness.
+
+## B-122 · Six mutants that patched nothing
+
+Adopting an adversary's mutant list (B-121) made the harness report **six
+survivors**. All six were inert: they changed no observable behaviour at all.
+
+`offer__price_branch_off` did `setattr(V, "_price", ...)`, but `verify()`
+dispatches through `checker = REGISTRY.get(claim.type)` and the registry still
+held the original function object captured at import. The others patched module
+attributes that the probe path never reached.
+
+**A mutant that changes nothing is worse than a missing mutant.** Reporting it
+as SURVIVED claims a coverage gap that does not exist and sends you writing
+tests for a rule that was never disabled — which is exactly what happened, until
+checking each one against a probe showed the verdicts were identical before and
+after.
+
+`tools/mutate.py` now fingerprints behaviour across nine inputs — the offer
+path, the clause splitter, the negation window, coverage, and the per-type
+registry — before and after applying each mutant. A mutant that does not move
+the fingerprint is reported as **inert** and excluded from the denominator, so
+the headline is *effective* mutants killed rather than mutants attempted.
+
+**This is the third time the same shape has appeared**: B-70's harness measured
+its own blind spot, B-121's list was written by the person it graded, and
+B-122's list contained entries that did nothing. Each layer of the instrument
+needed its own check, and none of them was going to come from me.

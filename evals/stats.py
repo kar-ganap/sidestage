@@ -46,6 +46,7 @@ class McNemar:
 
 
 def mcnemar(b: int, c: int) -> McNemar:
+    """Exact McNemar. See below — this docstring continues after the guard."""
     """Exact (binomial) McNemar on the discordant pairs.
 
     Exact rather than the chi-square approximation on purpose: every comparison
@@ -59,6 +60,13 @@ def mcnemar(b: int, c: int) -> McNemar:
     here says the ASYMMETRY is unlikely by chance, not that the effect is large
     or that the sample is adequate.
     """
+    # B-119: `math.comb` raises TypeError on a float, which is the right
+    # outcome but an opaque one; counts of discordant PAIRS are integers by
+    # construction and a caller passing otherwise has a bug worth naming.
+    if int(b) != b or int(c) != c or b < 0 or c < 0:
+        raise ValueError(f"discordant pair counts must be non-negative "
+                         f"integers, got b={b!r} c={c!r}")
+    b, c = int(b), int(c)
     n = b + c
     if n == 0:
         return McNemar(b, c, 1.0, "no discordant pairs — the test is vacuous")
@@ -94,6 +102,8 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     """
     if n == 0:
         return (0.0, 0.0)
+    if k > n or k < 0:
+        raise ValueError(f"wilson: {k} successes in {n} trials is not a proportion")
     p = k / n
     d = 1 + z * z / n
     centre = (p + z * z / (2 * n)) / d
@@ -133,6 +143,11 @@ def chi_square_homogeneity(counts: list[tuple[int, int]]) -> ChiSquare:
     minimum expected cell of 4.56 and said nothing about it.
     """
     k = len(counts)
+    if not k:
+        # B-119: `min_exp` started at `inf` and was never reset when the loop
+        # body did not run, so an EMPTY input reported `licensed = True` —
+        # satisfying Cochran's rule with no data at all.
+        return ChiSquare(0.0, 0, 1.0, 0.0)
     tot_hit = sum(h for h, _ in counts)
     tot_n = sum(n for _, n in counts)
     p_pool = tot_hit / tot_n if tot_n else 0.0

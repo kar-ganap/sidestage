@@ -243,7 +243,12 @@ def _require_key() -> None:
     credential needed", so a reviewer would reasonably run it cold.
     """
     from app.config import settings
-    if not settings.anthropic_api_key:
+    # B-120: this checked only that the env var was non-empty, so
+    # `ANTHROPIC_API_KEY=junk SIDESTAGE_LLM_MODE=replay` gave a fully offline
+    # run that still printed "OVER-BLOCKED 0 0.0% <- the number that matters".
+    # What the suite needs is a LIVE model, which is what `use_live_llm`
+    # answers — it accounts for the replay override as well as the key.
+    if not settings.use_live_llm:
         print("\nSuite B generates drafts AND grades them with an independent\n"
               "model. Without ANTHROPIC_API_KEY every draft is the replay\n"
               "fallback and every grade fails, which would print a perfect\n"
@@ -317,14 +322,25 @@ def main() -> int:
         over = [o for o in out if o.verdict == "over_blocked"]
         n = len(out)
         print(f"\nB2 control — {n} cases in {time.perf_counter()-t0:.0f}s")
+        # B-120. `by['passed'] - deg` subtracted ALL degraded cases from the
+        # passed bucket, but a degraded case can land in `over_blocked` too — so
+        # the arithmetic was wrong in both directions. Count the measured ones.
         deg = sum(1 for o in out if o.degraded)
+        measured = [o for o in out if not o.degraded]
+        m = len(measured)
+        ok = sum(1 for o in measured if o.verdict == "passed")
+        ob = sum(1 for o in measured if o.verdict == "over_blocked")
         if deg:
             print(f"   DEGRADED                  {deg:>4}  {deg/n:6.1%}"
-                  f"   <- no model answered; NOT counted as passed (B-109)")
-        print(f"   passed                    {by['passed'] - deg:>4}  "
-              f"{(by['passed'] - deg)/n:6.1%}")
-        print(f"   OVER-BLOCKED              {by['over_blocked']:>4}  "
-              f"{by['over_blocked']/n:6.1%}   <- the number that matters")
+                  f"   <- no model answered; excluded from BOTH rows (B-120)")
+        print(f"   passed                    {ok:>4}  "
+              f"{(ok/m if m else 0):6.1%}")
+        if m:
+            print(f"   OVER-BLOCKED              {ob:>4}  {ob/m:6.1%}"
+                  f"   <- the number that matters")
+        else:
+            print( "   OVER-BLOCKED                 —  no case was measured; "
+                   "this run says nothing (B-120)")
         repair_funnel(out)
         if over:
             print(f"\n   over-blocked, by code:")

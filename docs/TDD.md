@@ -453,7 +453,7 @@ messages — but that justification does not travel, and the function is now nam
 
 **Does not survive:** "the incumbent is unstable." Per-segment recall reads
 40.0 / 40.7 / 68.8 / 60.0, which looks erratic, but chi-square homogeneity over
-four segments gives **p = 0.097**. It does not reject. Withdrawn — and note that
+four segments gives **p = 0.130** — and with a minimum expected cell of **4.56** the asymptotic test was never licensed (Cochran's rule wants 5). It does not reject. Withdrawn — and note that
 the fourth of those segments is the eBay Live `?` baseline rather than an
 incumbent, so the test was pooling two different things even to reach a null.
 

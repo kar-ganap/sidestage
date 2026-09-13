@@ -162,7 +162,13 @@ def _spike1_spread(model: str, arm: str, axis: str, which: str,
             # set. Pooling by model alone mixes a three-arm run with a two-arm
             # one, which is the splice this whole mechanism exists to prevent,
             # reintroduced inside the checker meant to catch it.
-            if d["draft_model"] != model or tuple(d.get("arms", [])) != arms:
+            # B-119: `report_spike1` keys on (model, arms, CASE COUNT); this
+            # was missing the third, so the two-case smoke run B-113 names as
+            # the hazard still polluted the checker — which then reported the
+            # published range as stale and told a reader to write 0.0%.
+            cases = len({r["case_id"] for r in d["rows"]})
+            if (d["draft_model"] != model or tuple(d.get("arms", [])) != arms
+                    or cases < 50):
                 continue
             sub = [r for r in d["rows"] if r["arm"] == arm]
             if not sub:
@@ -180,6 +186,21 @@ def _spike1_spread(model: str, arm: str, axis: str, which: str,
             raise FileNotFoundError(f"no recorded runs for {model}/{arm}")
         return round(min(vals) if which == "lo" else max(vals), 1)
     return go
+
+
+def _chi_p() -> float:
+    """The homogeneity p-value, COMPUTED from the four per-segment recalls.
+
+    B-115. `evals/stats.py` proved this was 0.130 and `tests/test_stats.py`
+    asserts it, while **0.097 stayed in three shipped documents** — the wave
+    that found the error corrected the BUILD-LOG entry and not the claims.
+    A number that a test disproves and a document still states is worse than an
+    unchecked one, because the repo now contradicts itself in public.
+    """
+    sys.path.insert(0, str(ROOT))
+    from evals.stats import chi_square_homogeneity
+    return round(chi_square_homogeneity(
+        [(4, 10), (11, 27), (22, 32), (6, 10)]).p, 3)
 
 
 def _bench(path: str, stat: str) -> Callable[[], float]:
@@ -221,8 +242,13 @@ def _spike1(model: str, arm: str, axis: str) -> Callable[[], float]:
 # move on every commit and `--fix` may rewrite them. Nothing derived from a run
 # is in here: an eval result that edited itself into the docs would defeat the
 # entire purpose of the check.
-_DERIVED_COUNTS = {"tests", "fixtures", "build-log entries", "decisions",
-                   "observed messages"}
+_DERIVED_COUNTS = {"tests", "fixtures", "build-log entries", "decisions"}
+# B-119. "observed messages" came OUT. It is a count of repository contents in
+# one sense and the DENOMINATOR of a measured proportion in another: one of its
+# claim sites is `pooled 69/485`, and `--fix` rewrote the 485 while leaving the
+# 69, silently changing a published rate from 14.2% to 13.8% under a sentence
+# still saying 14%. Its own help text promised "a measurement is never
+# auto-edited". If the corpus grows, that rate must be recomputed by a person.
 
 
 @dataclass
@@ -259,6 +285,11 @@ FACTS = [
     # checked 25 facts and "none of the contested ones" — decision counts and
     # heading counts were never in doubt; the Spike 2 arms and the ablation
     # spread were wrong in four documents at once.
+    Fact("chi-square homogeneity p", _chi_p,
+         [("README.md", r"chi-square homogeneity p = (\d\.\d+)"),
+          ("docs/SUBMISSION.md", r"over four segments, p = (\d\.\d+)"),
+          ("docs/TDD.md", r"four segments gives \*\*p = (\d\.\d+)\*\*")],
+         tolerance=0.0005),
     Fact("A1 precision", _triage("A1", "p"),
          [("README.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| (\d+\.\d)% \|"),
           ("docs/TDD.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| (\d+\.\d)% \|")],

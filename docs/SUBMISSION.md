@@ -42,7 +42,7 @@ find those faster than the successes, so they are listed first.
 | claim | why it went |
 |---|---|
 | *"the cascade beats the incumbent on a new platform"* | a wash — F1 79.4% vs 80.0% on eBay Live (B-21b) |
-| *"the incumbent is unstable"* | chi-square homogeneity over four segments, p = 0.097. Does not reject |
+| *"the incumbent is unstable"* | chi-square homogeneity over four segments, p = 0.130 — and the test was never licensed (min expected cell 4.56). Does not reject |
 | *"97.8% safe"* as a headline | unfalsifiable: a system that only ever says the safe fallback scores 100% on it |
 | *"verification is a 0.2 ms dict lookup"* | measured on one synthetic draft; it is 0.83 ms p95 CPU over the real corpus, ~4x what it was before the B-56 rewrite |
 | Suite E's `10/10 correct` as validation | 216 of 2,500 threshold pairs also score 10/10 |
@@ -87,7 +87,7 @@ writes give 12 verified, 3 diverged, 4 idempotent replays off 4 lost responses.
 A divergent read-back is reported and **never retried**, because retrying a
 write that may have landed is how you double-apply.
 
-**Focused tests and evals.** **292 tests**, no credential. Five eval suites, each
+**Focused tests and evals.** **306 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.
@@ -182,5 +182,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 87 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 94 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |
