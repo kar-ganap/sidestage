@@ -4,39 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SideStage</title>
-<style>
-  :root { color-scheme: light dark; }
-  body {
-    margin: 0; min-height: 100vh; display: grid; place-items: center;
-    font: 15px/1.5 ui-monospace, Menlo, monospace;
-    background: #15181b; color: #e8e7e2;
-  }
-  main { text-align: center; padding: 24px; }
-  h1 { font-size: 22px; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 6px; }
-  p { color: #9aa0a0; margin: 0 0 18px; }
-  pre {
-    text-align: left; background: #1d2126; border: 1px solid #2e3439;
-    padding: 14px 16px; border-radius: 3px; font-size: 13px; overflow-x: auto;
-  }
-  a { color: #7ea6c9; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/console.css">
 </head>
 <body>
-<main>
-  <h1>SideStage</h1>
-  <p>Live-selling copilot &middot; scaffold running</p>
-  <pre id="health">checking /healthz&hellip;</pre>
-  <p><a href="/api/docs">API docs</a></p>
-</main>
-<script>
-  fetch("/healthz")
-    .then(function (r) { return r.json(); })
-    .then(function (j) {
-      document.getElementById("health").textContent = JSON.stringify(j, null, 2);
-    })
-    .catch(function (e) {
-      document.getElementById("health").textContent = "healthz failed: " + e;
-    });
+<div id="root"><div class="boot">starting…</div></div>
+
+<!-- Required, not optional. preact/hooks does `import {options} from "preact"`
+     — a bare specifier the browser cannot resolve on its own, so without this
+     map the module fails to load and the console renders nothing but "starting…".
+     Versions are pinned: an unpinned CDN import is a silent dependency on
+     whatever shipped this morning. -->
+<script type="importmap">
+{
+  "imports": {
+    "preact": "https://cdn.jsdelivr.net/npm/preact@10.23.2/dist/preact.module.js",
+    "preact/hooks": "https://cdn.jsdelivr.net/npm/preact@10.23.2/hooks/dist/hooks.module.js",
+    "htm": "https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.module.js"
+  }
+}
 </script>
+<script type="module" src="/console.js"></script>
+<noscript><div class="boot">This console needs JavaScript.</div></noscript>
 </body>
 </html>

@@ -408,8 +408,20 @@ _DEDUPE_STRIP = re.compile(r"[^a-z0-9 ]+")
 
 
 def _shingle(text: str) -> frozenset[str]:
+    """Word set, with a crude plural stem.
+
+    The stem is not decoration. The only genuine repeat in 161 real messages is
+    `Any Blaziken?` / `Any Blazikens ?`, and on raw words those score 0.33
+    Jaccard — {any, blaziken} against {any, blazikens} shares one token of
+    three. The single feature clustering exists for was defeated by a trailing
+    `s`, and the queue showed two cards where the operator sees one question
+    asked twice.
+
+    Trailing `s` only. Real stemming (Porter and friends) buys nothing here and
+    would make the cluster key something nobody can predict by eye.
+    """
     words = _DEDUPE_STRIP.sub(" ", text.lower()).split()
-    return frozenset(words)
+    return frozenset(w[:-1] if len(w) > 3 and w.endswith("s") else w for w in words)
 
 
 def cluster(results: list[TriageResult], *, threshold: float = 0.6) -> list[TriageResult]:
