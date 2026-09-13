@@ -229,6 +229,7 @@ function renderLabel(note) {
         <kbd>d</kbd> ${sdOverride === null ? "seller-directed: auto from intent"
           : `seller-directed: forced ${sdOverride}`}</div>
       <div class="tg" id="tb"><kbd>←</kbd> back</div>
+      <div class="tg" id="tk"><kbd>space</kbd> skip — OCR junk, not a message</div>
       <div class="spacer"></div>
       <div class="tg" id="tx">export what I have</div>
     </div>
@@ -239,6 +240,7 @@ function renderLabel(note) {
   $("#th").onclick = () => { highlighted = !highlighted; renderLabel(""); };
   $("#td").onclick = () => { cycleSd(); renderLabel(""); };
   $("#tb").onclick = back;
+  $("#tk").onclick = skip;
   $("#tx").onclick = renderDone;
 }
 
@@ -259,6 +261,16 @@ function pick(key) {
   });
   i++; highlighted = false; sdOverride = null;
   save(); renderLabel("");
+}
+
+/* Rows come from OCR of text composited over live video, so a few are glyph
+   soup rather than anything a person typed. Skipping drops the row entirely —
+   it is not a label, and writing one would put noise in the corpus. */
+function skip() {
+  if (i >= msgs.length) return;
+  msgs.splice(i, 1);
+  highlighted = false; sdOverride = null;
+  save(); renderLabel("skipped");
 }
 
 function back() {
@@ -323,6 +335,7 @@ document.addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase();
   if (k === "h") { e.preventDefault(); highlighted = !highlighted; return renderLabel(""); }
   if (k === "d") { e.preventDefault(); cycleSd(); return renderLabel(""); }
+  if (k === " " || e.code === "Space") { e.preventDefault(); return skip(); }
   if (k === "arrowleft" || k === "backspace") { e.preventDefault(); return back(); }
   if (BY_KEY[k]) { e.preventDefault(); pick(k); }
 });
