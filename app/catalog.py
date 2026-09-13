@@ -276,7 +276,7 @@ class Catalog:
     def is_observational(self, attribute: str) -> bool:
         """Attributes that exist only in the card in the seller's hand (D-12).
 
-        Asked five times across 477 observed messages and answered zero times.
+        Asked five times across 485 observed messages and answered zero times.
         The copilot cannot answer these; it prompts the host to show the card.
         """
         return attribute in self.observational_attributes

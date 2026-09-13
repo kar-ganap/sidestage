@@ -1,17 +1,17 @@
 {
   "key": "ccc737553b5e78bade71",
-  "latency_ms": 3279,
+  "latency_ms": 2842,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "listed as raw NM overall",
-        "source_fact_id": "f2",
-        "type": "grade",
-        "value": "raw, NM"
+        "quote": "I'll have the host flip it over and check on camera",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "deferred to host check"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "It's listed as raw NM overall, but I'll have the host flip it over on camera to check the back condition for you."
+    "reply_text": "Can't confirm the back condition from here, I'll have the host flip it over and check on camera."
   }
 }

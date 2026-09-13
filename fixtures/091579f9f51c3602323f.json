@@ -1,35 +1,10 @@
 {
   "key": "091579f9f51c3602323f",
-  "latency_ms": 13614,
+  "latency_ms": 3529,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "the Charizard VMAX 074/073 PSA 10",
-        "source_fact_id": "f5",
-        "type": "availability",
-        "value": "queued position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
-      },
-      {
-        "quote": "a Blaziken ex",
-        "source_fact_id": "f6",
-        "type": "availability",
-        "value": "queued position 8: Blaziken ex FireRed & LeafGreen PSA 8"
-      },
-      {
-        "quote": "a Mew ex PSA 9",
-        "source_fact_id": "f11",
-        "type": "availability",
-        "value": "shop item: Mew ex FireRed & LeafGreen PSA 9, 1 available"
-      },
-      {
-        "quote": "some Mew Celebrations raw NM",
-        "source_fact_id": "f10",
-        "type": "availability",
-        "value": "shop item: Mew Celebrations 011/025 raw NM, 3 available"
-      }
-    ],
+    "claims": [],
     "needs_clarification": false,
-    "reply_text": "No Venusaur 151 in this line-up or the shop right now, up next after this Charizard is the Charizard VMAX 074/073 PSA 10, then a Blaziken ex, and in the shop we do have a Mew ex PSA 9 and some Mew Celebrations raw NM."
+    "reply_text": "I don't have a Venusaur 151 listed in tonight's lineup or shop stock, so I can't confirm availability on that one."
   }
 }

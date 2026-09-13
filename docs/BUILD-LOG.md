@@ -1936,3 +1936,63 @@ That it survived this long in four places is the argument for
 **Lesson, and it is the same one as B-78.** A name can carry a claim. `_judge`
 in an eval is a grader; `arm_incumbent` asserts that something in the world does
 this. The second is falsifiable and nobody checked it on the second platform.
+
+## B-85 · A system prompt quoting the middle segment as if it were pooled
+
+Correcting `477 -> 485` (B-84) ran into `app/llm.py:219`, because the number sits
+inside `TRIAGE_SYSTEM` — which is part of the fixture key **on purpose**, so a
+contract change invalidates the tape rather than silently replaying answers
+written against different instructions. One character stranded all 66 triage
+fixtures at once. The system working as designed, and the reason to check the
+prompt's *other* numbers before re-recording. One was wrong:
+
+> `and only 17% directed at the seller at all`
+
+Pooled it is **14%** — 69 of 485. The per-segment rates are **12.0 / 16.8 /
+13.3%**, so 17% is the middle segment quoted as though it were the whole show.
+That is verbatim the error B-21 already recorded and corrected elsewhere:
+*"Quote the pooled figure, or quote the range — never the middle segment
+alone."* The docs were worse: **"16–20%"**, when nothing in the data reaches 20%
+and the true range starts at 12%.
+
+The prompt's job is to stop the model over-assigning `seller_directed`, and it
+was overstating how much traffic is seller-directed by three points.
+
+The other three figures in that prompt check out against 485: hype 42%,
+cross-user 29%, market commentary 13%.
+
+`tools/check_docs.py` now derives the message count, the seller-directed rate and
+the `highlighted == "?"` agreement **from the labelled files**, across prose and
+prompts, so the files are the source and everything else is a copy.
+
+## B-86 · A pruning tool I could not validate, so I did not ship it
+
+Fixture keys hash the system prompt, so every prompt edit orphans the old files
+and the recorder — which adds and never removes — writes new ones beside them.
+After B-85 the directory held **269 fixtures**, and it was not obvious how many
+were playable.
+
+So I wrote `tools/prune_fixtures.py`, which computed the set of keys the current
+code could produce and reported **184 of 269 orphaned**.
+
+**Before deleting anything I moved them aside instead**, and the claim collapsed:
+the keyless demo went from 6 surfaced to 6 but its draft fell through to the
+degraded safe refusal, because the whitelist did not model repair-attempt keys
+or the second corpus. The tool would have destroyed live fixtures and the only
+symptom would have been a reviewer getting *"let me check that and come back to
+you"* for every card.
+
+Deleted rather than fixed. A tool whose failure mode is silent destruction earns
+its place by being validated, not by being plausible, and the validation costs
+more than the 76 KB it was cleaning up.
+
+**What the quarantine did establish, which is the number actually worth having:**
+instrumenting `ReplayClient._load` across the documented keyless walkthrough
+gives **0 fixture misses**. Coverage is complete where it matters, and
+`triage_test`'s 32% classify coverage is not a gap — only escalated messages
+reach the model, and all 13 of the 13 escalations in the first 40 have a
+fixture.
+
+**Lesson.** "Move it aside and see what breaks" cost one command and refuted a
+tool I was about to run with `--apply`. Quarantine before delete, for anything
+whose failure is silent.

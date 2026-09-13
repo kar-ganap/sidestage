@@ -21,7 +21,7 @@ uv run uvicorn app.main:app --reload       # → http://127.0.0.1:8000
 ```
 
 **No credential is required.** With `ANTHROPIC_API_KEY` unset the app runs in replay mode
-against 199 recorded fixtures and the full workflow still works, deterministically. Set a
+against 269 recorded fixtures and the full workflow still works, deterministically. Set a
 key in `.env` (copy `.env.example`) to run against live models. `GET /healthz` reports
 which mode you are in, the models, and the latency budgets — never the key.
 
@@ -145,7 +145,7 @@ app/
   main.py        FastAPI: REST, static console
 data/            seeded catalog, set records, comps, policies (modeled)
 static/          the operator console — no build step (DECISIONS.md D-07)
-fixtures/        199 recorded LLM responses for replay mode
+fixtures/        269 recorded LLM responses for replay mode
 evals/           the suites; `run_spike1.py` is the Spike 1 ablation
 ```
 

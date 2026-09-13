@@ -216,9 +216,9 @@ information, an action, or an item. It is false for messages addressed to other 
 viewers (even with a question mark), for commentary about prices, for banter, and \
 for platform events.
 
-Most traffic is noise. In a measured sample of 477 real messages from one show: \
+Most traffic is noise. In a measured sample of 485 real messages from one show: \
 42% hype and banter, 29% viewers talking to each other, 13% market commentary, \
-and only 17% directed at the seller at all. Do not over-assign `seller_directed` \
+and only 14% directed at the seller at all. Do not over-assign `seller_directed` \
 — a false positive costs the seller a glance they cannot spare, and the platform's \
 own question-detector already over-fires at 20%.
 

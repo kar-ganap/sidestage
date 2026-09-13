@@ -1,0 +1,17 @@
+{
+  "key": "f7d3dd18a0a3d9a156f7",
+  "latency_ms": 6510,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "next up after this Charizard is the Charizard VMAX Champion's Path 074/073 PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Don't have a Rayquaza in this lineup, next up after this Charizard is the Charizard VMAX Champion's Path 074/073 PSA 10."
+  }
+}

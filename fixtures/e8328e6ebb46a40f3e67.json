@@ -1,0 +1,23 @@
+{
+  "key": "e8328e6ebb46a40f3e67",
+  "latency_ms": 4148,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Mew Celebrations raw NM",
+        "source_fact_id": "f10",
+        "type": "availability",
+        "value": "3 available"
+      },
+      {
+        "quote": "Mew ex PSA 9",
+        "source_fact_id": "f11",
+        "type": "availability",
+        "value": "1 available"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Nothing from Fossil or Jungle right now, but we do have Mew Celebrations raw NM and Mew ex PSA 9 in the shop if you're after a Mew."
+  }
+}

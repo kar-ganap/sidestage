@@ -23,7 +23,8 @@ winning bids). **513 chat messages labelled**, on two platforms and two sellers.
 Three facts from that corpus shape everything below.
 
 **Chat is a needle-in-haystack problem at low volume, not a firehose.** 0.15
-msg/s, and 16–20% of messages are directed at the seller. The design problem is
+msg/s, and 14% of messages are directed at the seller — 12.0 / 16.8 / 13.3%
+across three segments of one show (B-85). The design problem is
 precision at low volume, not backpressure. *(This falsified the original
 load-shedding justification for the cascade — D-15.)*
 

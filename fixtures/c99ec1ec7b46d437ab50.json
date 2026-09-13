@@ -1,10 +1,17 @@
 {
   "key": "c99ec1ec7b46d437ab50",
-  "latency_ms": 3514,
+  "latency_ms": 5039,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "sitting at $890 right now",
+        "source_fact_id": "f5",
+        "type": "bid",
+        "value": "$890.00"
+      }
+    ],
     "needs_clarification": false,
-    "reply_text": "Doing good, thanks for asking - Charizard's heating up right now."
+    "reply_text": "Doing great, thanks for asking - we've got this Charizard sitting at $890 right now, come join in."
   }
 }

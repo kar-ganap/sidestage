@@ -1,10 +1,23 @@
 {
   "key": "79bad58261c8e25984a9",
-  "latency_ms": 4022,
+  "latency_ms": 5747,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "Base Set Charizard 4/102 holo",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard \u2014 Base Set 4/102"
+      },
+      {
+        "quote": "current live lot",
+        "source_fact_id": "f3",
+        "type": "availability",
+        "value": "live"
+      }
+    ],
     "needs_clarification": false,
-    "reply_text": "I don't have a Lugia Unseen Force lot in tonight's queue, so I can't rerun that one, only what's listed here."
+    "reply_text": "I don't have a Lugia Unseen Force lot in the queue or shop right now, so I can't rerun something that's not listed; current live lot is the Base Set Charizard 4/102 holo."
   }
 }

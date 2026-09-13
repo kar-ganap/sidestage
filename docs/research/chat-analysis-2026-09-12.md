@@ -293,7 +293,7 @@ Seventeen distinct failure modes for exact lookup, from twenty minutes of one sh
 | | |
 |---|---|
 | **D-15** | The cascade's justification moves from load-shedding to precision at low volume. 0.15 msg/s needs no backpressure. Keep the interpretable scorer; drop the throughput framing. |
-| **Spike 2** | Now has a measured incumbent to beat: **53.6% recall, 80.4% precision** pooled over 477 messages, from a punctuation heuristic. That is the baseline any classifier must exceed — and because the same heuristic scores 40%/41%/69% recall segment to segment, **stability across segments is part of the bar**. A far better empirical target than a synthetic PR curve. |
+| **Spike 2** | Now has a measured incumbent to beat: **53.6% recall, 80.4% precision** pooled over 485 messages, from a punctuation heuristic. That is the baseline any classifier must exceed — and because the same heuristic scores 40%/41%/69% recall segment to segment, **stability across segments is part of the bar**. A far better empirical target than a synthetic PR curve. |
 | **Spike 1** | Strengthened. Detection is solved and unhelpful; the answer is the gap. 15 instances of viewers supplying comps is the demand, stated. |
 | **D-13** | `market_comment` is 8% of traffic and was not in the taxonomy. Add it. |
 | **D-16** | Referents skew hard to catalog, closed lots and the shop — confirmed at larger n. |

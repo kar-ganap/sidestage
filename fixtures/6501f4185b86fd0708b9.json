@@ -1,10 +1,23 @@
 {
   "key": "6501f4185b86fd0708b9",
-  "latency_ms": 13990,
+  "latency_ms": 7929,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "next up is a Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued position 7: Charizard VMAX Champion's Path 074/073 PSA 10"
+      },
+      {
+        "quote": "then a Blaziken ex PSA 8",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued position 8: Blaziken ex FireRed & LeafGreen PSA 8"
+      }
+    ],
     "needs_clarification": false,
-    "reply_text": "No Psyduck in tonight's lineup or the shop right now, sorry."
+    "reply_text": "No Psyduck lined up right now \u2014 next up is a Charizard VMAX Champion's Path PSA 10, then a Blaziken ex PSA 8."
   }
 }

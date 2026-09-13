@@ -143,7 +143,7 @@ numbers stand as assumptions until it is.
 
 **On "never a bare number", which is the one I would defend hardest.** Observed chat quotes
 bare numbers relentlessly — `8 is 3 k`, `Went for 1800 the other night`, `450-470 card raw`
-— with no sample size and no date, in 60 instances across 477 messages. So the rule is not a
+— with no sample size and no date, in 60 instances across 485 messages. So the rule is not a
 description of domain practice; it is a deliberate departure from it:
 
 > A person saying *"8 is 3k"* carries implicit uncertainty the whole room understands. A
@@ -270,7 +270,7 @@ like a falsified cache design rather than one conditional layer.
 
   > ### ⚠ Contradicted by our own data `[O, 2026-09-12]`
   >
-  > **"Asked on nearly every lot" is inherited domain lore, and 477 messages of real chat do
+  > **"Asked on nearly every lot" is inherited domain lore, and 485 messages of real chat do
   > not support it.** `shipping_returns_q` appears **zero times** across all three transcribed
   > segments — before, middle and after — of a full auction show.
   >

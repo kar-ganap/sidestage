@@ -551,7 +551,7 @@ def _grade(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
 
 
 def _condition(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
-    """D-12. Asked five times in 477 observed messages, answerable zero times.
+    """D-12. Asked five times in 485 observed messages, answerable zero times.
 
     An observational fact exists precisely so the model can decline while
     pointing at something. Citing it to ASSERT is the error.

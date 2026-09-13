@@ -1,35 +1,35 @@
 {
   "key": "8a4d7267d45b8e525253",
-  "latency_ms": 9755,
+  "latency_ms": 6977,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Mew Celebrations 011/025 raw NM (3 left, $24)",
+        "quote": "Mew Celebrations 011/025 raw NM for $24 (3 in stock)",
         "source_fact_id": "f5",
         "type": "availability",
         "value": "3 available"
       },
       {
-        "quote": "Mew Celebrations 011/025 raw NM (3 left, $24)",
+        "quote": "raw NM for $24",
         "source_fact_id": "f6",
         "type": "price",
         "value": "24.00"
       },
       {
-        "quote": "Mew ex FireRed & LeafGreen PSA 9 (1 left, $240)",
+        "quote": "Mew ex FireRed & LeafGreen PSA 9 for $240 (1 left)",
         "source_fact_id": "f7",
         "type": "availability",
         "value": "1 available"
       },
       {
-        "quote": "Mew ex FireRed & LeafGreen PSA 9 (1 left, $240)",
+        "quote": "PSA 9 for $240",
         "source_fact_id": "f8",
         "type": "price",
         "value": "240.00"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "No bubble Mew here, but we've got Mew Celebrations 011/025 raw NM (3 left, $24) and Mew ex FireRed & LeafGreen PSA 9 (1 left, $240) in the shop."
+    "reply_text": "No bubble Mew listed right now, but we do have Mew Celebrations 011/025 raw NM for $24 (3 in stock) and a Mew ex FireRed & LeafGreen PSA 9 for $240 (1 left)."
   }
 }

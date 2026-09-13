@@ -1,6 +1,6 @@
 """Turning what people type into something the catalog can answer about.
 
-Buyers do not name cards the way a database does. Across 477 observed messages
+Buyers do not name cards the way a database does. Across 485 observed messages
 they produced seventeen distinct ways to break exact matching:
 
     dragonight · rakwaza · venasaur · entai · psyducks · quaza · boarders

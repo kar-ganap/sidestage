@@ -1,10 +1,29 @@
 {
   "key": "16ace47a662accc6b932",
-  "latency_ms": 3408,
+  "latency_ms": 4785,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "Dark Dragonite 1st Ed PSA 9 already sold for $360",
+        "source_fact_id": "f7",
+        "type": "price",
+        "value": "360"
+      },
+      {
+        "quote": "Shining Dragonite Neo Destiny raw LP is queued up next at lot 9",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "opening at $120",
+        "source_fact_id": "f6",
+        "type": "bid",
+        "value": "120"
+      }
+    ],
     "needs_clarification": true,
-    "reply_text": "Just to confirm which one you mean, are you asking about the Shining Dragonite Neo Destiny raw LP coming up next, or the Dark Dragonite 1st Ed PSA 9 that already sold?"
+    "reply_text": "We've got two Dragonite pieces come up tonight, the Dark Dragonite 1st Ed PSA 9 already sold for $360 and the Shining Dragonite Neo Destiny raw LP is queued up next at lot 9, opening at $120 \u2014 which one did you mean?"
   }
 }

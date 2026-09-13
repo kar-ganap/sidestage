@@ -1,35 +1,23 @@
 {
   "key": "5e34511cda35a70818ea",
-  "latency_ms": 16402,
+  "latency_ms": 11521,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "after this Charizard we've got the Charizard VMAX Champion's Path PSA 10",
+        "quote": "currently on the Base Set Charizard",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "Champion's Path Charizard VMAX is up next",
         "source_fact_id": "f5",
         "type": "availability",
-        "value": "Charizard VMAX Champion's Path 074/073 PSA 10, position 7, queued"
-      },
-      {
-        "quote": "then Blaziken ex",
-        "source_fact_id": "f6",
-        "type": "availability",
-        "value": "Blaziken ex FireRed & LeafGreen PSA 8, position 8, queued"
-      },
-      {
-        "quote": "Shining Dragonite",
-        "source_fact_id": "f7",
-        "type": "availability",
-        "value": "Shining Dragonite Neo Destiny raw LP, position 9, queued"
-      },
-      {
-        "quote": "Base Set Blastoise PSA 8",
-        "source_fact_id": "f8",
-        "type": "availability",
-        "value": "Base Set Blastoise 1st Edition PSA 8, position 10, queued"
+        "value": "queued"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "I don't have a Skyridge card in tonight's lineup - after this Charizard we've got the Charizard VMAX Champion's Path PSA 10, then Blaziken ex, Shining Dragonite, and Base Set Blastoise PSA 8."
+    "reply_text": "I don't have a Skyridge card in what's live or queued for me, we're currently on the Base Set Charizard and Champion's Path Charizard VMAX is up next."
   }
 }

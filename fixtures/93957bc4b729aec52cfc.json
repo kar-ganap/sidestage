@@ -1,17 +1,17 @@
 {
   "key": "93957bc4b729aec52cfc",
-  "latency_ms": 5913,
+  "latency_ms": 9205,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Back condition is something the host will check on camera for you",
-        "source_fact_id": "f3",
-        "type": "condition",
-        "value": "observational - not asserted, host will check on camera"
+        "quote": "listed raw NM overall",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "raw NM"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Back condition is something the host will check on camera for you, one sec."
+    "reply_text": "It's listed raw NM overall, but I'll have the host flip it and check the back on camera for you."
   }
 }

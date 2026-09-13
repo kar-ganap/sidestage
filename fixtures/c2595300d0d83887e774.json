@@ -1,10 +1,10 @@
 {
   "key": "c2595300d0d83887e774",
-  "latency_ms": 5550,
+  "latency_ms": 3131,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [],
     "needs_clarification": true,
-    "reply_text": "Which one are you bidding on, the Gengar in the shop or the Charizard that's live right now?"
+    "reply_text": "Not sure which item you mean by that, can you clarify what you're bidding on?"
   }
 }

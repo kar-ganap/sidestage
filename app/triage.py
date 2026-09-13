@@ -2,7 +2,7 @@
 
 The opponent is real and measured. Whatnot highlights chat messages in its own
 UI, and `docs/research/chat-analysis-2026-09-12.md` establishes what that
-highlighter is: across 477 observed messages **every** highlighted row contains
+highlighter is: across 485 observed messages **every** highlighted row contains
 `?` and **no** unhighlighted row does. It is a question-mark regex, and it scores
 **53.6% recall / 80.4% precision** pooled.
 

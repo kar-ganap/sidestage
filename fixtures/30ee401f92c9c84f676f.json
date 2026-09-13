@@ -1,23 +1,23 @@
 {
   "key": "30ee401f92c9c84f676f",
-  "latency_ms": 4752,
+  "latency_ms": 3347,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "Current bid's at $890",
+        "quote": "Current bid's at $890 right now",
         "source_fact_id": "f2",
         "type": "bid",
         "value": "$890.00"
       },
       {
-        "quote": "we don't have enough recent sales to quote a solid range yet",
+        "quote": "we don't have enough recent sales yet to give a solid comp range on this one",
         "source_fact_id": "f4",
         "type": "comp",
-        "value": "insufficient data - only 3 sales in 90 days, need 5 to quote a range"
+        "value": "not quotable - only 3 sales in 90d"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "Current bid's at $890, and honestly we don't have enough recent sales to quote a solid range yet."
+    "reply_text": "Current bid's at $890 right now, and honestly we don't have enough recent sales yet to give a solid comp range on this one."
   }
 }

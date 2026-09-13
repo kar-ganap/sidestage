@@ -14,7 +14,7 @@ Four files. Three are in this directory and were generated synthetically; the fo
 this directory carries `"source": "synthetic"` so the two can never be silently mixed. A
 number reported over `triage_train.jsonl` is a sanity check. The only number worth quoting
 externally is the one measured on `triage_test.jsonl`, against the incumbent baseline of
-**53.6% recall / 80.4% precision** — the figure pooled over all 477 observed messages in the
+**53.6% recall / 80.4% precision** — the figure pooled over all 485 observed messages in the
 chat analysis. Quote the pooled figure or the segment range, never one segment alone.
 
 Everything here is grounded in the seeded world under `data/` — `card_sets.json`,
@@ -467,5 +467,5 @@ messages **in this file**, and it is reproducible from the file rather than asse
 scores 40.0%/80.0% on `triage_extra_batch0.jsonl` and 68.8%/88.0% on
 `triage_extra_batch2.jsonl` — the recall spread is a property of how many people in a
 segment happened to type a `?`, not of the detector. The figure to beat is the pooled
-**53.6% recall / 80.4% precision / F1 64.3%** over all 477 messages, with the per-segment
+**53.6% recall / 80.4% precision / F1 64.3%** over all 485 messages, with the per-segment
 spread reported beside it.

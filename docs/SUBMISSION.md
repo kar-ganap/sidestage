@@ -16,7 +16,7 @@ with no API key.
 uv sync && uv run uvicorn app.main:app --reload     # → http://127.0.0.1:8000
 ```
 
-No credential needed — with `ANTHROPIC_API_KEY` unset it replays 199 recorded
+No credential needed — with `ANTHROPIC_API_KEY` unset it replays 269 recorded
 fixtures and the whole workflow still works, deterministically.
 
 1. **The demo case.** Ask the console *"is that 1st edition?"* about the
@@ -182,5 +182,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 58 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 60 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

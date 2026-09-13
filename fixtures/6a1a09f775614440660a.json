@@ -1,0 +1,17 @@
+{
+  "key": "6a1a09f775614440660a",
+  "latency_ms": 4327,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "the Charizard here",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "Charizard \u2014 Base Set 4/102"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "I only have details on the Charizard here, not a Dark Dragonite, so can you confirm which card you mean?"
+  }
+}

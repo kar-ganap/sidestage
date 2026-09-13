@@ -1,10 +1,35 @@
 {
   "key": "28860828ca358f3f58ed",
-  "latency_ms": 3262,
+  "latency_ms": 7370,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [],
+    "claims": [
+      {
+        "quote": "next up is the Champion's Path Charizard VMAX PSA10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "then Blaziken ex PSA8",
+        "source_fact_id": "f6",
+        "type": "availability",
+        "value": "queued"
+      },
+      {
+        "quote": "the shop has Gengar PSA9",
+        "source_fact_id": "f9",
+        "type": "availability",
+        "value": "shop, 1 available"
+      },
+      {
+        "quote": "and Mew Celebrations raw in stock",
+        "source_fact_id": "f10",
+        "type": "availability",
+        "value": "shop, 3 available"
+      }
+    ],
     "needs_clarification": false,
-    "reply_text": "Nothing like that in this lineup right now, just the cards and pieces listed above and coming up next."
+    "reply_text": "No sealed promos or banned cards in the lineup right now, next up is the Champion's Path Charizard VMAX PSA10 then Blaziken ex PSA8, and the shop has Gengar PSA9 and Mew Celebrations raw in stock."
   }
 }

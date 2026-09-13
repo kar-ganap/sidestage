@@ -93,6 +93,34 @@ def _registry_block() -> str:
     return f"{len(real)} entries, names match"
 
 
+def _observed(stat: str) -> Callable[[], object]:
+    """Facts derived from the labelled observation set itself.
+
+    B-84/B-85 were both this shape: a number computed once from the data, copied
+    into prose and prompts, and then the data grew. The message count went 477 ->
+    485 in fourteen places including a system prompt; the seller-directed rate
+    was quoted as 17% (the MIDDLE SEGMENT) and as "16-20%" (unsupported at
+    either end) when the pooled figure is 14%. Deriving them here means the
+    files are the source and the prose is the copy.
+    """
+    import json as _json
+
+    def go() -> object:
+        rows = []
+        for f in ("triage_test", "triage_extra_batch0", "triage_extra_batch2"):
+            for line in (ROOT / f"evals/data/{f}.jsonl").read_text().splitlines():
+                if line.strip() and "_meta" not in line:
+                    rows.append(_json.loads(line))
+        if stat == "n":
+            return len(rows)
+        if stat == "seller_directed_pct":
+            return round(100 * sum(r["seller_directed"] for r in rows) / len(rows))
+        if stat == "highlight_equals_qmark":
+            return sum(r["highlighted"] == ("?" in r["text"]) for r in rows)
+        raise ValueError(stat)
+    return go
+
+
 def _bench(path: str, stat: str) -> Callable[[], float]:
     """A latency percentile from the recorded bench run."""
     def go() -> float:
@@ -161,6 +189,15 @@ FACTS = [
           ("app/precompute.py", r"verification costs (\d\.\d) ms p95 of CPU"),
           ("docs/SUBMISSION.md", r"it is (\d\.\d+) ms p95 CPU over the real")],
          tolerance=0.35),
+    Fact("observed messages", _observed("n"),
+         [("docs/PRD.md", r"pooled 69/(\d+)"),
+          ("app/triage.py", r"across (\d+) observed messages"),
+          ("app/llm.py", r"measured sample of (\d+) real messages")]),
+    Fact("seller-directed %", _observed("seller_directed_pct"),
+         [("docs/PRD.md", r"\*\*(\d+)% of\s*\n?messages are directed at the seller\*\*"),
+          ("app/llm.py", r"only (\d+)% directed at the seller")]),
+    Fact("highlighted == '?' agreement", _observed("highlight_equals_qmark"),
+         [("evals/run_triage.py", r"messages, every highlighted row contains `\?` and no unhighlighted\s*\n\s*row does\. (\d+)/485")]),
     Fact("decisions", _decisions,
          [("docs/TDD.md", r"`DECISIONS\.md` holds (\d+) decisions"),
           ("docs/SUBMISSION.md", r"\| (\d+) decisions, each with the alternative")]),

@@ -1,23 +1,10 @@
 {
   "key": "06bfa9c5cdad169f73a6",
-  "latency_ms": 8407,
+  "latency_ms": 3788,
   "model": "claude-sonnet-5",
   "output": {
-    "claims": [
-      {
-        "quote": "live at position 6",
-        "source_fact_id": "f3",
-        "type": "availability",
-        "value": "live"
-      },
-      {
-        "quote": "up next is the Charizard VMAX Champion's Path PSA 10",
-        "source_fact_id": "f4",
-        "type": "availability",
-        "value": "queued"
-      }
-    ],
-    "needs_clarification": false,
-    "reply_text": "Right now we are still on the Charizard Base Set 4/102 holo, live at position 6, and up next is the Charizard VMAX Champion's Path PSA 10."
+    "claims": [],
+    "needs_clarification": true,
+    "reply_text": "Sorry, can you clarify what you'd like me to bring back \u2014 the card, the price, or something else?"
   }
 }

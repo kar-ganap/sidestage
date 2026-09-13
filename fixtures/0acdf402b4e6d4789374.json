@@ -1,17 +1,17 @@
 {
   "key": "0acdf402b4e6d4789374",
-  "latency_ms": 4204,
+  "latency_ms": 3786,
   "model": "claude-sonnet-5",
   "output": {
     "claims": [
       {
-        "quote": "listed NM raw",
+        "quote": "listed raw at NM condition",
         "source_fact_id": "f2",
         "type": "grade",
-        "value": "NM"
+        "value": "raw, NM"
       }
     ],
     "needs_clarification": false,
-    "reply_text": "It's raw, listed NM, but for exact centering and surface details I'll have the host check it on camera."
+    "reply_text": "This one's listed raw at NM condition, but for exact grade specifics like centering, edges, and surface I'll have the host check it on camera."
   }
 }
