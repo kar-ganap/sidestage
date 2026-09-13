@@ -500,7 +500,21 @@ settles that, and until it runs the parity claim stays provisional.
 it to be disciplined — and then verifying it anyway. The verifier turns model quality from a
 safety question into a latency and cost question. Both models should reach zero
 post-verification violations; the difference shows up as **repair rate**, and therefore
-latency, not as risk. That table is Spike 2's headline.
+latency, not as risk.
+
+> **Corrected 2026-09-12 — this table is a consequence of Spike 1, not Spike 2.** An earlier
+> draft called it "Spike 2's headline." That was written before the incumbent was measured,
+> when the second spike was still framed as a model-tiering comparison. It is not:
+>
+> - **Spike 1 — claim verification.** Mechanism. This table belongs to it, because "swap the
+>   model and safety does not move" is a property the *verifier* provides.
+> - **Spike 2 — triage against a measured incumbent** (`docs/research/chat-analysis-2026-09-12.md`).
+>   Empirical validation against Whatnot's own question-mark highlighter at 53.6% recall /
+>   80.4% precision pooled. Its headline is the head-to-head on the held-out set, plus the
+>   per-segment spread.
+>
+> The two spikes make deliberately different kinds of claim — *how it works* and *it beats
+> what exists* — and collapsing either into a model comparison loses that.
 
 **Cost profile is inverted from intuition.** Estimated ~120 drafts/live on Sonnet ≈
 $0.50–0.90, but ~800 triage escalations on Haiku ≈ $0.64 — the cheap model costs more,
