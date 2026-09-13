@@ -1,0 +1,29 @@
+{
+  "weights": {
+    "question_mark": 2.481,
+    "wh_word": 0.5021,
+    "aux_initial": 1.4517,
+    "second_person": 0.3254,
+    "request_verb": 1.6651,
+    "catalog_entity": 0.7101,
+    "entity_live": 0.6401,
+    "quantifier": 1.0221,
+    "polite": 1.156,
+    "price_offer": 0.2062,
+    "at_mention": -1.2386,
+    "noise_lexicon": -0.6447,
+    "emoji_only": -0.3498,
+    "very_short": -0.2011,
+    "long": -0.2298
+  },
+  "bias": -1.201,
+  "threshold": 0.24,
+  "fitted_on": "2026-09-13",
+  "n_train": 676,
+  "train_files": [
+    "triage_train",
+    "triage_extra_batch0",
+    "triage_extra_batch2"
+  ],
+  "note": "Fit by evals/fit_triage.py. Weights AND threshold are chosen on train only; triage_test.jsonl is never fit or tuned against."
+}

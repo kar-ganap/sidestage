@@ -513,13 +513,33 @@ class AnthropicClient:
                 max_tokens=256,           # a label and a float
                 system=_system_blocks(TRIAGE_SYSTEM),
                 messages=msgs,
+                # Explicit, and for the opposite reason to the draft path.
+                # D-17 always specified "no thinking" for triage; the code never
+                # said so, so it inherited adaptive and the reasoning ate the
+                # 256-token budget before the JSON was emitted — producing
+                # `{"intent":"unkn` and a parse error, but only once the Suite A
+                # threshold dropped far enough to escalate real volume.
+                #
+                # B-15 rejected disabling thinking on the DRAFT path because it
+                # cost citation discipline. Nothing transfers: this call picks
+                # one label from a closed set with worked examples in the prompt.
+                # Same parameter, opposite correct value — which is exactly why
+                # neither should be left to a default.
+                thinking={"type": "disabled"},
                 output_format=TriageOutput,
             )
         except Exception as exc:
             self._note_failure(exc)
             return self._fallback.classify(message=message)
         self._note_success()
-        res = _envelope(r, settings.triage_model, t0, key)
+        # An unparsable classification abstains rather than guessing: confidence
+        # 0.0 routes to `unknown`, which surfaces the message without a draft
+        # (D-13, D-14). Dropping it would be the one unsafe option — a silently
+        # discarded buyer is the failure this whole stage exists to avoid.
+        res = _envelope(r, settings.triage_model, t0, key,
+                        on_unparsed=TriageOutput(
+                            intent=Intent.UNKNOWN.value, referent="ambiguous",
+                            seller_directed=True, confidence=0.0))
         self._maybe_record(key, res)
         return res
 
@@ -533,10 +553,26 @@ class AnthropicClient:
             json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def _envelope(r: Any, model: str, t0: float, key: str, *, ttft_ms: int = 0) -> LLMResult:
+def _envelope(r: Any, model: str, t0: float, key: str, *, ttft_ms: int = 0,
+              on_unparsed: Any = None) -> LLMResult:
+    """B-12, and the second time it bit.
+
+    `parsed_output` is None whenever generation was truncated or refused. That
+    was fixed once, at the *draft* call site — so it came straight back on the
+    classify path as an AttributeError on the first real eval run. A guard at one
+    consumer is not a fix when the seam has two.
+
+    `on_unparsed` is the caller's safe value for that case, so every path through
+    this function returns a well-formed output and no consumer has to remember
+    that None is possible.
+    """
     u = r.usage
+    parsed = r.parsed_output
+    if parsed is None:
+        log.warning("%s returned no parsable output (truncated or refused)", model)
+        parsed = on_unparsed
     return LLMResult(
-        output=r.parsed_output,
+        output=parsed,
         model=model,
         latency_ms=int((time.perf_counter() - t0) * 1000),
         ttft_ms=ttft_ms,

@@ -440,3 +440,114 @@ argued from latency has to be priced against B2, because B2 is the only suite
 that can see what it broke.** Also: a mechanism nobody has measured is a
 mechanism nobody can cut — the fire rate and the conversion rate were both
 unknown until the question was asked, and the intuition about both was wrong.
+
+---
+
+## B-17 · The same None bug, at the second call site
+
+**What broke.** `parsed_output` is None when generation is truncated or refused.
+That was found once (B-12) and fixed **at the draft call site**. The first real
+Suite A run crashed with `AttributeError: 'NoneType' object has no attribute
+'intent'` — the classify path, which had the identical hole.
+
+**Fix, and where it belongs.** In `_envelope`, which every live call returns
+through, with the caller supplying its own safe value. Classify's is an
+abstention: `confidence=0.0` routes to `unknown`, which surfaces the message
+without a draft (D-13, D-14). Dropping it would be the one unsafe option.
+
+**Lesson.** A guard at one consumer is not a fix when the seam has two. The bug
+was recorded, understood and still recurred, because the entry said what went
+wrong rather than where the fix had to live.
+
+---
+
+## B-18 · The strongest feature is blind to the question it most needs to answer
+
+**What we found.** `catalog_entity` — "does this message name something we
+sell?" — is the feature the whole D-15 amendment rests on. Testing it on
+`"You got any psyducks"`, a real message from the corpus, returned **nothing**.
+Psyduck is not one of our fifteen lots.
+
+**Why that is structural, not a data gap.** `availability_q` is overwhelmingly
+*"do you have X"*, and the premise of asking is that X might **not** be in the
+catalog. So the best feature is definitionally blind on the class it is most
+needed for.
+
+**How it was found.** A unit test, not the eval. The message sat 0.003 under the
+threshold and Suite A's aggregate looked healthy — B-01's shape again, where the
+symptom of the failure is a plausible number.
+
+**The fix that did not work.** A 221-name species vocabulary, so naming *any*
+Pokémon counts whether we stock it or not. It fit well — weight +1.22, above
+`catalog_entity`'s +0.47 — and **5-fold cross-validation rejected it**: 75.8%
++/- 2.2% against 77.0% +/- 1.3% without, with a much less stable threshold
+(0.67-0.74 vs 0.52-0.61). Reverted.
+
+Why it failed is the interesting part: plenty of noise names a Pokémon.
+*"dragonite has been staring at me all night"* asks nothing. **Naming a card is
+not the signal; asking something about one is.** That is the second time this
+intuition has been tried and failed — D-15 already withdrew an earlier version
+of it — which is worth more than the feature would have been.
+
+**What actually catches the message.** `quantifier` + `second_person` + a loose
+operating point. Not knowledge of what a Psyduck is. Pinned in
+`test_the_catalog_is_blind_to_what_we_do_not_stock` so the limitation stays
+visible, and `rule_intent` was widened so the degraded path can still route it.
+
+---
+
+## B-19 · Choosing the threshold on the test set, nearly
+
+**What happened.** The first Suite A run used threshold 0.5 — which I picked
+after reading a sweep over the held-out segment. That is tuning on the test set.
+The reported score becomes the best of nineteen tries rather than an estimate of
+anything, and holding a segment out buys nothing.
+
+**And the second version was still wrong.** Moving selection to the training set
+fixed the threshold but not the *model* choice: when B-18's feature helped train
+and hurt test, the obvious move — compare both on test, keep the better — is
+model selection on the test set by another name.
+
+**Fix.** Every choice that is not a weight is made by 5-fold cross-validation on
+the training segments (`cv_threshold`), the test segment is read once, and the
+weights file ships the threshold so the eval **reads** an operating point rather
+than choosing one.
+
+**Then F1 turned out to be the wrong objective anyway.** It weights a missed
+buyer and a wasted glance equally. The observation says otherwise: at 0.15 msg/s
+even a loose threshold puts ~3 items/minute in front of the seller, while a
+dropped question is a lot that closes unanswered. So the shipped operating point
+is the **lowest threshold whose surfaced rate stays inside operator capacity**
+(~3/min, about one per lot) — derived from the observed pace, like the latency
+budget, rather than taken from convention. It moved the cutoff 0.59 -> 0.24 and
+recall 59.3% -> 88.9% on held-out data.
+
+**Lesson.** Two separate traps, and the second is the subtle one. Not tuning on
+the test set means not using it to choose the *model* either. And an operating
+point taken from a convention is not derived — F1 encodes an assumption about
+relative costs that this product does not have.
+
+---
+
+## B-20 · The same parameter, opposite correct values — and a pipe that hid a crash
+
+**Thinking on the classify path.** D-17 specified "short classification,
+`max_tokens: 256`, no thinking" from the start. The code never passed the
+parameter, so it inherited adaptive thinking, and the reasoning consumed the
+budget before the JSON was emitted: `{"intent":"unkn` and a parse error. It only
+appeared once B-19's operating point dropped far enough to escalate real volume.
+
+B-15 **rejected** disabling thinking on the draft path because it cost citation
+discipline. Nothing transferred: drafting composes an argument from evidence,
+classification picks one label from a closed set with worked examples in the
+prompt. **Same parameter, opposite right answer** — which is exactly why neither
+should be a default.
+
+**And the process bug, which is worse.** `uv run ... | tail -10` hid a `NameError`
+and an exit code of 1 for two full Suite A runs. The fitter crashed before
+writing, the eval read a **stale weights file**, and the numbers looked
+plausible — a threshold of 0.69 reported against a model fit for 0.59.
+
+**Lesson.** Never read a result through a pipe that can swallow the exit status.
+Any harness whose output is a number needs the run to fail loudly, because a
+stale artifact and a fresh one are indistinguishable once the traceback is gone.
