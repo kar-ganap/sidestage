@@ -17,7 +17,7 @@
 {"text": "I didn\u2019t notice for months that the 151 zard had no neck", "intent": "off_topic_abuse", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
 {"text": "The flying lizard is overrated", "intent": "off_topic_abuse", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
 {"text": "Just 151 lizard", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
-{"text": "nick did you see that galade SAR the tourney promo", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "nick did you see that galade SAR the tourney promo", "intent": "attribute_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13", "label_revised": "was hype_noise/not-seller-directed; revised by the annotator after review. A direct question to the seller, addressed by first name."}
 {"text": "Could have been beautiful", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
 {"text": "That\u2019s the old school teg card?", "intent": "attribute_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
 {"text": "Nick you should led a campaign to reduce price of Charizard from overrated to rated with 50% off flash deals", "intent": "request", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}

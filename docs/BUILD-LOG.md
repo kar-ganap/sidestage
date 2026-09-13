@@ -609,3 +609,56 @@ be confirmed here.
 headline number did not transfer; the *mechanism* claim did, and it is the one
 worth defending — the features read intent, and intent does not depend on how
 many people in a given twenty minutes happened to press shift-slash.
+
+---
+
+## B-21b · Two corrections to B-21, and one of them undermines its own headline
+
+**First: I reported a single run of a stochastic arm.** A2's veto is a model
+call, so it is not deterministic. Five runs on the *unchanged* labels:
+
+| | range over 5 runs | mean |
+|---|---|---:|
+| A2 recall | 66.7% - 77.8% | 73.3% |
+| A2 precision | 85.7% - 87.5% | 86.8% |
+| **A2 F1** | **75.0% - 82.4%** | **79.4%** |
+| incumbent F1 (deterministic) | — | 80.0% |
+
+B-21 quoted 75.0%, the **bottom of that range**, and concluded the incumbent
+won. The mean is 79.4% against the incumbent's 80.0% — indistinguishable. The
+conclusion "the incumbent's F1 beats the cascade" was drawn from one sample of a
+distribution and should not have been stated that way. This is B-15's lesson
+arriving a second time: do not call a comparison from n=1 run.
+
+**Second: one label was revised after seeing the result, and that needs
+declaring.** `nick did you see that galade SAR the tourney promo` was labelled
+`hype_noise` / not-seller-directed, was the cascade's only false positive, and
+the annotator then revised it to `attribute_q` / seller-directed on reflection.
+
+Both scores, so the reader can discount as they see fit:
+
+| labels | positives | A2 F1 (mean of 5) | incumbent F1 |
+|---|---:|---:|---:|
+| original | 9 | 79.4% | **80.0%** |
+| revised | 10 | **86.3%** | 75.0% |
+
+**Why the revision is defensible, and why that is not enough on its own.** The
+hypothesis was **pre-registered**: `observation-ebaylive-2026-09-13.md` §5 names
+this exact message as evidence that the scorer lacks a first-name-address
+feature, and it was committed at 20:32, twenty-five minutes before the data was
+labelled (`git log`: 87bd8b0 then ada04af). The label was assigned *against* a
+prediction already on record, then corrected toward it.
+
+That is meaningfully better than post-hoc rationalisation, and it is still a
+label changed after seeing it cost us a point. **Both numbers are reported and
+the original is the one to quote to a sceptic.**
+
+**What must NOT follow.** The obvious next move — add a first-name-address
+feature, refit, re-measure on this set — would be tuning on the test set with
+extra steps. The feature is recorded as a candidate for a future fit on new
+training data, and deliberately not implemented now.
+
+**Lesson.** Pre-registering a prediction is what makes a later correction
+legible instead of suspicious. It does not make the correction free — it makes
+it *auditable*, which is the most that is available once you have seen the
+answer.
