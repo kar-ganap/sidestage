@@ -1178,3 +1178,280 @@ no warning at all, never a block.
 been to stop measuring wall-clock from the system's side and ask what the human
 was doing meanwhile. Streaming bought the read; this buys the decision. Neither
 made anything faster.
+
+---
+
+## B-33 · Eight of fourteen verifiers never checked the kind of fact they were handed
+
+`_require_kind` did not exist. Four verifiers compared `fact.kind` themselves;
+the other eight went straight to `fact.value.get(...)`, got `None` from a fact of
+the wrong kind, and returned `[]`. A pass.
+
+That is **B-04's mis-citation hole, wide open, on the mechanism this project
+leads with**. Reproduced before fixing: a `bid` claim of `"$4"` citing the
+*identity* fact, against a lot whose real bid is $890, verified clean.
+
+It survived because everything around it looked healthy — `_dedupe`,
+`_structural` and `_coverage` all behaved, and the registry dispatched
+correctly. The missing check was four lines that were simply never written in
+eight of the functions, and **no test asserted that a claim must cite its own
+kind**. `tests/test_verify.py::test_every_verifier_rejects_a_fact_of_the_wrong_kind`
+is parametrised over `REGISTRY` so the next verifier added without a guard fails
+there rather than in production.
+
+## B-35 · The coverage pass, three times wrong
+
+D-11's backstop is the only pass that catches a claim type nobody enumerated,
+and it took three rewrites to get a rule that is wrong in neither direction.
+
+**v1 — quote-keyed.** Every assertive span had to appear in some claim's
+*quote*. Over-blocked at **51.9%**: the contract asks for one claim per
+assertion (B-09), so a sentence carrying two assertions could not have a single
+quote spanning both. The rule punished the model for obeying its own
+instructions.
+
+**v2 — a flat token bag.** Every token in the evidence, plus the buyer's
+question, pooled into one set. Broke in *both* directions at once — see B-42.
+
+**v3 — per-sentence, per-cited-fact.** *A span may go uncited only if the fact a
+claim covering **this sentence** cites already contains it.* See B-56 for what
+v3's first draft still got wrong.
+
+**Lesson, and it is the one this file exists for:** every exemption is an attack
+surface, and an exemption cheaper to satisfy than the assertion it guards is a
+hole. Both failures were exemptions added to stop over-blocking.
+
+## B-36 · Quoting is not asserting
+
+Coverage keyed on `claim.quote`. A one-word quote therefore satisfied coverage
+for an entire sentence: `quote="It"` laundered *"It has sold for 9999 dollars
+three times this week"*, and `_identity` — which checks the **value** — had
+nothing to object to, because the value said only "Charizard".
+
+A claim is responsible for exactly the content it puts in `value`, because that
+is the part the per-type verifier checks against the record. The quote is a
+highlight for the operator, not evidence.
+
+## B-37 · The registry failed open, and `identity` was the second most common claim type
+
+`REGISTRY.get(claim.type)` returning `None` meant *skip*. `identity` and
+`sizing` were both offered to the model in `DRAFT_SYSTEM`'s claim-type list and
+neither had an entry — so a claim of either type went entirely unchecked while
+still satisfying coverage. One `identity` claim could launder a fabricated
+grade, a false bid and a shipping promise at once.
+
+`identity` is the **second most common claim type in the recorded fixtures**,
+which made it the widest hole in the contract.
+
+Fixed by emitting `unverifiable_claim_type` (UNREPAIRABLE) instead of skipping,
+and by writing the two missing verifiers. The fail-closed branch is now
+unreachable from the pipeline — `_to_draft` drops unknown types before they
+arrive — so it protects only against a future `ClaimType` added without a
+registry entry. `test_registry_covers_every_claim_type` is what actually catches
+that, and it is the honest description of the guarantee.
+
+## B-38 · `GET /api/state` 500ed on 28% of concurrent reads
+
+Writes took `self._lock`; reads did not. `ingest` inserts into `self.cards`
+while `queue()` iterates it, so the console's own polling raced the cascade:
+`RuntimeError: dictionary changed size during iteration`.
+
+Invisible single-threaded, which is why it survived every manual test. Fixed
+with an `RLock` (the read path composes — `stats()` calls `queue()`) and a
+`snapshot()` that copies the log and ledger under it.
+
+## B-39 · `send()` journalled empty replies
+
+An empty body was written to the ledger as a sent reply — the worst kind of
+entry: it records that something reached the buyer and cannot say what. Every
+path that produces one is a bug upstream. Now raises `EmptyReply`, and the API
+answers **409**, not 404 and not 500: the card exists and the request was
+well-formed, there is simply nothing to send.
+
+## B-40 · `/api/replay` interpolated the caller's string into a path
+
+`evals/data/{body.source}.jsonl` reads any `.jsonl` on the filesystem given
+enough `../`, and 500s with a `KeyError` on anything that parses without a
+`text` field. Fixed with an allowlist built by **listing the directory** rather
+than a `..` check — it can only ever name files that are there, so there is no
+string to sanitise.
+
+## B-42 · First adversarial pass — twelve findings, four fatal
+
+An independent agent was given `app/verify.py` and told to break it in both
+directions. Every finding came with a runnable repro and an observed verdict.
+
+**The four fatal ones:**
+
+| # | what | observed |
+|---|------|----------|
+| 1 | `_is_negated` read the **whole quote**, so one "not" elsewhere in the sentence disarmed `_variant` | `"This copy is 1st Edition."` BLOCKED; `"This copy is 1st Edition, not Shadowless."` **PASS** — the flagship demo case, defeated by two words |
+| 2 | coverage's `if not spans:` fallback was a whole-sentence bypass | a false `$305` bid against a real $330, **with no bid claim at all** — PASS |
+| 3 | **the exemption set was attacker-controlled** — `_known_tokens` folded in the buyer's question verbatim | question `"is it a psa 10?"` → `"Yes, this Charizard is a PSA 10"` PASS against a PSA 9 record; same draft, empty question, BLOCKED |
+| 4 | the same branch over-blocked the system's own prescribed replies | the catalog's shipping clause, verbatim and cited, BLOCKED — while `"All sales are final"`, the exact sentence `_policy` says must never be repeated, PASSED |
+
+Finding 3 is the one worth remembering. **I had built a prompt-injection path
+into the safety component**, in a fix whose stated purpose was to stop a buyer's
+own offer from blocking a correct refusal.
+
+Sub-codes: B-43 inflections (`\bship\b` did not match "Ships"); B-44 a decimal
+point ended a sentence, so `$890.00` and `BGS 9.5` split in two; B-45 the
+exemption tokenised with `[a-z0-9]+` while spans kept separators, so `1,320`
+could never match — a **$999 ceiling** on the refusal case, and on every
+four-figure comp in the catalog; B-46 negation scoped to the claimed value;
+B-47 `_centering` never read `claim.value` at all (the condition after the kind
+guard was dead, so a fabricated `60/40` passed against a recorded 9.5 and was
+ledgered as checked); B-48 the D-14 clarifier blocked UNREPAIRABLY for naming
+its own candidates; B-49 every numeric verifier read `_numbers(...)[0]`, so word
+order inside a claim decided the verdict; B-50 `_sizing` was REPAIRABLE though
+no sizing fact is ever minted, burning the 2.3 s retry by construction;
+B-51 `_dedupe` keyed on `(code, claim_index)` and every coverage violation
+carries `claim_index=None`, so three unbacked sentences collapsed to one message
+and the bounded retry could only ever make one pass of progress; B-52 `_comp`
+read the sample size and the window as prices; B-53 a promise to **defer** is
+not a promise about the record, and the recorded reply following the verifier's
+own remedy blocked on `I'll`.
+
+## B-56 · Second adversarial pass — the fixes were worse than the bugs
+
+The same agent was pointed at the *fixed* verifier. Verdict, quoted:
+
+> the fixes traded a set of false negatives for a much larger set of false
+> positives, and did not close the false negatives
+
+**15 of 49 real recorded drafts blocked** — the system's own output, against real
+evidence — while a fabricated refund promise, a fabricated shipping guarantee, a
+fabricated bid and an unbounded quantifier all still passed.
+
+Measured on the demo corpus: **8/16 blocked (50%)**, every one a false positive.
+
+Its one-line diagnosis was the useful part: *findings 4, 5, 6 and 9 are all the
+same shape — an exemption predicate cheaper to satisfy than the assertion it is
+guarding.*
+
+**The highest-yield single fix, B-56 itself:** `_numkey` stripped commas and a
+trailing dot and compared **strings**. Every figure `assemble` mints is a float
+and every note renders money as `$890.00`, while the model writes `$890`. So the
+verdict on a true, correctly-cited sentence depended on whether the model typed
+the cents. It blocked 4 of 7 console drafts and 3 of 8 demo drafts, and it was
+invisible on sold lots only because `_queue` happens to format those with
+`:,.0f`. Numbers are now compared **numerically**.
+
+Sub-codes: B-55 `_stem` replaced by an explicit 30-entry lemma table — the
+stemmer collided `lots` → `lot`, and `assemble` mints a `"lot is <status>"` note
+for *every* lot, so **"we have lots of these" exempted itself** against the
+domain's most common noun, while leaving `guarantee`/`guaranteed` unequal;
+B-57 `only`, `never` and `always` left `_SUPERLATIVE` (they are scope and denial
+words, and *"Champion's Path only came out unlimited"* is the flagship demo's own
+correct denial, which was blocking as a REPAIRABLE `unbacked_claim` instead of
+the UNREPAIRABLE `variant_not_printed` the demo exists to show), and card names
+became exempt as words (`itm_swshp_special_delivery_pikachu` is real, and
+`_COMMITMENT` matches "Delivery"); B-59 `_deferred` narrowed to the **modal
+only** — this is a live-*show* product where `_is_deferral` matches "show",
+"check" and "seller", so exempting every commitment word in such a sentence let
+*"Everything from this show ships free"* and *"I'll refund you in full, ask the
+seller"* pass with zero claims; B-60/B-64/B-69 `_availability`, `_condition` and
+`_grade` read the raw `claim.quote`, so **widening a highlight by three words
+flipped the verdict** — a correct grade denial blocked UNREPAIRABLY because its
+quote named the grade it was denying; B-61 `_comp`'s sanctioned-phrase
+short-circuit read `ctx.reply`, so one compliant claim exempted every other comp
+claim in the draft; B-62 `_centering` compared against a flat key set, so the
+*edges* subgrade stood in for centring; B-63 the ambiguity exemption applied
+even when the reply **answered** rather than asked; B-65 `_overlaps` was
+substring-either-way, so a three-character quote spoke for every sentence
+containing it and restored finding 2 verbatim; B-66 no `PRICE` fact was minted
+for a queued auction lot's starting bid, so `_price`'s repair instruction was
+unsatisfiable — an evidence-shape gap reported as a model error; B-67 the
+negation window was symmetric, so a denial about a *different* thing later in
+the sentence exempted an earlier assertion (*"All sales are final and returns
+are not accepted"*); B-68 `_proper_nouns` used `[a-z0-9]+` and silently exempted
+every **digit** in an identity fact — the docstring said "a number in a title is
+still a number"; the code did not.
+
+**The question is no longer consulted at all.** B-42's fix narrowed it; this pass
+showed the narrowing still let *"Sorry, the price is already 999"* and *"Let me
+check with the host, we have 24 left"* through, because apologies are not denials
+and deferring is not declining. It then turned out to be **unnecessary as well as
+dangerous**: B-37's motivating case — *"We're at $890, so $320 wouldn't push
+it"* — is recognisable from the reply alone, because the reply denies the figure.
+`_negated_near` does that work, and a denial cannot be smuggled in from outside
+the draft.
+
+**Result: 50% → 6.7%** on the recorded corpus, with all 12 findings of the first
+pass and 17 of the 18 of the second closing.
+
+**The one that did not close, stated rather than papered over.** Exemption is per
+*sentence*, so two occurrences of the same number in one sentence are
+indistinguishable: *"Orders ship within 2 business days, and we have 2 of these
+left"* passes on a cited shipping clause, because the clause's own "2" exempts
+the fabricated stock count. Closing it needs to know what each figure modifies,
+which is parsing, not matching. It is in the `_coverage` docstring as a known
+bound.
+
+## B-70 · Eleven mutants survived fifty-three tests
+
+`app/verify.py` — the component the entire safety claim rests on — had **zero
+direct tests** until this pass. `tests/test_adapter.py` had 28 and
+`tests/test_ledger.py` had 18, both for code an adversarial review found
+unreachable from the running app.
+
+Writing 53 tests was not enough. Mutation testing — delete a rule, run the suite,
+see if anything goes red — found **11 distinct mutants surviving all 53**,
+including:
+
+- `operator_only_off` — deleting the reserve-leak pass entirely. The most
+  damaging thing this system can do to its own user, and nothing asserted it.
+- `grade_off` — deleting every rule in `_grade` bar the kind guard.
+- `staleness_off` — deleting D-09.
+- `lexical_off` — deleting the whole `policies.json` pass.
+- `numkey_id`, `stem_id` — turning the two helpers the coverage rewrite rests on
+  into the identity function.
+
+Two tests were also **vacuous with respect to the fix they named**: one asserted
+only the absence of a single violation code rather than a pass, and its claim
+value would have satisfied the *pre-fix* code too; the other applied `_numkey` to
+both sides of its comparison, so any `_numkey` — including the identity function
+— made it pass.
+
+Now **79 tests, 15/15 mutants killed** (`tests/test_verify.py`; the harness is
+`scratchpad/mutate.py`). Suite total 239.
+
+**Lesson.** A green suite is evidence about the suite, not about the code. The
+question to ask of a test is not "does it pass" but "what would have to break for
+it to fail", and the cheapest way to answer that is to break the thing on purpose.
+
+---
+
+## Index of sub-codes
+
+B-42 and B-56 each cover one adversarial pass, so their findings share an entry
+rather than getting thirty headings of three lines. This maps every code
+referenced in the source to where it is written up.
+
+| code | what | in |
+|---|---|---|
+| B-43 | uninflected patterns — `\bship\b` missed "Ships" | B-42 |
+| B-44 | a decimal point ended a sentence | B-42 |
+| B-45 | `1,320` could never match — a $999 ceiling | B-42 |
+| B-46 | negation read the whole quote, not the claimed value | B-42 |
+| B-47 | `_centering` never read `claim.value` | B-42 |
+| B-48 | the D-14 clarifier blocked for naming its own candidates | B-42 |
+| B-49 | `_numbers(...)[0]` — word order decided the verdict | B-42 |
+| B-50 | `_sizing` repairable though no sizing fact exists | B-42 |
+| B-51 | `_dedupe` collapsed every unbacked sentence into one | B-42 |
+| B-52 | `_comp` read sample size and window as prices | B-42 |
+| B-53 | a promise to defer is not a promise about the record | B-42 |
+| B-54 | numbers written as words were never assertions | B-42 |
+| B-55 | `_stem` collided `lots`/`lot`; replaced by a lemma table | B-56 |
+| B-57 | `only`/`never`/`always`; card names as commitments | B-56 |
+| B-59 | `_deferred` exempted every commitment in a "show" sentence | B-56 |
+| B-60 | `_availability` read the quote, not the reply | B-56 |
+| B-61 | `_comp`'s phrase short-circuit read the whole reply | B-56 |
+| B-62 | `_centering` compared against a flat key set | B-56 |
+| B-63 | the ambiguity exemption applied to answers, not just questions | B-56 |
+| B-64 | `_condition` read the quote — a fragment flipped the verdict | B-56 |
+| B-65 | `_overlaps` substring-either-way; a 3-char quote spoke for all | B-56 |
+| B-66 | no `PRICE` fact for a queued lot's starting bid | B-56 |
+| B-67 | the negation window was symmetric | B-56 |
+| B-68 | `_proper_nouns` exempted digits | B-56 |
+| B-69 | `_grade` fell back to the quote for the stated grade | B-56 |

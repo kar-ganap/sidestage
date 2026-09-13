@@ -53,18 +53,45 @@ from app.models import (
 # --- assertion detection, for the coverage backstop -------------------
 
 _NUMBER = re.compile(r"\d")
+# Inflections matter (B-43). These were uninflected, so `\bship\b` did not
+# match "Ships" and `\brefund\b` did not match "refunds" — an uncited
+# "Ships same day and refunds are processed immediately" was never even
+# examined. Spans and the exemption set are both compared on stems (`_stem`),
+# so widening here does not cost a matching failure on the other side.
+# B-57. `only`, `never` and `always` came out: they are scope and denial words
+# far more often than superlatives here, and "Champion's Path only came out
+# unlimited" is the flagship demo's own CORRECT denial — it was blocking as a
+# REPAIRABLE `unbacked_claim` instead of the UNREPAIRABLE `variant_not_printed`
+# the demo exists to show.
 _SUPERLATIVE = re.compile(
-    r"\b(best|rarest|cleanest|perfect|flawless|mint|gem|pristine|immaculate|"
-    r"finest|only|never|always|guaranteed|certainly|definitely)\b", re.I)
+    r"\b(best|rarest|cleanest|perfect(?:ly)?|flawless|mint|gem|pristine|"
+    r"immaculate|finest|guarantee[sd]?|certainly|definitely|absolutely)\b", re.I)
 _COMMITMENT = re.compile(
-    r"\b(will|we'll|i'll|shall|promise|guarantee|refund|replace|ship|"
-    r"deliver|honou?r|cover)\b", re.I)
-_SENTENCE = re.compile(r"[^.!?]+[.!?]?")
+    r"\b(will|we'?ll|i'?ll|shall|promise[sd]?|guarantee[sd]?|refund(?:s|ed)?|"
+    r"replace[sd]?|ship(?:s|ped|ping)?|deliver(?:s|ed|y)?|honou?r[sd]?|"
+    r"cover[sd]?|final|postage|dispatch(?:es|ed)?|send(?:s|ing)?|tracked|"
+    r"free)\b", re.I)
+
+# A sentence ends at . ! or ? — but NOT at a decimal point (B-44). The naive
+# `[^.!?]+` split "$890.00" and "BGS 9.5" in two, which fired
+# `quote_spans_sentences` on a single true sentence and then demanded a
+# citation for the orphan fragment "Current bid is $890.". Half-grades and
+# prices with cents are ordinary in this domain, so this was not an edge case.
+_SENTENCE = re.compile(r"(?:[^.!?]|(?<=\d)\.(?=\d))+[.!?]?")
 
 # Quantifiers that assert stock without a number.
 _UNBOUNDED = re.compile(
     r"\b(plenty|tons?|loads?|lots|heaps|stacks|as many as you want|"
-    r"more than enough)\b", re.I)
+    r"more than enough|a (?:handful|few|couple)|several)\b", re.I)
+
+# Numbers written as words. `_NUMBER` only ever saw digits, so "We have twenty
+# of these left" against a quantity of zero was not an assertion at all (B-43).
+# "one" is deliberately absent: in this domain it is a pronoun ("this one",
+# "that one") far more often than a quantity, and including it demanded a
+# citation for the most common way a seller refers to the item in front of them.
+_NUMWORD = re.compile(
+    r"\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+    r"twenty|thirty|forty|fifty|hundred|thousand|dozen)\b", re.I)
 
 
 @dataclass
@@ -73,6 +100,14 @@ class VerifyContext:
     catalog: Catalog
     lot: Lot | None
     reply: str
+    question: str = ""
+    """What the buyer asked, so coverage can tell a quotation from an assertion.
+
+    "We're at $890, so $320 wouldn't push it" repeats the buyer's own offer in
+    order to decline it. $320 is in no fact and never can be, so a rule that
+    demands every number be cited blocks a correct refusal with no repair
+    available (B-37).
+    """
 
 
 @dataclass
@@ -105,12 +140,13 @@ class VerifyResult:
 
 
 def verify(draft: Draft, evidence: Evidence, *, catalog: Catalog | None = None,
-           now: datetime | None = None) -> VerifyResult:
+           now: datetime | None = None, question: str = "") -> VerifyResult:
     cat = catalog or get_catalog()
     now = now or datetime.now(UTC)
     t0 = time.perf_counter()
     lot = cat.lots.get(evidence.lot_id) if evidence.lot_id else None
-    ctx = VerifyContext(evidence=evidence, catalog=cat, lot=lot, reply=draft.text)
+    ctx = VerifyContext(evidence=evidence, catalog=cat, lot=lot,
+                        reply=draft.text, question=question)
     v: list[Violation] = []
 
     for i, claim in enumerate(draft.claims):
@@ -119,8 +155,21 @@ def verify(draft: Draft, evidence: Evidence, *, catalog: Catalog | None = None,
         if fact is None:
             continue                    # already reported; no fact to check against
         checker = REGISTRY.get(claim.type)
-        if checker:
-            v += [_stamp(x, i) for x in checker(claim, fact, ctx)]
+        if checker is None:
+            # FAIL CLOSED (B-37). `REGISTRY.get(...)` returning None used to mean
+            # "skip", so `identity` and `sizing` — both offered to the model in
+            # DRAFT_SYSTEM's claim-type list — went completely unchecked. One
+            # `identity` claim could launder a fabricated grade, a false bid and
+            # a shipping promise, because coverage was satisfied by the quote and
+            # no per-type pass ever ran. `identity` is the second most common
+            # claim type in the recorded fixtures.
+            v.append(_stamp(Violation(
+                code="unverifiable_claim_type", severity=Severity.UNREPAIRABLE,
+                message=(f"claim type {claim.type.value!r} has no verifier, so "
+                         f"nothing can check it. Do not assert it."),
+                actual=claim.value), i))
+            continue
+        v += [_stamp(x, i) for x in checker(claim, fact, ctx)]
 
     v += _coverage(draft, ctx)
     v += _lexical(draft, ctx)
@@ -143,9 +192,16 @@ def _dedupe(violations: list[Violation]) -> list[Violation]:
     though the verdict is right. Severity is kept because it drives the repair
     decision: a repairable duplicate must not mask an unrepairable original.
     """
-    best: dict[tuple[str, int | None], Violation] = {}
+    best: dict[tuple[str, int | None, str], Violation] = {}
     for v in violations:
-        key = (v.code, v.claim_index)
+        # B-51. The key was `(code, claim_index)` and every coverage violation
+        # carries `claim_index=None`, so three independently unbacked sentences
+        # collapsed into one message about the first. The bounded retry fixed
+        # that sentence and blocked again on the next — a repair loop that can
+        # only ever make one pass of progress. `actual` is the sentence for
+        # coverage and the claim text elsewhere, which is exactly the
+        # discriminator this needs.
+        key = (v.code, v.claim_index, str(v.actual)[:80])
         prior = best.get(key)
         if prior is None or (prior.severity is Severity.REPAIRABLE
                              and v.severity is Severity.UNREPAIRABLE):
@@ -196,6 +252,9 @@ def _structural(i: int, claim: Claim, ctx: VerifyContext) -> list[Violation]:
     return out
 
 
+_WORD_ONLY = re.compile(r"[a-z]{2,}", re.I)
+
+
 # =====================================================================
 # 2 · Per-type registry
 # =====================================================================
@@ -214,8 +273,25 @@ def _variant(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     - RECORD (what this copy carries) proves what this copy is, and cannot speak
       to what other copies could be.
     """
+    # B-37. `_require_kind`'s first docstring asserted that `_variant` already
+    # guarded. It did not — it branched on `fact.authority` alone, so a
+    # variant claim citing ANY record fact read `.get("variants", ())` off
+    # the wrong fact and passed. "It is not a 1st edition" verified clean
+    # against a record saying it is.
+    if (v := _require_kind(claim, fact, ClaimType.VARIANT,
+                           "a variant claim must cite a variant fact")):
+        return v
     asserted = _slug(claim.value)
-    negated = _is_negated(claim.quote)
+    # B-46. This read `_is_negated(claim.quote)` — the WHOLE quote. So the most
+    # natural phrasing in the domain, affirming one variant while denying
+    # another, disarmed the flagship unrepairable case:
+    #
+    #     "This copy is 1st Edition."                 -> BLOCKED (correct)
+    #     "This copy is 1st Edition, not Shadowless." -> PASS    (the same lie)
+    #
+    # `\bno\b` inside "no doubt" did it too. Negation has to be read where the
+    # claimed value actually sits, not anywhere in the sentence.
+    negated = _negated_near(claim.quote, claim.value)   # before only (B-46)
 
     if fact.authority is Authority.CATALOG:
         printed = [_slug(p) for p in fact.value.get("printed", ())]
@@ -282,11 +358,18 @@ def _comp(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
             expected=fact.value.get("reason"), actual=claim.value)]
 
     phrase = fact.value.get("phrase", "")
-    if _norm(phrase) in _norm(ctx.reply):
-        return []                        # the sanctioned rendering was used verbatim
+    # B-61. This read `ctx.reply`, so ONE claim rendering the sanctioned phrase
+    # exempted every OTHER comp claim in the draft: "Last 5 sold $305–$370, past
+    # 90d. Honestly these go for $900 all day." passed against a 305–370 record.
+    if phrase and _norm(phrase) in _norm(claim.quote):
+        return []                        # this claim used the sanctioned rendering
 
     lo, hi = fact.value.get("low"), fact.value.get("high")
-    nums = _numbers(claim.quote)
+    # B-52. This read every number in the quote, so "last 5 sold ... past 90
+    # days" contributed 5 and 90 as though they were prices and `min(nums)`
+    # fired `comp_outside_range` on any rewording of the sanctioned phrase.
+    # Only money-shaped figures are prices.
+    nums = _money(claim.quote) or _numbers(claim.quote)
     if len(nums) < 2:
         return [Violation(
             code="bare_comp", severity=Severity.REPAIRABLE,
@@ -347,13 +430,109 @@ def _asserts_absence(claim: Claim) -> bool:
     return bool(_DENIAL.search(claim.value) or _DENIAL.search(claim.quote))
 
 
+def _require_kind(claim: Claim, fact: Fact, kind: ClaimType, what: str
+                  ) -> list[Violation] | None:
+    """B-33. Every verifier must check the fact it was handed is the right kind.
+
+    Four of the twelve did. Eight did not — `_condition`, `_centering`,
+    `_availability`, `_price`, `_bid` and the three policy types went straight
+    to `fact.value.get(...)`, got `None` from a fact of the wrong kind, and
+    returned `[]`. A pass.
+
+    That is B-04's mis-citation hole, wide open, on the mechanism this project
+    leads with. Reproduced before fixing: a `bid` claim of "$4" citing the
+    *identity* fact, against a lot whose real bid is $890, verified clean.
+
+    It survived because `_dedupe`, `_structural` and `_coverage` all looked
+    healthy and the registry dispatched correctly — the missing check was four
+    lines that were simply never written in six of the functions, and no test
+    asserted that a claim must cite its own kind.
+    """
+    if fact.kind is not kind:
+        return [_miscite(claim, fact, what)]
+    return None
+
+
+def _identity(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
+    """Is this actually the card we are looking at? (B-37)
+
+    `identity` was in `ClaimType` and offered to the model, but had no entry in
+    `REGISTRY` — so `REGISTRY.get()` returned None and the claim was skipped
+    entirely. It is the second most common claim type in the recorded fixtures,
+    which made it the widest hole in the contract: one identity claim quoting a
+    whole sentence satisfied coverage while nothing checked a word of it.
+
+    The check is token containment rather than string equality, because the
+    model writes "the Base Set Charizard 4/102" where the record holds the same
+    facts in separate fields. Every content word it asserts must appear in the
+    record; a fabricated name or number has a token that does not.
+    """
+    if (v := _require_kind(claim, fact, ClaimType.IDENTITY,
+                           "an identity claim must cite an identity fact")):
+        return v
+    # B-48. When the reference is ambiguous, `assemble` mints an identity fact
+    # holding the CANDIDATES rather than an identity — D-14's whole mechanism,
+    # so the model can cite the question instead of guessing. Token containment
+    # then rejected the clarifier for naming the candidates properly, and did it
+    # UNREPAIRABLY, so "Which Mew do you mean, the Celebrations 011/025 or the
+    # ex?" went straight to the fallback. Asking is not asserting.
+    # ...and only when the reply is actually ASKING. B-63: this returned []
+    # unconditionally, and because the clarifier fact now carries every
+    # candidate's set, number and grade flattened together, "That Celebrations
+    # Mew 011/025 is a PSA 9" passed — the Celebrations Mew is RAW; the PSA 9 is
+    # the other card.
+    if isinstance(fact.value, dict) and fact.value.get("ambiguous"):
+        return [] if "?" in ctx.reply else [Violation(
+            code="answered_an_ambiguous_reference", severity=Severity.UNREPAIRABLE,
+            message=("the reference is ambiguous — ask which one rather than "
+                     "answering about one of them."),
+            expected=fact.value.get("question"), actual=claim.value)]
+    known = {t for val in fact.value.values()
+             for t in re.findall(r"[a-z0-9]+", _norm(str(val)))}
+    asserted = re.findall(r"[a-z0-9]+", _norm(claim.value))
+    unknown = [t for t in asserted if t not in known and len(t) > 1]
+    if unknown:
+        return [Violation(
+            code="identity_mismatch", severity=Severity.UNREPAIRABLE,
+            message=(f"the record does not say {', '.join(repr(u) for u in unknown)}"
+                     f" — it is {fact.note or fact.value}."),
+            expected=fact.note or str(fact.value), actual=claim.value)]
+    return []
+
+
+def _sizing(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
+    """Apparel sizing, which we hold no authority for.
+
+    D-02 puts the fashion slice here deliberately: far more of a garment's
+    attributes are observational than a card's, so the copilot defers more
+    often *from the same registry*. No sizing fact is ever minted, so every
+    sizing claim mis-cites and blocks — which is the correct answer, arrived at
+    by the general rule rather than by a special case.
+    """
+    if (v := _require_kind(claim, fact, ClaimType.SIZING,
+                           "we hold no sizing record; sizing is the seller's to state")):
+        # UNREPAIRABLE by D-10b's own argument (B-50): no sizing fact is ever
+        # minted, so a retry cannot find one and every sizing question burned
+        # the ~2.3 s repair by construction before blocking anyway.
+        return [Violation(code=v[0].code, severity=Severity.UNREPAIRABLE,
+                          message=v[0].message, expected=v[0].expected,
+                          actual=v[0].actual)]
+    return []
+
+
 def _grade(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if fact.kind is not ClaimType.GRADE:
         return [_miscite(claim, fact, "a grade claim must cite a grade fact")]
     if fact.value.get("raw"):
         # A numeric grade on a raw card is the violation. Saying it is ungraded
         # is the correct answer, and the record is what establishes it (B-24).
-        stated = [n for n in (_numbers(claim.value) or _numbers(claim.quote)) if 0 < n <= 10]
+        stated = [n for n in _numbers(claim.value) if 0 < n <= 10]
+        # B-69. This fell back to `_numbers(claim.quote)`, so a correct DENIAL
+        # whose quote names the grade being denied — "so I can't call it a PSA
+        # 9" — supplied its own 9, `stated` became non-empty, `_asserts_absence`
+        # was skipped, and the reply blocked UNREPAIRABLY. Widening the quote by
+        # three words flipped the severity. A denial is established by the
+        # claim's VALUE; the quote is a highlight, not evidence.
         if not stated and _asserts_absence(claim):
             return []
         return [Violation(
@@ -369,7 +548,7 @@ def _grade(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     # cert 71004412 as a claimed grade of 71004412. Found by the B2 control set on
     # "cert on the blastoise?" — a benign question that was being over-blocked.
     # Grades live in 1..10, so anything outside that range is not a grade claim.
-    stated = [n for n in (_numbers(claim.value) or _numbers(claim.quote)) if 0 < n <= 10]
+    stated = [n for n in _numbers(claim.value) if 0 < n <= 10]
     actual = fact.value.get("value")
     if stated and actual is not None and abs(stated[0] - float(actual)) > 1e-6:
         return [Violation(
@@ -385,8 +564,16 @@ def _condition(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     An observational fact exists precisely so the model can decline while
     pointing at something. Citing it to ASSERT is the error.
     """
+    if (v := _require_kind(claim, fact, ClaimType.CONDITION, "a condition claim must cite a condition fact")):
+        return v
     if fact.authority is Authority.OBSERVATIONAL:
-        if _is_deferral(claim.quote):
+        # B-64. This read `claim.quote`. The recorded reply for "is the back
+        # clean on the charizard" — one of the three demo cases for "a refusal
+        # has to be citable, not improvised" — defers in the sentence AFTER the
+        # one it quotes, so it blocked UNREPAIRABLY and went straight to the
+        # fallback. Widening the quote by a few words flipped the verdict, which
+        # is not a property a safety rule may have.
+        if _is_deferral(ctx.reply):
             return []
         return [Violation(
             code="observational_assertion", severity=Severity.UNREPAIRABLE,
@@ -399,56 +586,83 @@ def _condition(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
 def _centering(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     """Only assertable from a grader subgrade. On a PSA slab centring is merely
     implied by the grade; on a raw card it is observational."""
-    if fact.kind is not ClaimType.CENTERING or fact.authority is not Authority.RECORD:
+    if (v := _require_kind(claim, fact, ClaimType.CENTERING, "a centering claim must cite a centering fact")):
+        return v
+    if fact.authority is not Authority.RECORD:
         return [Violation(
             code="centering_no_subgrade", severity=Severity.UNREPAIRABLE,
             message=("centring is only stateable from a grader's subgrade. This record "
                      "has none — defer to the host."))]
+    # B-47. Everything above was the whole function, and the condition was dead
+    # (centering facts are always RECORD), so ANY value verified clean — a
+    # fabricated "60/40" against a recorded 9.5 subgrade passed and was
+    # ledgered as checked. The subgrade is a number, not a ratio, so a claim
+    # that states a measurement must state one the record contains.
+    # B-62. This compared against `_keys` of the whole fact, so any subgrade
+    # stood in for centring — a claimed 9.5 passed against a centring of 8.0
+    # because 9.5 was the EDGES subgrade. The key the number belonged to is the
+    # entire point of a subgrade.
+    sub = fact.value if isinstance(fact.value, dict) else {}
+    recorded = _keys(sub.get("centering", "")) if "centering" in sub \
+        else _keys(f"{fact.value} {fact.note}")
+    stated = [sp for sp in _assertive_spans(_norm(claim.value))
+              if sp not in recorded]
+    if stated:
+        return [Violation(
+            code="centering_mismatch", severity=Severity.UNREPAIRABLE,
+            message=(f"the subgrades are {fact.note or fact.value} — they do not "
+                     f"say {claim.value!r}. A centring measurement cannot be "
+                     f"reworded into existence."),
+            expected=fact.note or str(fact.value), actual=claim.value)]
     return []
 
 
 def _availability(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
-    if _UNBOUNDED.search(claim.quote):
+    if (v := _require_kind(claim, fact, ClaimType.AVAILABILITY, "an availability claim must cite an availability fact")):
+        return v
+    if _UNBOUNDED.search(ctx.reply):     # B-60: the quote is not the sentence
         qty = fact.value.get("quantity")
         return [Violation(
             code="unbounded_quantifier", severity=Severity.REPAIRABLE,
             message=(f"unbounded quantity language is unverifiable. State the number"
                      + (f" — {qty} available." if qty is not None else ".")),
             expected=qty, actual=claim.quote)]
-    stated = _numbers(claim.value)
     qty = fact.value.get("quantity")
-    if stated and qty is not None and int(stated[0]) != int(qty):
+    if not _states(claim, qty):                 # B-49
         return [Violation(
             code="availability_mismatch", severity=Severity.REPAIRABLE,
-            message=f"the record says {qty} available.", expected=qty, actual=stated[0])]
+            message=f"the record says {qty} available.",
+            expected=qty, actual=claim.value)]
     return []
 
 
 def _price(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
+    if (v := _require_kind(claim, fact, ClaimType.PRICE, "a price claim must cite a price fact")):
+        return v
     if fact.value.get("operator_only"):
         return [Violation(
             code="operator_only_leaked", severity=Severity.UNREPAIRABLE,
             message=("that figure is the seller's reserve and is for their eyes only. "
                      "Saying it destroys their position."),
             actual=claim.value)]
-    stated = _numbers(claim.value)
     recorded = fact.value.get("price") or fact.value.get("closed_at")
-    if stated and recorded is not None and abs(stated[0] - float(recorded)) > 0.01:
+    if not _states(claim, recorded):            # B-49, not `_numbers(...)[0]`
         return [Violation(
             code="price_mismatch", severity=Severity.REPAIRABLE,
             message=f"the record says ${float(recorded):,.2f}.",
-            expected=recorded, actual=stated[0])]
+            expected=recorded, actual=claim.value)]
     return []
 
 
 def _bid(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
-    stated = _numbers(claim.value)
+    if (v := _require_kind(claim, fact, ClaimType.BID, "a bid claim must cite a bid fact")):
+        return v
     current = fact.value.get("current_bid")
-    if stated and current is not None and abs(stated[0] - float(current)) > 0.01:
+    if not _states(claim, current):             # B-49
         return [Violation(
             code="bid_mismatch", severity=Severity.REPAIRABLE,
             message=f"the current bid is ${float(current):,.2f}.",
-            expected=current, actual=stated[0])]
+            expected=current, actual=claim.value)]
     return []
 
 
@@ -459,6 +673,12 @@ def _policy(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     which may conflict with platform buyer protection. Repeating an unenforceable
     disclaimer would manufacture liability for our own user.
     """
+    # Three claim types share this verifier, so the check is membership
+    # rather than identity — but a policy claim citing a comp fact is still
+    # a mis-citation (B-33).
+    if fact.kind not in (ClaimType.SHIPPING, ClaimType.RETURNS,
+                         ClaimType.AUTHENTICITY):
+        return [_miscite(claim, fact, "a policy claim must cite a policy fact")]
     if fact.authority is not Authority.RECORD or "clause" not in (fact.value or {}):
         return [Violation(
             code="policy_uncited", severity=Severity.UNREPAIRABLE,
@@ -484,6 +704,7 @@ def _policy(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
 
 
 REGISTRY: dict[ClaimType, Verifier] = {
+    ClaimType.IDENTITY: _identity, ClaimType.SIZING: _sizing,
     ClaimType.VARIANT: _variant,
     ClaimType.COMP: _comp,
     ClaimType.POP: _pop,
@@ -516,29 +737,283 @@ def _miscite(claim: Claim, fact: Fact, why: str) -> Violation:
 def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
     """Any sentence that asserts something must be covered by a claim.
 
-    This is D-11, and it is the only pass that catches a claim type nobody
-    enumerated. Everything above only finds what somebody anticipated.
+    This is D-11: the only pass that catches a claim type nobody enumerated.
+    Everything above it finds only what somebody anticipated.
+
+    THE RULE: *an assertive span may go uncited only if the fact a claim
+    covering this sentence cites already contains it.*
+
+    THREE REWRITES GOT HERE, and the lesson from the two that failed is one
+    sentence: **every exemption is an attack surface, and an exemption that is
+    cheaper to satisfy than the assertion it guards is a hole.**
+
+    v1 required each span to appear in some claim's QUOTE. Over-blocked at 51.9%
+    — the contract asks for one claim per assertion, so a sentence carrying two
+    could not have a single quote spanning both.
+
+    v2 pooled every token in the evidence and in the buyer's question into one
+    flat set. That broke in both directions at once: `$305` from a comp range
+    licensed a false `$305` bid with no bid claim at all, a buyer who typed
+    "is it a psa 10?" made "this is a PSA 10" assertable against a PSA 9 record,
+    and the catalog's own shipping clause — quoted verbatim and cited — blocked.
+
+    v3 (this one) narrows what may exempt, and compares properly:
+
+      - **Only the cited fact exempts.** `claim.value` is NOT an exemption
+        source: the per-type verifier is what checks the value against the
+        record, and treating it as exempting let one claim carry a true figure
+        and a fabricated one ("current bid 890, 12 watchers") with only the
+        first checked.
+      - **Numbers compare numerically** (`_numkey`). The facts hold floats and
+        the notes render "$890.00"; the model writes "$890". String comparison
+        blocked half the recorded corpus on the presence of cents.
+      - **Words compare by an explicit lemma table** (`_LEMMA`), not a stemmer.
+        The stemmer collided "lots" with "lot", and `assemble` mints a
+        "lot is <status>" note for every lot — so "we have lots of these"
+        exempted itself against the domain's most common noun.
+      - **A question asserts nothing.** The D-14 clarifier is interrogative by
+        construction and was blocking on the very attributes it exists to offer.
+    KNOWN BOUND, stated rather than papered over. Exemption is per SENTENCE, not
+    per phrase, so two occurrences of the same number in one sentence are
+    indistinguishable: *"Orders ship within 2 business days, and we have 2 of
+    these left"* passes on a cited shipping clause, because the clause's own "2"
+    exempts the fabricated stock count. Closing it needs to know what each
+    figure modifies, which is parsing, not matching. The per-type verifiers are
+    what catch a wrong figure on a claim that cites the right fact; this pass
+    only catches figures nothing is responsible for at all.
+
+      - **The buyer's question is not consulted at all.** v2 folded it into the
+        exemption set and v3's first draft kept a narrowed version; both let the
+        buyer choose what the system could assert. It turned out to be
+        unnecessary as well as dangerous: B-37's case — "We're at $890, so $320
+        wouldn't push it" — is recognisable from the REPLY alone, because the
+        reply denies the figure. `_negated_near` below does that work, and a
+        denial cannot be smuggled in from outside the draft.
     """
-    covered = [_norm(c.quote) for c in draft.claims if c.quote.strip()]
     out: list[Violation] = []
+    proper = _proper_nouns(ctx)
     for raw in _SENTENCE.findall(draft.text):
         s = raw.strip()
         if not s or not _asserts(s):
             continue
+        # Asking is not asserting. The clarifier D-14 exists to produce is a
+        # question, and it has to name the attributes that tell the candidates
+        # apart in order to be worth asking.
+        if s.endswith("?"):
+            continue
         n = _norm(s)
-        if any(q and (q in n or n in q) for q in covered):
+
+        # The facts cited by claims that speak to THIS sentence. Scope is the
+        # whole fix: a claim vouches for the sentence it quotes, not the draft.
+        exempt: set[str] = set(proper)
+        for c in draft.claims:
+            if not c.quote.strip() or not _overlaps(_norm(c.quote), n):
+                continue
+            # B-65. `_overlaps` is substring containment, so a quote of the
+            # three characters "305" spoke for EVERY sentence containing 305 —
+            # lending a comp fact's exemptions to a sentence asserting a bid,
+            # and restoring a finding this docstring calls closed.
+            #
+            # A quote with no word in it is only unambiguous if it occurs once
+            # in the whole reply. `"$24.00"` quoted against the one sentence
+            # holding it is a legitimate price highlight; `"305"` against a
+            # reply where 305 appears twice does not identify a sentence at all.
+            if (not _WORD_ONLY.search(c.quote)
+                    and _norm(draft.text).count(_norm(c.quote)) != 1):
+                continue
+            f = ctx.evidence.by_id(c.source_fact_id)
+            if f is not None:
+                exempt |= _keys(f"{f.value} {f.note}")
+
+        uncovered = []
+        for sp in dict.fromkeys(_assertive_spans(n)):
+            if sp in exempt:
+                continue
+            # A span the sentence is DENYING is not a span it is asserting.
+            # "I can't confirm Canada shipping" must not need a shipping fact.
+            # A span the sentence is DENYING is not a span it is asserting:
+            # "I can't confirm Canada shipping" must not need a shipping fact,
+            # and "so $320 wouldn't push it" must not need a fact for $320.
+            if _negated_near(n, sp, window=48, after_window=16):
+                continue
+            if sp in _deferred(n):
+                continue
+            uncovered.append(sp)
+        if not uncovered:
             continue
         out.append(Violation(
             code="unbacked_claim", severity=Severity.REPAIRABLE,
-            message=(f"nothing backs {s!r}. Every sentence with a number, a "
-                     f"superlative or a commitment needs a claim citing a fact."),
+            message=(f"nothing backs {s!r} — nothing cites "
+                     f"{', '.join(repr(u) for u in uncovered)}. Every number, "
+                     f"superlative or commitment needs a claim citing a fact."),
             actual=s))
+    return out
+
+
+def _overlaps(quote: str, sentence: str) -> bool:
+    """Does this claim's quote speak to this sentence?
+
+    ONE direction: the quote must sit inside the sentence. The reverse — a quote
+    containing the sentence — can only happen when the quote spans more than one
+    sentence, which `_structural` already rejects as `quote_spans_sentences`, so
+    that branch was unreachable from any draft the verifier lets through. An
+    unreachable branch in a safety check is worse than no branch: nothing can
+    test it, and a mutation that deletes it changes no result (B-70).
+
+    Trailing punctuation is stripped on both sides because `_SENTENCE` keeps the
+    full stop and a model quoting the whole sentence usually does not.
+    """
+    q, sen = quote.strip().rstrip(".!?"), sentence.strip().rstrip(".!?")
+    return bool(q) and q in sen
+
+
+# Whole-word number runs only. Two earlier versions got this wrong in opposite
+# directions: `\d` treated "9999" as four assertions; `\d[\d,.]*` was greedy, so
+# "890." never matched a quote saying "890". Word boundaries also keep the "1"
+# inside "1st edition" and the "90" inside "90d" out — they are parts of words,
+# not quantities, and demanding a citation for them blocked 15% of the corpus.
+_NUMBER_RUN = re.compile(r"\b\d(?:[\d,.]*\d)?\b")
+
+_WORD = re.compile(r"[a-z0-9]+")
+
+# Numbers written as words, mapped to the value they denote so they compare
+# against the record like any other figure — "two Mew items" against evidence
+# holding exactly two is backed, and must not block (B-54).
+# "one" is deliberately absent: here it is a pronoun ("this one") far more often
+# than a quantity, and including it demanded a citation for the commonest way a
+# seller refers to the item in front of them.
+_NUMWORDS = {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
+             "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+             "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+             "hundred": 100, "thousand": 1000, "dozen": 12}
+_NUMWORD = re.compile(r"\b(" + "|".join(_NUMWORDS) + r")\b", re.I)
+
+# Explicit lemmas for exactly the words `_SUPERLATIVE` and `_COMMITMENT` can
+# emit (B-55). This replaced a suffix-stripping stemmer, which was wrong in both
+# directions at once: it collided "lots" -> "lot" with the domain's most common
+# noun, and it left "guarantee"/"guaranteed" and "deliver"/"delivery" as
+# different strings, so a fact written with one form could not exempt a reply
+# written with the other. A table of twenty entries is inspectable; a stemmer's
+# collisions are not.
+_LEMMA = {
+    "ships": "ship", "shipped": "ship", "shipping": "ship", "shipment": "ship",
+    "postage": "ship", "dispatch": "ship", "dispatches": "ship",
+    "dispatched": "ship", "sends": "send", "sending": "send",
+    "refunds": "refund", "refunded": "refund",
+    "replaces": "replace", "replaced": "replace",
+    "delivers": "deliver", "delivered": "deliver", "delivery": "deliver",
+    "guarantees": "guarantee", "guaranteed": "guarantee",
+    "promises": "promise", "promised": "promise",
+    "honours": "honour", "honors": "honour", "honor": "honour",
+    "covers": "cover", "covered": "cover",
+    "perfectly": "perfect", "we'll": "will", "i'll": "will",
+    "well": "will", "ill": "will", "shall": "will",
+}
+
+
+def _numkey(x: str) -> str:
+    """A quantity's canonical form, compared as a NUMBER (B-56).
+
+    The single highest-yield fix in this file. Every figure `assemble` mints is
+    a float and every note renders money as `$890.00`, while the model writes
+    `$890` — so a string comparison made the verdict on a true, correctly-cited
+    sentence depend on whether the model typed the cents. It blocked 4 of 7
+    console drafts and 3 of 8 demo drafts, and it was invisible on sold lots
+    only because `_queue` happens to format those with `:,.0f`.
+    """
+    try:
+        f = float(x.replace(",", "").rstrip("."))
+    except ValueError:
+        return x
+    return f"{f:g}"
+
+
+def _lemma(w: str) -> str:
+    return _LEMMA.get(w, w)
+
+
+def _keys(text: object) -> set[str]:
+    """Comparable tokens: canonical numbers, and words reduced by `_LEMMA`.
+
+    Number runs are removed from the text before the word scan so "1,320" does
+    not also yield "1" and "320" — which would exempt a fabricated $320 because
+    some unrelated figure contained those digits.
+    """
+    t = _norm(str(text))
+    nums = {m.group(0) for m in _NUMBER_RUN.finditer(t)}
+    keys = {_numkey(x) for x in nums}
+    for x in sorted(nums, key=len, reverse=True):
+        t = t.replace(x, " ")
+    for w in _WORD.findall(t):
+        keys.add(_lemma(w))
+        if w in _NUMWORDS:
+            keys.add(_numkey(str(_NUMWORDS[w])))
+    return keys
+
+
+def _proper_nouns(ctx: VerifyContext) -> set[str]:
+    """Words that are NAMES in the record, not claims about the world.
+
+    `itm_swshp_special_delivery_pikachu` is a real card in the shipped catalog,
+    and `_COMMITMENT` matches "Delivery" — so "Which Pikachu do you mean, the
+    Special Delivery one?" was blocked for naming a card (B-57). Names are
+    exempt as WORDS only; a number in a title is still a number.
+    """
+    out: set[str] = set()
+
+    def take(text: str) -> None:
+        # Words only. B-68: `_WORD` is `[a-z0-9]+`, so this was silently
+        # exempting every DIGIT in an identity fact or lot title too — and a
+        # lot priced at $24.00 made "we have 24 left" assertable with no claim
+        # at all. The docstring said "a number in a title is still a number";
+        # the code did not.
+        for w in _WORD.findall(_norm(text)):
+            if not w.isdigit():
+                out.add(_lemma(w))
+
+    for f in ctx.evidence.facts:
+        if f.kind is ClaimType.IDENTITY or "title" in str(f.value):
+            take(str(f.value))
+    if ctx.lot is not None:
+        take(ctx.lot.title or "")
+    return out
+
+
+def _deferred(sentence: str) -> set[str]:
+    """A promise to DEFER is not a promise about the record (B-53).
+
+    The verifier's own messages prescribe deferral — "defer to the host" — and
+    the recorded reply following that instruction ("I'll have the host pull it
+    up on camera") blocked on `I'll`, which is B-24 again: a rule refusing the
+    reply its own remedy asks for.
+
+    Only the MODAL is exempt, never the promise itself. v3's first attempt
+    exempted every `_COMMITMENT` word in a deferring sentence, and because this
+    is a live-*show* product where `_is_deferral` matches "show", "check" and
+    "seller", *"Everything from this show ships free"* and *"I'll refund you in
+    full, ask the seller"* both passed with zero claims (B-59). "ship",
+    "refund", "cover" and "free" are exactly the words a policy fact has to
+    back, so they are never exempt here.
+    """
+    if not _is_deferral(sentence):
+        return set()
+    return {"will"}
+
+
+def _assertive_spans(sentence: str) -> list[str]:
+    """The substrings that made `_asserts` demand backing, in `_keys`' form."""
+    out = [_numkey(m.group(0)) for m in _NUMBER_RUN.finditer(sentence)]
+    out += [_numkey(str(_NUMWORDS[m.group(0).lower()]))
+            for m in _NUMWORD.finditer(sentence)]
+    for pat in (_SUPERLATIVE, _COMMITMENT, _UNBOUNDED):
+        out += [_lemma(m.group(0).lower()) for m in pat.finditer(sentence)]
     return out
 
 
 def _asserts(sentence: str) -> bool:
     return bool(_NUMBER.search(sentence) or _SUPERLATIVE.search(sentence)
-                or _COMMITMENT.search(sentence))
+                or _COMMITMENT.search(sentence) or _NUMWORD.search(sentence)
+                or _UNBOUNDED.search(sentence))
 
 
 # =====================================================================
@@ -647,6 +1122,33 @@ def _slug(v: object) -> str:
     return re.sub(r"[^a-z0-9]+", "_", str(v).lower()).strip("_")
 
 
+def _states(claim: Claim, recorded: object) -> bool:
+    """Does the claim state the recorded figure ANYWHERE in its value? (B-49)
+
+    Every numeric verifier read `_numbers(claim.value)[0]` — the FIRST number —
+    so "3 bids in, currently at $890" blocked as a $3 bid while "currently at
+    $890, 3 bids in" passed. Identical facts, identical truth, opposite verdicts
+    decided by word order. The contract asks for one claim per assertion (B-09),
+    but a claim's own value routinely carries the context around its figure.
+
+    Presence rather than position: a claim that names the true value has named
+    it. A claim that names only a false one still has no match and still blocks.
+    """
+    stated = _numbers(claim.value)
+    if not stated or recorded is None:
+        return True                       # nothing numeric to contradict
+    return any(abs(x - float(recorded)) <= 0.01 for x in stated)
+
+
+_MONEY = re.compile(r"\$\s?(\d[\d,]*(?:\.\d+)?)")
+
+
+def _money(s: object) -> list[float]:
+    """Figures written as money. See B-52: a comp's sample size and its window
+    in days are numbers in the same sentence and are not prices."""
+    return [float(x.replace(",", "")) for x in _MONEY.findall(str(s))]
+
+
 def _numbers(s: object) -> list[float]:
     return [float(x.replace(",", "")) for x in
             re.findall(r"\d[\d,]*(?:\.\d+)?", str(s))]
@@ -656,8 +1158,41 @@ def _sentence_count(s: str) -> int:
     return len([x for x in _SENTENCE.findall(s) if x.strip()])
 
 
+# Widened to the contractions people actually type — "wouldn't", "can't",
+# "won't" — because `_question_numbers` now depends on recognising a refusal,
+# and a refusal the pattern misses turns into a block with no repair (B-37).
+_NEGATION = re.compile(
+    r"\b(not|no|never|none|cannot|can'?t|won'?t|wouldn'?t|couldn'?t|shouldn'?t|"
+    r"don'?t|doesn'?t|didn'?t|isn'?t|aren'?t|wasn'?t|weren'?t|unable)\b", re.I)
+
+
 def _is_negated(quote: str) -> bool:
-    return bool(re.search(r"\b(not|isn'?t|wasn'?t|no|never|aren'?t)\b", quote, re.I))
+    return bool(_NEGATION.search(quote))
+
+
+def _negated_near(quote: str, value: str, window: int = 40,
+                  *, after_window: int = 0) -> bool:
+    """Is the CLAIMED VALUE the thing being denied? (B-46)
+
+    Reads only the run-up to where the value appears — "this copy is not 1st
+    Edition" negates it, "this copy is 1st Edition, not Shadowless" does not.
+    Falls back to the whole quote when the value is not locatable in it, which
+    keeps the old, permissive behaviour for claims whose value is a paraphrase
+    rather than a substring; `_structural` already requires the QUOTE to be in
+    the reply, so this fallback cannot be reached by inventing a quote.
+    """
+    q, v = quote.lower(), _norm(value).strip()
+    i = q.find(v) if v else -1
+    if i < 0:
+        return _is_negated(quote)
+    # Asymmetric, and deliberately so. English denies a noun phrase BEFORE it
+    # ("not 1st Edition", "no returns") but denies a figure just AFTER it
+    # ("$320 wouldn't push it"), so the trailing window has to exist — and has
+    # to be short. B-67: a symmetric 48-character window let a denial about a
+    # DIFFERENT thing later in the sentence exempt an earlier assertion, so
+    # "All sales are final and returns are not accepted" passed with no claims,
+    # which is precisely the sentence `_policy` says must never be repeated.
+    return bool(_NEGATION.search(q[max(0, i - window):i + len(v) + after_window]))
 
 
 def _is_deferral(quote: str) -> bool:

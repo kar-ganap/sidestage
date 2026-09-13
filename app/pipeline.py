@@ -122,7 +122,11 @@ def draft_reply(
 
         # 4 — verify, against the fact each claim cited
         t = _tick()
-        result = verify(draft, ev, catalog=cat)
+        # `question` is not optional here in practice: without it the
+        # coverage pass cannot tell a number the buyer supplied from one
+        # the model invented, and a reply repeating an offer in order to
+        # decline it blocks with no repair available (B-37).
+        result = verify(draft, ev, catalog=cat, question=message)
         timing[f"verify_{attempt}"] = _tock(t)
 
         # An empty reply is not a pass. Nothing to verify is not the same as

@@ -31,12 +31,29 @@ from pydantic import BaseModel, Field
 
 from app.config import STATIC_DIR, settings
 from app.models import Intent
-from app.session import Card, LoggedMessage, get_session, reset_session
+from app.session import Card, EmptyReply, LoggedMessage, get_session, reset_session
 from app.triage import Model
 
 VERSION = "0.2.0"
 
+# B-40. `/api/replay` used to interpolate the caller's string into a path:
+#
+#     evals/data/{body.source}.jsonl
+#
+# which reads any .jsonl on the filesystem given enough `../`, and 500s with a
+# KeyError on anything that parses but has no "text" field. An allowlist built
+# by *listing the directory* is the fix rather than a `..` check, because it can
+# only ever name files that are actually there — there is no string to sanitise.
+_TRANSCRIPTS: dict[str, "Path"] = {}
+
+
+def _transcripts() -> dict[str, "Path"]:
+    from pathlib import Path
+    d = Path(__file__).parent.parent / "evals" / "data"
+    return {p.stem: p for p in sorted(d.glob("*.jsonl"))}
+
 app = FastAPI(title="SideStage", version=VERSION, docs_url="/api/docs")
+_TRANSCRIPTS.update(_transcripts())
 
 
 # =====================================================================
@@ -99,14 +116,22 @@ def healthz() -> JSONResponse:
 
 @app.get("/api/state")
 def state() -> JSONResponse:
+    """Everything the console renders, from one consistent read.
+
+    The log and the ledger come from `snapshot()` rather than the live
+    containers: this endpoint is polled while the cascade is ingesting, and
+    iterating a container another thread is appending to raised a 500 on ~28%
+    of concurrent reads (B-38).
+    """
     s = get_session()
+    log, ledger = s.snapshot()
     return JSONResponse({
         "lot": _lot(s.active_lot),
         "nudge": s.nudge(),
         "lots": [_lot(l) for l in s.catalog.lots.values()],
-        "log": [_msg(m) for m in reversed(s.log)],
+        "log": [_msg(m) for m in reversed(log)],
         "queue": [_card(c) for c in s.queue()],
-        "ledger": list(reversed(s.ledger)),
+        "ledger": list(reversed(ledger)),
         "stats": s.stats(),
     })
 
@@ -142,10 +167,11 @@ def replay(body: ReplayIn) -> JSONResponse:
     and the handful the platform's own highlighter missed.
     """
     import json
-    from pathlib import Path
-    path = Path(__file__).parent.parent / "evals" / "data" / f"{body.source}.jsonl"
-    if not path.exists():
-        return JSONResponse({"error": f"no transcript {body.source}"}, status_code=404)
+    path = _TRANSCRIPTS.get(body.source)
+    if path is None:
+        return JSONResponse(
+            {"error": f"no transcript {body.source!r}",
+             "available": sorted(_TRANSCRIPTS)}, status_code=404)
     rows = [json.loads(line) for line in
             path.read_text(encoding="utf-8").splitlines() if line.strip()]
     rows = [r for r in rows if "_meta" not in r][body.offset:body.offset + body.n]
@@ -186,7 +212,15 @@ class SendIn(BaseModel):
 
 @app.post("/api/cards/{card_id}/send")
 def send(card_id: str, body: SendIn | None = None) -> JSONResponse:
-    entry = get_session().send(card_id, text=(body.text if body else None))
+    try:
+        entry = get_session().send(card_id, text=(body.text if body else None))
+    except EmptyReply:
+        # 409, not 404 and not 500: the card exists and the request was
+        # well-formed, but there is nothing to send. Journalling it anyway
+        # would put a line in the ledger claiming a reply the buyer never got.
+        return JSONResponse(
+            {"error": "nothing to send — the draft is empty; "
+                      "redraft it or type a reply"}, status_code=409)
     if entry is None:
         return JSONResponse({"error": "no such card"}, status_code=404)
     return JSONResponse(entry)

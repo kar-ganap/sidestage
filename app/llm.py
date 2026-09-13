@@ -254,54 +254,56 @@ REFERENTS
 
 WORKED EXAMPLES, all verbatim from real chat:
 
-  "Any Blazikens ?"                 -> availability_q · catalog · seller · 0.95
-  "lugia next!"                     -> request · upcoming_queue · seller · 0.9
+  "Any fossil psa cards my guy"     -> availability_q · catalog · seller · 0.95
+  "Run the shining dragon"          -> request · upcoming_queue · seller · 0.9
       no question mark, unmistakable intent
-  "Go quicker"                      -> request · none · seller · 0.85
-      a request about the show itself, not about a card
-  "Pre bid Lugia so I can sleep"    -> request · upcoming_queue · seller · 0.9
-  "You got any psyducks"            -> availability_q · catalog · seller · 0.9
+  "whens the slong zard runnin"     -> request · upcoming_queue · seller · 0.85
+      no question mark, a nickname and a misspelling — still a request
+  "im no terrorist could you run that beautiful dragonite?"
+                                  -> request · upcoming_queue · seller · 0.9
+  "Do you have any psyduck card now that I have his phone w and money lol"
+                                  -> availability_q · catalog · seller · 0.9
   "Back again plz"                  -> request · current_lot · seller · 0.9
       asking the host to show the back of the card
-  "what set is that pikachu silver border from"
+  "What are these silver boarders out of ??"
                                     -> attribute_q · current_lot · seller · 0.9
-  "did i miss the skyridge"         -> price_value_q · closed_lot · seller · 0.8
+  "That shining Mewtwo sell?"       -> price_value_q · closed_lot · seller · 0.8
       a late arrival asking what a finished lot sold for
-  "Do you have the dragonight on the back wall in your shop??"
+  "Any chance you have a celebi or suicune wotc black star promo ?"
                                     -> availability_q · catalog · seller · 0.95
       misspelled, and about stock visible behind the seller
-  "Back is clean ?"                 -> grade_condition_q · current_lot · seller · 0.9
-  "320 for gare plz"                -> negotiation · current_lot · seller · 0.85
+  "Lugia clean?"                    -> grade_condition_q · upcoming_queue · seller · 0.9
+  "10k all gold stars you got a number in hand?"
+                                  -> negotiation · upcoming_queue · seller · 0.85
 
-  "base set?"                       -> cross_user · none · NOT seller · 0.8
-      tagged another viewer about a card that viewer owns
-  "Did it crash? It was $100 sealed last year"
-                                    -> market_comment · closed_lot · NOT seller · 0.85
+  "Mines have old backs"            -> cross_user · catalog · NOT seller · 0.8
+      a viewer describing their OWN copy; nothing is asked of the seller
+  "That was like non 1st ed price"  -> market_comment · closed_lot · NOT seller · 0.85
       commentary with a question mark; nothing is being asked of the seller
-  "half off? we trollin"            -> hype_noise · none · NOT seller · 0.9
-  "Yooo, atmosphere?? Song?"        -> hype_noise · none · NOT seller · 0.85
-      about the background music
-  "do you believe in grading pop control?"
-                                    -> hype_noise · none · NOT seller · 0.7
-      an opinion prompt to the room, not a request
-  "8 is 3 k"                        -> market_comment · closed_lot · NOT seller · 0.9
-  "1.5 in a 7, 1.3 in a 6"          -> market_comment · closed_lot · NOT seller · 0.9
+  "What the heck is with these non snuggly pokermuns"
+                                  -> hype_noise · none · NOT seller · 0.9
+  "Steelix nicer than my suv lmao"  -> hype_noise · current_lot · NOT seller · 0.85
+      names the card on screen and asks nothing
+  "Zard is hanging"                 -> hype_noise · ambiguous · NOT seller · 0.7
+      a remark about a lot in progress, not a question
+  "841 in 8"                        -> market_comment · current_lot · NOT seller · 0.9
+  "13.5k in a 10"                   -> market_comment · current_lot · NOT seller · 0.9
       a viewer quoting grade-indexed prices
-  "Check comps"                     -> request · current_lot · seller · 0.75
-      instructing the seller, borderline, but actionable
-  "Unlocked Bronze"                 -> system_event · none · NOT seller · 1.0
-  "is raiding with a party of 32."  -> system_event · none · NOT seller · 1.0
-  "wtf lmaoooo"                     -> hype_noise · none · NOT seller · 1.0
-  "I wanna see theory collection!"  -> cross_user · none · NOT seller · 0.7
-      asking another VIEWER to show their collection
+  "Back again plz"                  -> request · current_lot · seller · 0.75
+      asking the host to show the back of the card again
+  "💰$1 STARTS💰🔪WE ARE LIVE🔪"      -> system_event · none · NOT seller · 1.0
+  "is raiding with a party of 36."  -> system_event · none · NOT seller · 1.0
+  "Oops"                            -> hype_noise · none · NOT seller · 1.0
+  "I have this in Japanese"         -> cross_user · current_lot · NOT seller · 0.7
+      a viewer talking about their own copy, to the room
 
 HARDER CASES, also verbatim, where the obvious reading is wrong:
 
   "Can you run the pop series ray"  -> request · upcoming_queue · seller · 0.9
       "ray" is Rayquaza; nicknames and clippings are normal here
-  "Scyther can you re run the lugia unseen force, I came in middle of the stream?"
-                                    -> request · closed_lot · seller · 0.95
-      addresses the seller by handle; asks to re-offer a lot that already closed
+  "im no terrorist could you run that beautiful dragonite?"
+                                    -> request · upcoming_queue · seller · 0.95
+      banter wrapped around a real request; the request is what matters
   "which rayquaza is that in the back?"
                                     -> availability_q · catalog · seller · 0.85
       about stock visible BEHIND the seller, not the lot being sold
@@ -322,23 +324,21 @@ HARDER CASES, also verbatim, where the obvious reading is wrong:
       a viewer's condition assessment, not a question
   "dragonite?"                      -> availability_q · catalog · seller · 0.8
       a bare entity plus a question mark is still a real ask
-  "dragonite has been staring at me all night"
-                                    -> hype_noise · upcoming_queue · NOT seller · 0.75
+  "Zard is hanging"                 -> hype_noise · ambiguous · NOT seller · 0.75
       names a card but asks for nothing — naming alone is not a request
-  "modern slooooop"                 -> hype_noise · none · NOT seller · 0.85
+  "Chromed out"                     -> hype_noise · current_lot · NOT seller · 0.85
   "this bid is so low i feel like im on ketamine"
                                     -> market_comment · current_lot · NOT seller · 0.7
       commentary on price, in the local idiom
-  "half off? we trollin"            -> hype_noise · none · NOT seller · 0.9
+  "with honors"                     -> hype_noise · none · NOT seller · 0.9
   "Rigged?"                         -> hype_noise · none · NOT seller · 0.7
       a question mark on a complaint is not a request
   "No swirl??"                      -> grade_condition_q · current_lot · seller · 0.85
       asks about an attribute only the host can see — still a real question
-  "It was the Japanese silver border"
-                                    -> cross_user · closed_lot · NOT seller · 0.85
+  "not celebrations :)"             -> cross_user · catalog · NOT seller · 0.85
       a viewer ANSWERING another viewer's earlier question
-  "you almost said shining mewtwo"  -> market_comment · current_lot · seller · 0.7
-      a viewer correcting the host mid-sentence; worth surfacing, asks nothing
+  "you cleared a stack tonight"     -> market_comment · none · seller · 0.7
+      addressed to the host, worth surfacing, asks nothing
 
 NOTE ON THE LAST TWO PATTERNS. Viewers routinely answer and correct each other. \
 Those messages are addressed to the room, not to the seller, and classifying them \

@@ -114,8 +114,15 @@ def assemble(
     if resolution.needs_clarification and lot is None:
         facts.append(Fact(
             id=mint(), kind=ClaimType.IDENTITY, subject="resolution",
+            # B-48. `candidates` used to be bare names — ["Mew", "Mew ex"] —
+            # which is not enough to ask a distinguishing question with. The
+            # model has to name what separates the candidates (set, number,
+            # grade), so those have to be IN the fact: anything it says that is
+            # not in the fact it cites is an unbacked claim, and the clarifier
+            # was blocking on its own correct disambiguators. Evidence must
+            # carry what the reply is asked to distinguish on.
             value={"ambiguous": True, "question": resolution.clarification,
-                   "candidates": [i.name for i in resolution.items]},
+                   "candidates": [_candidate(i, cat) for i in resolution.items]},
             authority=Authority.RECORD, source="entities.resolve", as_of=now,
             note=f"AMBIGUOUS — ask, do not answer: {resolution.clarification}",
         ))
@@ -141,6 +148,24 @@ def assemble(
         built_at=now,
         assembly_ms=int((datetime.now(UTC) - t0).total_seconds() * 1000),
     )
+
+
+def _candidate(item: Item, cat: Catalog) -> dict:
+    """Enough to tell this candidate apart from the others (B-48).
+
+    Set NAME rather than code, because that is what a buyer in chat would
+    recognise and therefore what the clarifier has to be able to say.
+    """
+    s = cat.sets.get(item.set_code)
+    g = item.grade
+    return {
+        "item_id": item.id,
+        "name": item.name,
+        "set": s.name if s else item.set_code,
+        "number": item.number,
+        "grade": (f"{g.grader} {g.value:g}" if g and g.value is not None
+                  else (g.grader if g else "RAW")),
+    }
 
 
 def _subject_lot(res: Resolution, cat: Catalog) -> Lot | None:
@@ -272,6 +297,24 @@ def _pricing(m, lot: Lot, now, want) -> list[Fact]:
                 note=(f"auction, current bid ${lot.current_bid:,.2f}"
                       if lot.current_bid else "auction, no bids yet"),
             ))
+        # B-66. A queued auction lot's STARTING bid had no citable price fact —
+        # the number lives inside an availability fact, and the only PRICE fact
+        # on such a lot is the operator-only reserve. So "what's the opening on
+        # the Blastoise?" produced a price claim, `_price` answered
+        # `mis_citation`, and the bounded retry could not satisfy it because
+        # there was nothing to cite. An evidence-shape gap the verifier was
+        # reporting as a model error.
+        if (lot.starting_bid is not None and ClaimType.PRICE in want
+                and lot.status in ("queued", "live")):
+            out.append(Fact(
+                id=m(), kind=ClaimType.PRICE, subject=lot.id,
+                value={"price": lot.starting_bid, "currency": "USD",
+                       "is_starting_bid": True},
+                authority=Authority.RECORD,
+                source=f"lots.{lot.id}.starting_bid", as_of=now,
+                note=f"opening bid ${lot.starting_bid:,.2f}",
+            ))
+
         # The reserve is real and checkable, but it is the SELLER'S number and
         # saying it out loud destroys their position. Marked so the verifier can
         # let the operator see it while blocking any claim that quotes it.

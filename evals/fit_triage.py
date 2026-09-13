@@ -46,11 +46,41 @@ TRAIN = ["triage_train", "triage_extra_batch0", "triage_extra_batch2"]
 TEST = "triage_test"
 
 
-def load(name: str) -> list[dict]:
+def _raw(name: str) -> list[dict]:
     rows = [json.loads(line) for line in
             (DATA / f"{name}.jsonl").read_text(encoding="utf-8").splitlines()
             if line.strip()]
     return [r for r in rows if "_meta" not in r]
+
+
+def _test_texts() -> set[str]:
+    return {r["text"] for r in _raw(TEST)}
+
+
+def load(name: str, *, drop_test_overlap: bool = True) -> list[dict]:
+    """Load a corpus, refusing to hand back anything that is in the test set.
+
+    **Enforced here rather than trusted anywhere (B-36).** The previous version
+    filtered only `_meta`, and three separate leaks walked straight through it:
+
+      - `triage_extra_batch0.jsonl`'s own `_meta` names 8 rows that "duplicate
+        held-out test rows and must be dropped before the two files are
+        concatenated". Nothing dropped them.
+      - `triage_train.jsonl` is tagged `"source": "synthetic"` on all 352 rows
+        and contains **42 verbatim held-out test messages** — including
+        `lugia next!`, `320 for gare plz` and `You got any psyducks`, the exact
+        messages the PRD prints as proof the incumbent misses high intent.
+      - Between them, 35% of distinct test texts and **56% of test positives**
+        were in the training matrix.
+
+    A provenance note in a data file is a comment. This is a filter: the test
+    set cannot enter a training load, whatever any `source` field claims.
+    """
+    rows = _raw(name)
+    if not drop_test_overlap or name == TEST:
+        return rows
+    bad = _test_texts()
+    return [r for r in rows if r["text"] not in bad]
 
 
 def design_matrix(rows: list[dict]) -> tuple[np.ndarray, np.ndarray]:

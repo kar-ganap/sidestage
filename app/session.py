@@ -91,6 +91,15 @@ class Card:
     judge_why: str = ""
 
 
+class EmptyReply(RuntimeError):
+    """Raised when a send would journal nothing (B-39).
+
+    Distinct from "no such card" on purpose: the two are different operator
+    problems and collapsing them into one 404 is how a bug gets misdiagnosed as
+    a stale console.
+    """
+
+
 def _claim_rows(draft: Draft) -> list[dict]:
     return [{"type": c.type.value, "value": c.value,
              "fact": c.source_fact_id, "quote": c.quote} for c in draft.claims]
@@ -122,7 +131,12 @@ class Session:
         self.ledger: list[dict] = []
         self._seq = itertools.count(1)
         self._ids = itertools.count(1)
-        self._lock = threading.Lock()
+        # Reentrant, because the read path composes: `stats()` calls `queue()`
+        # and both need the lock. B-38 — `GET /api/state` 500ed at ~28% under
+        # concurrent ingest with a plain Lock-free read path, because `ingest`
+        # inserts into `self.cards` while `queue()` iterates it. The failure was
+        # invisible single-threaded, which is why it survived every manual test.
+        self._lock = threading.RLock()
         self.judge = JudgeRunner()
         self.active_lot_id: str | None = self._first_live()
 
@@ -289,6 +303,14 @@ class Session:
         op = self.judgement(card_id, timeout=2.0)
         body = text if text is not None else (
             card.reply if card.status == "ready" else card.fallback)
+        # B-39. An empty body was journalled as a sent reply, which is the worst
+        # kind of ledger entry: it records that something went to the buyer and
+        # cannot say what. Every path that produces one is a bug upstream (a
+        # truncated generation, a card drafted and never resolved), so this
+        # refuses rather than papering over it — the operator sees the card is
+        # not sendable instead of a log line claiming it was sent.
+        if not (body or "").strip():
+            raise EmptyReply(card_id)
         entry = {
             "id": f"L{len(self.ledger) + 1:03d}",
             "at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -308,6 +330,16 @@ class Session:
             card.status = "sent"
         return entry
 
+    def snapshot(self) -> tuple[list, list]:
+        """The log and the ledger, copied under the lock (B-38).
+
+        `/api/state` renders both while the cascade may be appending to either.
+        Copying the containers is enough — the elements are only mutated by the
+        draft path, which mutates cards rather than these.
+        """
+        with self._lock:
+            return list(self.log), list(self.ledger)
+
     def dismiss(self, card_id: str) -> bool:
         card = self.cards.get(card_id)
         if card is None:
@@ -322,8 +354,11 @@ class Session:
         x recency used offline, applied to live state."""
         from app.triage import _INTENT_VALUE
         import math
-        open_cards = [c for c in self.cards.values()
-                      if c.status not in ("sent", "dismissed")]
+        # The list comprehension is the critical section, not the sort: it is
+        # the only part that iterates the live dict (B-38).
+        with self._lock:
+            open_cards = [c for c in self.cards.values()
+                          if c.status not in ("sent", "dismissed")]
         newest = max((c.at for c in open_cards), default=None)
 
         def key(c: Card) -> float:
@@ -335,9 +370,12 @@ class Session:
         return sorted(open_cards, key=key, reverse=True)
 
     def stats(self) -> dict:
-        seen = len(self.log)
-        surfaced = sum(1 for m in self.log if m.surfaced)
-        escalated = sum(1 for m in self.log if m.escalated)
+        with self._lock:
+            log = list(self.log)
+            n_sent = len(self.ledger)
+        seen = len(log)
+        surfaced = sum(1 for m in log if m.surfaced)
+        escalated = sum(1 for m in log if m.escalated)
         return {
             "seen": seen,
             "surfaced": surfaced,
@@ -345,7 +383,7 @@ class Session:
             "escalated": escalated,
             "escalation_rate": round(escalated / seen, 3) if seen else 0.0,
             "queue_open": len(self.queue()),
-            "sent": len(self.ledger),
+            "sent": n_sent,
         }
 
 
