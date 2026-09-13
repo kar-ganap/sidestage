@@ -1,0 +1,37 @@
+{"_meta": "Suite C ground truth. Surface forms drawn from the 17 failure modes observed in real chat (docs/research/observation-2026-09-12.md, chat-analysis). Expectations encode what SHOULD happen given the seeded catalogue, written before running the resolver — not fitted to what it currently does. Three outcomes: `item` (resolve to exactly one), `abstain` (2+ candidates and no qualifier, so ask), `none` (we do not stock it, and must not fuzzy-match to something else)."}
+{"text": "blastoies", "expect": "item", "item": "Blastoise", "mode": "misspelling"}
+{"text": "gengr", "expect": "item", "item": "Gengar", "mode": "misspelling"}
+{"text": "blazkien", "expect": "item", "item": "Blaziken ex", "mode": "misspelling"}
+{"text": "dark dragonight", "expect": "item", "item": "Dark Dragonite", "mode": "misspelling + qualifier"}
+{"text": "shinning dragonite", "expect": "item", "item": "Shining Dragonite", "mode": "misspelling + qualifier"}
+{"text": "mewtwo armored", "expect": "item", "item": "Armored Mewtwo", "mode": "word order scrambled"}
+{"text": "gengar fire red", "expect": "item", "item": "Gengar", "mode": "word order scrambled"}
+{"text": "armoured mewtwo", "expect": "item", "item": "Armored Mewtwo", "mode": "spelling variant"}
+{"text": "big boy gengar", "expect": "item", "item": "Gengar", "mode": "descriptor that is not an attribute"}
+{"text": "the blastoise", "expect": "item", "item": "Blastoise", "mode": "deixis + name"}
+{"text": "shining dragon", "expect": "item", "item": "Shining Dragonite", "mode": "description instead of a name"}
+{"text": "charizard vmax", "expect": "item", "item": "Charizard VMAX", "mode": "qualifier disambiguates"}
+{"text": "mew ex", "expect": "item", "item": "Mew ex", "mode": "qualifier disambiguates"}
+{"text": "celebrations mew", "expect": "item", "item": "Mew", "mode": "set qualifier disambiguates"}
+{"text": "champions path zard", "expect": "item", "item": "Charizard VMAX", "mode": "set qualifier + nickname", "note": "Champion's Path names the set; only the VMAX is from it, so the reference is NOT ambiguous"}
+{"text": "delivery pikachu", "expect": "item", "item": "Special Delivery Pikachu", "mode": "partial name", "note": "three Pikachus in catalogue, but only one is a Delivery"}
+{"text": "flying pikachu", "expect": "item", "item": "Flying Pikachu V", "mode": "partial name"}
+{"text": "harris tweed", "expect": "item", "item": "Harris Tweed Overcoat", "mode": "prefix of a full name", "note": "the fashion slice (D-02); two words that prefix the listing title"}
+{"text": "levis jacket", "expect": "item", "item": "Vintage Levi's Type III Trucker Jacket", "mode": "informal name"}
+{"text": "mew", "expect": "abstain", "candidates": ["Mew", "Mew ex"], "mode": "under-specified family"}
+{"text": "the mew one", "expect": "abstain", "candidates": ["Mew", "Mew ex"], "mode": "deixis, still ambiguous"}
+{"text": "bubble mew", "expect": "abstain", "candidates": ["Mew", "Mew ex"], "mode": "descriptor is not a qualifier"}
+{"text": "zard", "expect": "abstain", "candidates": ["Charizard", "Charizard VMAX"], "mode": "nickname, ambiguous"}
+{"text": "charizard", "expect": "abstain", "candidates": ["Charizard", "Charizard VMAX"], "mode": "under-specified family"}
+{"text": "dragonight", "expect": "abstain", "candidates": ["Dark Dragonite", "Shining Dragonite"], "mode": "misspelling, ambiguous"}
+{"text": "pikachu", "expect": "abstain", "candidates": ["Pikachu", "Flying Pikachu V", "Special Delivery Pikachu"], "mode": "under-specified family"}
+{"text": "rakwaza", "expect": "none", "mode": "misspelling of a card we do not stock"}
+{"text": "venasaur", "expect": "none", "mode": "misspelling of a card we do not stock"}
+{"text": "entai", "expect": "none", "mode": "misspelling of a card we do not stock"}
+{"text": "psyducks", "expect": "none", "mode": "pluralised, not stocked (B-18)"}
+{"text": "pokermuns", "expect": "none", "mode": "misspelling of the game, not a card"}
+{"text": "lugia unseen force", "expect": "none", "mode": "set name singularised, not stocked"}
+{"text": "pokemon delta species", "expect": "none", "mode": "set named as a card, not stocked"}
+{"text": "Japanese silver border", "expect": "none", "mode": "description instead of a name, not stocked"}
+{"text": "wtf lmaooo", "expect": "none", "mode": "noise must not match anything"}
+{"text": "gg everyone", "expect": "none", "mode": "noise must not match anything"}

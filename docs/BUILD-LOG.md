@@ -1015,3 +1015,47 @@ have been observed with real time remaining.
 **Lesson.** Reaching for corroboration of a weak branch is exactly when the bar
 should go up, not down — a second instance that turns out to be an artefact is
 worse than having one instance and saying so.
+
+---
+
+## B-30 · Nobody types the apostrophe
+
+**Suite C found three failures on its first run**, all in the same direction —
+the resolver asking or giving up when the viewer had been specific enough. The
+safety side was already clean: **zero confident guesses on ambiguous references,
+zero wrong items, zero matches against stock we do not carry.**
+
+**1. `champions path zard` → abstained** between Charizard and Charizard VMAX.
+
+`cp zard` worked and `team rocket holos` worked, so set narrowing was fine. The
+difference was the apostrophe: `_norm` replaced punctuation with a space, so
+`Champion's Path` indexed as `champion s path`, while a viewer types
+`champions path`. **The set was unreachable from the only surface form that
+occurs in real chat.** `Levi's` had the same hole.
+
+Fixed by *deleting* apostrophes rather than replacing them — `champions path`,
+`levis` — which is what people write. The general form: a normaliser has to
+converge on the form users produce, not on a form that is merely consistent.
+
+**2. `delivery pikachu` → abstained** across three Pikachus, one of which is the
+Special Delivery. A word the viewer typed that only one candidate carries is a
+qualifier, whether or not it happens to be a set name. Narrowing now uses any
+such token, and only ever narrows an existing candidate list — it cannot invent
+a match, and it backs off when narrowing would empty the set.
+
+**3. `harris tweed` → nothing**, though `Harris Tweed Overcoat` is in the
+catalogue. The index keys on full names and head nouns; a two-word fragment of a
+listing title is neither. Added a containment fallback that requires **every**
+content token to appear in the name, so it tightens as a query lengthens rather
+than loosening — which is what keeps `wtf lmaooo` from reaching anything.
+
+**Result: 36/36, and nothing else moved.** 154 tests, Suite A gate recall
+unchanged at 88.9%, Suite E 10/10, and Suite B2 over-blocking went 10.4% → 7.8%
+(resolving `harris tweed` and friends means fewer replies grounded in nothing).
+
+**Lesson.** All three failures were *over*-caution — asking when the viewer had
+already answered, or giving up on a name we hold. That is the error an
+adversarial suite cannot see, exactly as B-24 found for the verifier: a system
+that abstains too much looks safe from every angle except the operator's. Suite
+C exists because "did it ask at the right time" is two-sided, and only one side
+shows up in a safety metric.

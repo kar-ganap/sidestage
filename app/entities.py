@@ -334,6 +334,42 @@ class EntityResolver:
         if named_sets and not items:
             items = [i for i in cat.items.values() if i.set_code in named_sets]
 
+        # A word the viewer typed that only ONE candidate carries is a
+        # qualifier, whether or not it is a set name. "delivery pikachu" names
+        # three Pikachus by head noun, and exactly one of them is a Delivery —
+        # asking "which Pikachu?" there spends the operator's attention on a
+        # question the viewer already answered (Suite C, B-30).
+        #
+        # Only ever narrows an existing candidate list, so it cannot invent a
+        # match, and it backs off whenever the narrowing would empty the set.
+        if len(items) > 1:
+            typed = {t for t in _norm(res.text).split()
+                     if t not in _NOISE_QUALIFIERS and len(t) > 2}
+            matched = {t for m in res.matches for t in m.canonical.split()}
+            extra = typed - matched
+            if extra:
+                narrowed = [i for i in items
+                            if extra & set(_norm(i.name).split())]
+                if narrowed and len(narrowed) < len(items):
+                    items = narrowed
+
+        # Nothing matched an index key, but the viewer may have typed a
+        # fragment of a listing title: "harris tweed" for "Harris Tweed
+        # Overcoat". Requires EVERY content token to appear in the name, so it
+        # tightens as the query gets longer rather than loosening — which is
+        # what keeps "wtf lmaooo" from reaching anything.
+        if not items:
+            typed = [t for t in _norm(res.text).split()
+                     if t not in _NOISE_QUALIFIERS and len(t) > 2]
+            if len(typed) >= 2:
+                hits = [i for i in cat.items.values()
+                        if all(t in _norm(i.name).split() for t in typed)]
+                if len(hits) == 1:
+                    items = hits
+                    res.matches.append(EntityMatch(
+                        " ".join(typed), _norm(hits[0].name), MatchKind.DESCRIPTOR,
+                        0.9, f"every word matches {hits[0].name}"))
+
         seen: set[str] = set()
         res.items = [i for i in items if not (i.id in seen or seen.add(i.id))]
         res.lots = [lot for i in res.items for lot in cat.lots_for_item(i.id)]
@@ -364,6 +400,9 @@ class EntityResolver:
 # =====================================================================
 
 
+_APOSTROPHE = re.compile(r"[\u2019\u02bc']")
+
+
 def _norm(s: str) -> str:
     """Lowercase, strip accents and punctuation, collapse whitespace.
 
@@ -373,7 +412,15 @@ def _norm(s: str) -> str:
     """
     s = unicodedata.normalize("NFKD", s)
     s = "".join(c for c in s if not unicodedata.combining(c))
-    s = _PUNCT.sub(" ", s.lower())
+    s = s.lower()
+    # Apostrophes are DELETED, not turned into a space (B-30). Replacing them
+    # made "Champion's Path" normalise to "champion s path", which no viewer
+    # will ever type — they type "champions path", and the set was therefore
+    # unreachable from the only surface form that occurs in real chat. The same
+    # went for "Levi's". Deleting gives "champions path" and "levis", which is
+    # what people actually write.
+    s = _APOSTROPHE.sub("", s)
+    s = _PUNCT.sub(" ", s)
     return _WS.sub(" ", s).strip()
 
 
