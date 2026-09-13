@@ -1651,3 +1651,28 @@ that exposes shared mutable state.
 `reload_catalog()` drops the singleton; `reset_session()` calls it. Reads being
 in memory (D-33) is what makes the system fast, and it also means *reset* has to
 mean reset.
+
+## B-77 · The README was frozen at the scaffold commit
+
+For the life of the project the entry point still read *"Status: in development.
+The scaffold, configuration and data model are in place. The pipeline, console,
+and evaluation harness are being built."* All three had shipped. It had not been
+touched since the first commit, and nothing could notice, because nothing
+executed it.
+
+A reviewer's first five minutes are the workflow the README describes. If one
+call 404s on a renamed route or a hardcoded card id, the project reads as broken
+regardless of what the rest of the code does.
+
+Rewritten around **five runnable calls in the order the product works** — replay
+the real recorded chat, inspect what was surfaced and dropped *with reasons*,
+draft, write with a read-back, drive the auction into a moment — all with no
+credential.
+
+One of them was wrong on the first pass: it hardcoded `c001`, and ranking puts
+`c002` first. Now it takes the id from the queue, which is also the honest
+instruction, because which card ranks first is a product decision rather than a
+constant.
+
+`tests/test_readme_workflow.py` runs the documented sequence. The entry point
+gets a test like anything else.
