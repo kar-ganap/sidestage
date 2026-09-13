@@ -19,4 +19,8 @@ __pycache__/
 docs/
 tests/
 evals/
+# ...except the transcripts. /api/replay pushes the real recorded chat through
+# the live cascade, so the corpus IS runtime data even though the harness that
+# scores it is not. Negation must come after the exclusion to take effect.
+!evals/data/
 .DS_Store

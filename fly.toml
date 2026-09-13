@@ -19,6 +19,15 @@ primary_region = "sjc"
   auto_start_machines = true
   min_machines_running = 1
 
+  # EXACTLY one machine, and this is a correctness constraint rather than a
+  # cost one. The operator session (app/session.py) holds the chat log, the
+  # queue and the ledger in process (D-33: reads are in memory). With two
+  # machines behind the load balancer a reviewer's POST /api/chat and their
+  # next GET /api/state can land on different instances, and the queue appears
+  # to empty at random. `min_machines_running` is a floor, not a ceiling —
+  # keep the count pinned with `fly scale count 1`.
+  max_machines_running = 1
+
   processes = ["app"]
 
 # D-31: no [[mounts]] block. The database is ephemeral and reseeded from

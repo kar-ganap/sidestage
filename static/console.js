@@ -30,6 +30,40 @@ const api = async (path, body) => {
   return r.json();
 };
 
+/* ---------------------------------------------------------------- theme */
+
+/* Stored choice wins; with none the page follows the OS. Wrapped because
+   localStorage throws outright in some contexts (private windows, blocked site
+   data) and a theme toggle must never be what stops the console rendering. */
+const THEME_KEY = "sidestage.theme";
+
+function readTheme() {
+  try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+}
+function applyTheme(t) {
+  if (t) document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+  try { t ? localStorage.setItem(THEME_KEY, t) : localStorage.removeItem(THEME_KEY); }
+  catch (e) {}
+}
+function currentTheme() {
+  const stored = readTheme();
+  if (stored) return stored;
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark" : "light";
+}
+applyTheme(readTheme());   // before first paint, so there is no flash
+
+function ThemeToggle() {
+  const [t, setT] = useState(currentTheme());
+  const flip = () => { const n = t === "dark" ? "light" : "dark"; applyTheme(n); setT(n); };
+  return html`
+    <button class="icon ghost" onClick=${flip} title=${`Switch to ${t === "dark" ? "light" : "dark"} mode`}
+            aria-label=${`Switch to ${t === "dark" ? "light" : "dark"} mode`}>
+      ${t === "dark" ? "☀" : "☾"}
+    </button>`;
+}
+
 /* ---------------------------------------------------------------- header */
 
 function Header({ stats, lot, busy, onReplay, onReset }) {
@@ -40,7 +74,7 @@ function Header({ stats, lot, busy, onReplay, onReset }) {
         <div class="lot">
           <span class="fmt">${lot.format}</span>
           <b>${lot.title}</b>
-          <span style="color:var(--ink-faint);font-family:var(--mono);font-size:12px">
+          <span class="money">
             ${lot.current_bid != null ? `bid $${lot.current_bid}`
               : lot.price != null ? `$${lot.price}` : "—"}
           </span>
@@ -57,6 +91,7 @@ function Header({ stats, lot, busy, onReplay, onReset }) {
         ${busy ? "replaying…" : "Replay 30 real messages"}
       </button>
       <button class="ghost" onClick=${onReset}>Reset</button>
+      <${ThemeToggle} />
     </header>`;
 }
 
@@ -81,9 +116,9 @@ function ChatLog({ log }) {
           <div class=${"msg " + (m.surfaced ? "surfaced" : "dropped")} key=${m.seq}>
             <div class="t">${m.text}</div>
             <div class="why">
-              <span style="color:var(--ink-faint)">${m.score.toFixed(2)}</span>
+              <span>${m.score.toFixed(2)}</span>
               ${m.reasons.map(r => html`<${Reason} text=${r} />`)}
-              ${m.escalated && html`<span style="color:var(--ink-faint)">· model</span>`}
+              ${m.escalated && html`<span>· model</span>`}
             </div>
           </div>`)}
       </div>

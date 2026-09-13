@@ -20,6 +20,11 @@ COPY app ./app
 COPY data ./data
 COPY static ./static
 COPY fixtures ./fixtures
+# The console's /api/replay pushes the REAL recorded transcript through the live
+# cascade, and that transcript is the eval corpus. Without this the demo's main
+# affordance 404s in production while working perfectly on a laptop — the class
+# of bug that only appears once the image is the thing being run.
+COPY evals/data ./evals/data
 
 ENV PATH="/srv/.venv/bin:$PATH"
 
