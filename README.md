@@ -123,6 +123,7 @@ uv run python tools/check_buildlog.py  # every B-NN cited in code is written up
 
 | | |
 |---|---|
+| [`docs/SUBMISSION.md`](docs/SUBMISSION.md) | **Start here.** The reviewer packet: ten-minute path, what is claimed and what was withdrawn, and the AI-use disclosure. |
 | [`docs/PRD.md`](docs/PRD.md) | What it is for, who it is for, and what it refuses to do. |
 | [`docs/TDD.md`](docs/TDD.md) | Architecture, the spikes, and the measured results. |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every architectural decision, the alternative rejected, and why. |

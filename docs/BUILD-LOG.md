@@ -1852,3 +1852,35 @@ Lost spacing is the weakest mode and is **deliberately not patched yet**.
 Matching across word boundaries is precisely the change most likely to convert
 safe silences into confident errors, and this arm is what would have to prove it
 did not.
+
+## B-83 · Five documents and no front door
+
+An unrelated project — [Papercusp/sidestage](https://github.com/Papercusp/sidestage),
+which arrived independently at the same name for the same problem — ships a
+`docs/submission.md` described as *"the reviewer-facing submission packet,
+walkthrough, and AI-use disclosure."*
+
+This repo had README, PRD, TDD, DECISIONS, BUILD-LOG and DOMAIN_PRIMER: roughly
+4,500 lines across six documents, and **no single entry point telling a reviewer
+where to start**. It also had no AI-use disclosure, which for a project built in
+a pair-programming loop with Claude is a thing better stated than inferred.
+
+`docs/SUBMISSION.md` closes both. It leads with **what was withdrawn** rather
+than what was achieved, because a reviewer should be able to find the negative
+results faster than the positive ones — six claims that did not survive
+measurement, before any that did.
+
+The AI-use section is the part worth having. The honest content is not the
+ratio; it is that Claude wrote a verifier rewrite containing a
+prompt-injection path into the safety component, docstrings describing guards
+that did not exist, an experiment whose paired test ran on unpaired data, and a
+`10/10` eval headline that could not fail — and that what caught all of them was
+adversarial review with an explicit brief to break things, plus mutation testing
+that found 11 mutants surviving all 53 tests of the file those tests were
+written for. Review-by-reading caught none of them.
+
+**Credit stated in the file itself.** Nothing was taken from that repository —
+its contents were not read and the stack is unrelated. What was borrowed is the
+*shape*: that a reviewer deserves one front door, and that how a thing was built
+should be declared. Recording where an idea came from costs nothing and is the
+same discipline as citing a fact.
