@@ -124,9 +124,9 @@ flowchart TD
 | R4 | Show the operator *why* something was blocked, and a safe alternative | built |
 | R5 | The operator always decides; they may override a block | built |
 | R6 | Collapse duplicate questions into one card with a count | built |
-| R7 | Work with no API key, so a reviewer can run it cold | **not built** — fixtures |
-| R8 | Propose showcase actions with an undo recorded at journal time | **not built** — adapter exists, ledger does not |
-| R9 | Nudge the seller when a lot is hot or stalled | **not built** — D-05, gated |
+| R7 | Work with no API key, so a reviewer can run it cold | built — 130 fixtures |
+| R8 | Propose showcase actions with an undo recorded at journal time | built — and two of the four turn out not to *have* an undo |
+| R9 | Nudge the seller when a lot is hot or stalled | built — 10/10 on real bid data |
 
 ---
 
@@ -193,8 +193,14 @@ buyer who got an answer.
 | recall of seller-directed messages | 45.9% | **89.2%** | 37 held-out, two platforms |
 | precision of the surfaced queue | — | **93.6%** | 189 held-out, two platforms |
 | unsafe replies reaching a buyer | — | **2.2%** | 89 adversarial cases |
-| good replies wrongly blocked | — | **10.4%** | 77 control cases |
+| good replies wrongly blocked | — | **7.8–10.4%** | 77 control cases, 5 runs |
+| ambiguous reference answered by a guess | — | **0** | 36 grounding cases |
 | cost per classified message | — | **$0.00146** | measured |
+
+The over-block figure is a **range** because the arm is stochastic — 7.8% in four
+of five runs, 10.4% in one. Quoting the favourable run is how an earlier
+conclusion in this project had to be withdrawn, so the range is what gets
+quoted.
 
 **Counter-metric, and it is the one to watch.** Over-blocking at 10.4% is the
 number that decides whether an operator keeps the tool. A verifier that blocks
@@ -249,18 +255,23 @@ referent prior had to become a function of lot velocity rather than a constant
 
 ## 9. What is not built
 
-**Replay fixtures (R7).** A reviewer with no API key can run the tests but not
-the console locally. The deployed URL works. This is the highest-value remaining
-item because it also unlocks the golden-replay suite.
+**An independent judge on the reply (B-13).** Claim-level verification checks
+what a reply *asserts*, not what it *implies*, so a reply can have every claim
+true and still mislead by answering a different question. The fix is a second
+model call on the critical path, which roughly doubles a latency already over
+budget. Detected offline by the eval judge; not shipped. **This is the most
+honest limitation in the system.**
 
-**The action ledger (R8).** The marketplace adapter exists with its fault modes;
-the ledger that wraps it — preconditions, idempotency, read-back, inverse op
-recorded at journal time — does not. The console keeps a simplified journal.
+**Real marketplace integration.** The adapter is a Protocol with a mock behind
+it (D-24) carrying seven fault modes, including lost responses and partial
+writes. The ledger, the idempotency handling and the read-back were all built
+against that seam — the mock is the piece that gets replaced, not the design.
 
-**The nudge layer (R9).** Gated behind the bench, which is now done. Suite E's
-labels (10 real lots with extension counts and bid deltas) are ready.
-
-**Grounding and moment-detection suites.** Data ready for both; no runners.
+**A third show.** Every generalisation claim rests on two, and the
+cross-platform set is 28 messages. Three things wait on data that does not exist
+yet: a feature for being addressed by name (eBay Live viewers write `nick did
+you see…`), a taxonomy class for commentary about a *card* rather than about the
+market, and any recalibration of the operating point for a faster room.
 
 ---
 
@@ -274,9 +285,12 @@ Stated so it can be checked rather than argued.
   pointless. *Measured false: 53.6% recall, and it misses the highest-intent
   traffic entirely.*
 - **If over-blocking cannot be held below the noise sellers already tolerate**,
-  the verifier is a worse product than no verifier. *Currently 10.4% against an
-  incumbent false-positive rate near 20% — inside the bar, but this is the number
-  that decides it.*
+  the verifier is a worse product than no verifier. *Currently 7.8–10.4% against
+  an incumbent false-positive rate near 20% — inside the bar, but this is the
+  number that decides it, and it is the one to watch after any change.*
+- **If the system asked about references the viewer had already made specific**,
+  the operator would stop reading its questions. *Measured: 0 of 36 grounding
+  cases, though all three bugs Suite C found were of exactly this kind.*
 - **If verification cost sat on the critical path**, the whole design collapses
   into "call a model twice". *Measured false: 0.2 ms p95, because the evidence is
   fetched before generation rather than after.*

@@ -1051,3 +1051,50 @@ the system will actually meet in production.
 **Consequence for the access notes.** Replay mode is not only the no-key path for reviewers;
 it is also the system's own failure mode. One mechanism, two jobs — which is why fixtures
 are recorded for the whole demo tape rather than a token subset.
+
+---
+
+### D-37 · All five suites built; what each is actually worth — settled 2026-09-13
+D-26 specified five. All five now run. Their evidential weight is **not** equal,
+and conflating them would be the easiest way to overstate this system.
+
+| suite | result | what it is worth |
+|---|---|---|
+| **A** triage | gate recall 88.9%, cascade precision 93.6% | **strongest.** Held-out, two platforms, two sellers, paired significance test (p < 0.0001 on the architecture claim) |
+| **B1** adversarial | 97.8% safe, 2.2% escaped | strong on n=89, but the cases are synthetic — they test the mechanism, not the world |
+| **B2** control | 7.8–10.4% over-blocked | **the one that found every real verifier bug.** B1 structurally cannot see over-blocking |
+| **C** grounding | 36/36 | surfaces are real (17 observed failure modes); the *expectations* are mine |
+| **D** golden replay | 130 fixtures, raises on prompt drift | a regression surface, not a measurement |
+| **E** moments | 10/10 | **weakest.** n=10, one stalled instance, and a threshold sweep that passes everywhere (B-29) |
+
+**The ordering matters more than any individual number.** A reviewer asking
+"how do you know this works" should be pointed at A and B2 — the two with
+held-out data and a counter-metric. E is honest arithmetic on ten real lots and
+should never be quoted as validation of anything but the shape of its rule.
+
+**Every suite that measures a model-in-the-loop path is stochastic**, and single
+runs are not results. B-21b withdrew a conclusion drawn from one; B2 is now
+quoted as a range across five.
+
+---
+
+### D-38 · What the project would need next, in order — settled 2026-09-13
+Recorded because "what would you do with another week" is a fair question and
+the answer should already be written down.
+
+1. **D-36 precomputation**, which buys the latency that
+2. **the B-13 reply judge** needs. In that order: the judge is the only thing
+   that catches true-but-misleading, and it costs a second model call the draft
+   path cannot currently afford.
+3. **A third show, labelled.** Every generalisation claim here rests on two, and
+   the cross-platform set is 28 messages. A first-name-address feature, a
+   taxonomy class for card commentary that is not market commentary, and any
+   recalibration of the operating point all wait on data that does not exist.
+4. **Real marketplace integration** behind the adapter Protocol. The seam, the
+   fault modes, the ledger and the read-back were all built for this; the mock
+   is what gets replaced, not the design.
+
+**Deliberately not next: tuning any number in this repo.** The two latency
+optimisations that were tried were both refused by the control set (B-15, B-16),
+and the one feature added to improve triage was refused by cross-validation
+(B-18). The remaining wins are structural, not parametric.

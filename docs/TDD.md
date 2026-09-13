@@ -6,7 +6,7 @@ decides which messages deserve the seller's attention, drafts replies that are
 showcase actions through a ledger that records how to undo them.
 
 > **How to read this.** `DECISIONS.md` holds 41 decisions with their rejected
-> alternatives. `BUILD-LOG.md` holds 25 entries on what building it taught us —
+> alternatives. `BUILD-LOG.md` holds 31 entries on what building it taught us —
 > mostly things we got wrong. This document is the design those two produced,
 > with the measurements that back it. Every number here is reproducible from a
 > command in the repo; none is asserted.
@@ -239,14 +239,19 @@ the verifier caught it — and both count. Escape is judged by an **independent
 
 ```
 B1 adversarial — 89 cases
-   answered safely            72   80.9%   model denied correctly, or declined
-   blocked by the verifier    15   16.9%
+   answered safely            74   83.1%   model denied correctly, or declined
+   blocked by the verifier    11   12.4%
    ESCAPED                     2    2.2%   <- residual risk
    SAFE overall               87   97.8%
 
 B2 control — 77 cases
-   OVER-BLOCKED                8   10.4%   <- the number that matters
+   OVER-BLOCKED             6-8   7.8-10.4%   <- the number that matters
 ```
+
+**B2 is quoted as a range because the arm is stochastic.** Five runs gave 7.8%
+four times and 10.4% once. A single run of a model-in-the-loop suite is one
+sample of a distribution, and quoting the favourable one is how B-21 reached a
+conclusion it had to withdraw.
 
 **B2 is mandatory, not optional** (D-26). A verifier that blocks good replies is
 useless whatever its recall, and **B1 structurally cannot see it** — from inside
@@ -354,14 +359,14 @@ both platforms — the gate catches **16** the regex misses and the regex catche
 Five suites (D-26). A, B and the bench are built; C, D and E are specified with
 data ready.
 
-| suite | what it proves | state |
+| suite | what it proves | result |
 |---|---|---|
-| **A** triage vs incumbent | reads intent, not punctuation | built — `evals/run_triage.py` |
-| **B1** adversarial guardrails | nothing unsafe reaches the buyer | built — 89 cases |
-| **B2** false-positive control | the verifier is calibrated, not paranoid | built — 77 cases |
-| **C** grounding & abstention | asks "which Mew?" exactly when it should | data ready (17 observed failure modes), no runner |
-| **D** unit + golden replay | deterministic, CI-safe, no key | units done (109 tests); fixtures missing |
-| **E** moment detection | hot/stalled/normal on 10 real labelled lots | labels ready, no runner |
+| **A** triage vs incumbent | reads intent, not punctuation | gate recall 88.9%, cascade precision 93.6% on held-out data from two platforms |
+| **B1** adversarial guardrails | nothing unsafe reaches the buyer | 97.8% safe, 2.2% escaped |
+| **B2** false-positive control | the verifier is calibrated, not paranoid | 7.8–10.4% over-blocked |
+| **C** grounding & abstention | asks "which Mew?" exactly when it should | **36/36** — 0 confident guesses, 0 unnecessary questions |
+| **D** unit + golden replay | deterministic, CI-safe, no key | 130 fixtures; the tape raises on prompt drift |
+| **E** moment detection | hot/stalled/normal on 10 real labelled lots | **10/10**, one stalled instance, stated |
 
 **Train on synthetic, test on real**, with `triage_test.jsonl` never fit or tuned
 against. Every file carries `source`, so the two can never be silently mixed.
@@ -496,6 +501,25 @@ won. Five runs put it at a wash.
 instructive bug in the project: it was invisible to the adversarial suite *and*
 the adversarial suite was reporting it as a success.
 
+**B-25 / B-28 · A defensive default is a silent assertion.** Twice. `_dt(None)`
+returned `datetime.now()`, so fourteen of fifteen lots — five of them *fixed-price
+shop listings* — were told to the model as auctions closing shortly. And
+`getattr(lot, "extensions", 0)` read a field the loader never populated, which
+would have shipped the entire nudge layer inert while looking healthy. Where a
+type already says `| None`, the loader's job is to preserve that; where a field
+is ours to populate, the crash is the feature.
+
+**B-27 · The inverse of a markdown is not a markdown.** `markdown` refuses any
+price at or above the current one, so D-04's four actions contain no way to raise
+a price — and the ledger was journalling a compensating action that could never
+execute. The fix is commercial rather than technical: a markdown is a public
+commitment, and restoring the price is a second decision, not a rewind.
+
+**B-30 · Nobody types the apostrophe.** `Champion's Path` normalised to
+`champion s path`; viewers type `champions path`. The set was unreachable from
+the only surface form that occurs in real chat. A normaliser has to converge on
+the form users produce, not one that is merely consistent.
+
 ---
 
 ## 10. Known limitations
@@ -526,26 +550,35 @@ integration was out of scope (D-24). The adapter records a result under its
 idempotency key *before* rolling the lost-response fault, which is the ordering a
 real client needs.
 
-**Not built:** the action ledger (`D-21`; the adapter exists beneath it and the
-console keeps a simplified journal), replay fixtures, Suite C/D/E runners, and
-the D-05 nudge layer.
+**Suite E rests on ten lots and one stalled instance.** Its threshold sweep
+passes at every setting in the range, which is *not* validation: observed
+extension counts are 1, 2, 3, 3, 6, 7, 7, 11, 15, 24, so any cutoff in the empty
+3–6 gap splits the same two groups. The suite validates the shape of the rule,
+not the value of the constants (B-29).
+
+**The triage scorer has no feature for being addressed by name.** eBay Live
+viewers write `nick did you see that galade SAR`; `at_mention` is a strong
+*negative* because on Whatnot an `@handle` meant one viewer answering another.
+Deliberately not fixed: the gap was found on a held-out set, so closing it needs
+new training data rather than a refit against the set that revealed it.
 
 ---
 
 ## 11. What I would do next
 
-1. **Fixtures**, which unlock no-key reviewer mode and Suite D together.
-2. **The action ledger** — propose → precondition snapshot → confirm → execute
-   under an idempotency key → read-back verify → journal *with its inverse*.
-   Compensating actions, not "undo", recorded at journal time because deriving
-   one later needs state we may not still have.
-3. **Suite E**, which is arithmetic on two numbers against 10 real labelled lots,
-   and gates the D-05 nudge layer.
-4. **A first-name-address feature** for triage — eBay Live viewers address the
-   seller as `nick`, and `at_mention` is a strong *negative*. Deliberately not
-   implemented yet: it was motivated by a held-out set, so it needs new training
-   data rather than a refit against the set that suggested it.
-5. **D-36 precomputation** — draft and verify the top-k (lot × intent) pairs off
+1. **Close B-13** — an independent judge on the reply, which is the only thing
+   that catches true-but-misleading. It roughly doubles draft latency, so it
+   needs (2) first.
+2. **D-36 precomputation** — draft and verify the top-k (lot × intent) pairs off
    the queue lookahead. Safe here for a reason it was not designed for:
    verification is a 0.2 ms dict lookup, so a cached draft can be re-verified
-   against fresh evidence at serve time and dropped if the world moved.
+   against fresh evidence at serve time and dropped if the world moved. This is
+   what buys the latency back for (1).
+3. **More labelled chat from a third seller.** Every generalisation claim here
+   rests on two shows; the cross-platform set is 28 messages. A first-name
+   feature, a taxonomy class for product commentary that is not market
+   commentary, and any recalibration of the operating point all need data that
+   does not yet exist.
+4. **Real marketplace integration** behind the existing adapter Protocol. The
+   ledger, the fault modes and the read-back are all built against a seam that
+   was designed for this; the mock is the thing that gets replaced.
