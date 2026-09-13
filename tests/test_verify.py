@@ -1023,3 +1023,94 @@ def test_every_unbacked_sentence_gets_its_own_violation():
     twice = draft("There are 4000 in the world. There are 4000 in the world.")
     assert len([v for v in run(twice, same).violations
                 if v.code == "unbacked_claim"]) == 1
+
+
+@pytest.mark.parametrize("text", [
+    "Everything from this show goes out with tracking.",
+    "We stand behind every card we sell.",
+    "Returns are handled case by case here.",
+    "Every order is insured to full value.",
+])
+def test_uncited_commercial_promises_block(text: str):
+    """B-126. The coverage backstop's commitment vocabulary had no word for
+    tracking, standing behind, returns, insurance or warranty — so four
+    fabricated commercial promises passed with **zero claims and zero facts**,
+    on the pass whose entire job is to catch what nobody enumerated.
+
+    This is the open-vocabulary bound of a lexical detector and it cannot be
+    closed by adding words. What it can be is *measured*: these are the four an
+    adversarial pass found, and the honest statement in `_coverage`'s docstring
+    is that the backstop catches numbers, superlatives and an enumerated set of
+    commitments — not "anything assertive"."""
+    e = ev(fact("f1", ClaimType.SHIPPING,
+                {"text": "Orders ship within 2 business days.",
+                 "clause": "shipping#1"}))
+    assert blocked(draft(text), e)
+
+
+# =====================================================================
+# B-127 — the four rules the mutation harness could still delete
+#
+# With the un-filterable denominator (B-125) the harness reported 37/41, and
+# every survivor was a rule added in wave 3 or 4 — `_denies`' all-occurrences
+# rule, `_INTERJECTION` in both directions, and `_soft`'s clause delimiters.
+# Each was written to close an adversarial finding and none was pinned, so the
+# next person to "simplify" one gets a green suite.
+# =====================================================================
+
+
+def _variant_case(text: str):
+    """A VARIANT claim against a catalog fact printing only `unlimited`, which
+    is the shipped Champion's Path record and the flagship demo's subject."""
+    e = ev(fact("f1", ClaimType.VARIANT,
+                {"printed": ["unlimited"], "language": "en"},
+                authority=Authority.CATALOG,
+                note="Champion's Path (en) was printed as: unlimited"))
+    return draft(text, claim(ClaimType.VARIANT, "1st Edition", "f1", text)), e
+
+
+def test_denying_a_value_once_and_asserting_it_again_is_an_assertion():
+    """`denies__any_occurrence` survived. `_denies` takes ALL occurrences of the
+    claimed value and requires every one to be denied. With `any`, repeating the
+    value's own words in an earlier negated clause decided the verdict for a
+    later affirming one — and the earlier clause is free to write."""
+    d, e = _variant_case(
+        "No 1st Edition copies were reprinted so this 1st Edition is genuine.")
+    assert "variant_not_printed" in codes(run(d, e))
+
+
+def test_an_appositive_interjection_does_not_split_the_clause():
+    """`interjection__never` survived. Without `_INTERJECTION`, the commas
+    around "however" strand the claimed value away from the negation that
+    governs it, and a correct refusal blocks as an UNREPAIRABLE fabricated
+    variant — the worst severity in the file, on a true sentence."""
+    d, e = _variant_case("It is not, however, 1st Edition.")
+    assert "variant_not_printed" not in codes(run(d, e))
+
+
+def test_a_conjunctive_however_still_splits_the_clause():
+    """`interjection__any_comma_word` survived. Blanking every `,word,` merges
+    two real clauses, and the negation in the first then exempts an uncited
+    assertion in the second — the mechanism B-91 exists to remove."""
+    e = ev(fact("f1", ClaimType.SHIPPING,
+                {"text": "Orders ship within 2 business days.",
+                 "clause": "shipping#1"}))
+    assert blocked(draft("We can't cover postage, however, the card is mint."), e)
+    assert blocked(draft("We can't cover postage, shipping, the card is mint."), e)
+
+
+@pytest.mark.parametrize("dash", ["—", "–", "-", "--", "‒",
+                                  "―", "−", "‑"])
+def test_every_dash_form_ends_a_clause(dash: str):
+    """`soft__drops_delimiters` was *unverified* — the probe used an ASCII
+    hyphen, which `_norm` happens to keep, so reverting `_soft` looked like a
+    no-op. B-118 found six of eight dash forms defeating the flagship case
+    while the fix covered two; this pins all eight."""
+    d, e = _variant_case(f"This is 1st Edition {dash} no doubt about it.")
+    assert "variant_not_printed" in codes(run(d, e)), f"{dash!r} erased the clause"
+
+
+def test_semicolon_and_colon_also_end_a_clause():
+    for punct in (";", ":"):
+        d, e = _variant_case(f"This is 1st Edition{punct} no doubt about it.")
+        assert "variant_not_printed" in codes(run(d, e)), punct

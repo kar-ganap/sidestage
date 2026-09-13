@@ -122,7 +122,7 @@ def _observed(stat: str) -> Callable[[], object]:
     return go
 
 
-def _triage(arm: str, stat: str) -> Callable[[], float]:
+def _triage(arm: str, stat: str, n: int = 161) -> Callable[[], float]:
     """A Spike 2 arm figure, from the run that produced it.
 
     B-101: every one of these lived only in prose, and every one was computed
@@ -131,17 +131,22 @@ def _triage(arm: str, stat: str) -> Callable[[], float]:
     forward past a refit and nothing could notice.
     """
     def go() -> float:
-        f = ROOT / "evals/results/triage.json"
+        f = ROOT / f"evals/results/triage_{n}.json"
         if not f.exists():
+            flag = " --both-platforms" if n != 161 else ""
             raise FileNotFoundError(
-                "no triage result — run `uv run python -m evals.run_triage --no-llm`")
-        return round(100 * json.loads(f.read_text())["arms"][arm][stat], 1)
+                f"no {n}-row triage result — run "
+                f"`uv run python -m evals.run_triage --no-llm{flag}`")
+        v = json.loads(f.read_text())["arms"][arm][stat]
+        # tp/fp/fn are COUNTS; r/p/f1 are rates. Multiplying a count by 100 is
+        # how "33 false positives" became "3300" and reported the doc as stale.
+        return v if stat in ("tp", "fp", "fn") else round(100 * v, 1)
     return go
 
 
 def _triage_meta(key: str) -> Callable[[], object]:
     def go() -> object:
-        f = ROOT / "evals/results/triage.json"
+        f = ROOT / "evals/results/triage_161.json"
         return json.loads(f.read_text())[key]
     return go
 
@@ -298,6 +303,12 @@ FACTS = [
          [("README.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| 46\.2% \| (\d+\.\d)% \|"),
           ("docs/TDD.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| 46\.2% \| (\d+\.\d)% \|")],
          tolerance=0.05),
+    Fact("A1 precision, 189 two-platform", _triage("A1", "p", 189),
+         [("docs/TDD.md", r"A1 gate alone\s+P (\d+\.\d)%")], tolerance=0.05),
+    Fact("A1 false positives, 189", _triage("A1", "fp", 189),
+         [("README.md", r"the gate emits \*\*(\d+)\*\* false positives"),
+          ("docs/SUBMISSION.md", r"gate emits\s*\n?\s*\*\*(\d+)\*\* false positives"),
+          ("docs/TDD.md", r"A1 gate alone\s+P 50\.0%\s+R 89\.2%\s+F1 64\.1%\s+(\d+) false")]),
     Fact("A0 recall", _triage("A0", "r"),
          [("docs/TDD.md", r"question-mark regex \*\(the incumbent\)\* \| (\d+\.\d)%")],
          tolerance=0.05),
@@ -329,8 +340,54 @@ FACTS = [
 ]
 
 
+# Numbers that are prose, not measurements: dates, section refs, code
+# identifiers, money in illustrative examples, and the B-NN / D-NN citations.
+_PROSE = __import__("re").compile(
+    r"B-\d+|D-\d+|§\s*\d+|20\d\d(?:-\d\d)?|"          # citations, dates
+    r"\bp\.?\s*\d+|\b[vV]\d+\b|\b\d+\s*(?:KB|MB|ms|s|px|pt)\b|"
+    r"\b(?:lot_|itm_|f)\d+|\d+/\d+\s*(?:102|025|112|82)\b")
+
+
+def audit_unpinned(files: list[str], pinned: set[str]) -> list[tuple[str, str]]:
+    """Every number in a document that NOTHING checks.
+
+    B-123. `check_docs` verified 25 of ~695 numeric tokens across the four
+    documents — **3.6%** — so the default was *unchecked unless pinned*, and
+    three separate false claims survived five waves of review by living in the
+    96% nobody looked at:
+
+      - "a bare model is 46.1% safe" appears in **no recorded run**; it is
+        `100 - 53.9`, a model's SAFE rate transcribed into an UNSAFE column and
+        then propagated into four documents as measured fact.
+      - "+2.3, p = 0.016" still led the two files the README labels "Start
+        here" while the TDD spent a page retracting it as a splice.
+      - "35 of 37 false positives" is a subtraction from a population that does
+        not exist — the shipped gate emits 33, and `run_triage.py` says so.
+
+    Each time, the fix corrected the cell a Fact pinned and left the claim
+    everywhere else. Inverting the default is the only version of this check
+    that could have caught them: a number is suspect until something derives it.
+
+    This does not make the numbers right. It makes the unchecked ones VISIBLE,
+    which is the difference between an audit and a formality.
+    """
+    import re as _re
+    out = []
+    for rel in files:
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        for m in _re.finditer(r"\b\d[\d,]*(?:\.\d+)?%?", text):
+            tok = m.group(0)
+            ctx = text[max(0, m.start() - 60):m.end() + 30].replace("\n", " ")
+            if _PROSE.search(ctx) or tok in pinned:
+                continue
+            out.append((rel, ctx.strip()))
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--audit", action="store_true",
+                    help="list every numeric token no Fact derives (B-123)")
     ap.add_argument("--fix", action="store_true",
                     help="rewrite DERIVED counts in place. Only counts — a "
                          "measurement is never auto-edited, because a number "
@@ -372,6 +429,25 @@ def main() -> int:
                 problems.append(
                     f"  STALE          {rel}: says {stated}, "
                     f"{fact.name} is {truth}")
+
+    if a.audit:
+        pinned = set()
+        for fact in FACTS:
+            try:
+                pinned.add(str(fact.truth()))
+            except Exception:                        # noqa: BLE001
+                pass
+        rows = audit_unpinned(
+            ["README.md", "docs/PRD.md", "docs/TDD.md", "docs/SUBMISSION.md"],
+            pinned)
+        by: dict[str, int] = {}
+        for rel, _ in rows:
+            by[rel] = by.get(rel, 0) + 1
+        print("\n  UNPINNED numeric tokens — nothing in the repo derives these\n")
+        for rel, n in sorted(by.items()):
+            print(f"      {rel:<24}{n:>5}")
+        print(f"      {'TOTAL':<24}{len(rows):>5}\n")
+        return 0
 
     for line in problems + unmatched:
         print(line)

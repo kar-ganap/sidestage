@@ -204,8 +204,8 @@ different data — which is the error this row exists to avoid.
 | metric | incumbent | now | source |
 |---|---|---|---|
 | recall of seller-directed messages | 45.9% | **89.2%** | 37 held-out seller-directed, two platforms |
-| precision of the surfaced queue | — | **93.6%** | 189 held-out, two platforms |
-| unsafe replies reaching a buyer | 53.9% *(bare model)* | **3.4%** | 89 adversarial cases, ablated |
+| precision of the surfaced queue | — | **84.4–87.5%** | 189 held-out, two platforms, 3 runs |
+| unsafe replies reaching a buyer | **50.6%** *(bare model)* | **3.4%** | 89 adversarial cases, ablated over 3 runs |
 | good replies wrongly blocked | — | **9.1%** | 77 control cases |
 | ambiguous reference answered by a guess | — | **0** | 36 grounding cases |
 | cost per classified message | — | **$0.00098** | measured, `sonnet-5` (B-101) |
@@ -214,11 +214,22 @@ different data — which is the error this row exists to avoid.
 "97.8% safe" against nothing at all, which was both unattributable — nobody
 could say whether a bare model reaches 95% unaided — and unfalsifiable, since a
 system that only ever says *"let me check that and come back to you"* scores
-100% on it. The ablation supplies the missing arms: a bare model is **46.1%**
-safe, adding the evidence contract takes it to **94.3%**, and verification adds
-**+2.3 points** on top while costing **7.9 points of responsiveness** (McNemar
-p = 0.016 — the cost is the better-established effect). TDD §4 has the full
-table and what it does not show.
+100% on it. The ablation supplies the missing arms, over **three runs** rather than one:
+a bare model is **49.4%** safe, adding the evidence contract takes it to
+**96.6%**, and verification adds **nothing measurable** on top — the safety
+delta is +0.0, +1.2, -1.1 across runs, so the sign is not stable and the paired
+test is 2 vs 2 discordant at p = 1.00. What it does cost is **5.6 to 6.7 points
+of responsiveness, in every run**.
+
+> **An earlier version of this paragraph said "+2.3 points … p = 0.016"**
+> (B-123). That came from splicing two runs — the S0 row from one and the
+> S1/S2 rows from another — and `docs/TDD.md` §4 retracted it while this
+> sentence, in the document the README labels *"Start here"*, kept leading with
+> it. Correcting the cell a checker pinned and leaving the claim everywhere else
+> is the failure that recurred through five waves of review; `tools/check_docs.py
+> --audit` exists because of it.
+
+TDD §4 has the full table, the per-run spread, and what it does not show.
 
 The over-block figure was previously quoted as a **range** because the arm is
 stochastic — 7.8% in four of five runs, 10.4% in one. Quoting the favourable run is how an earlier
@@ -267,9 +278,9 @@ referent prior had to become a function of lot velocity rather than a constant
 
 | risk | mitigation | residual |
 |---|---|---|
-| A fabricated attribute reaches a buyer | claims verified against evidence fetched before generation; ablated at 96.6% safe against 46.1% for a bare model | **3.4% escape rate** |
+| A fabricated attribute reaches a buyer | claims verified against evidence fetched before generation; ablated at 96.6% safe against **49.4%** for a bare model | **3.4% escape rate** |
 | A reply is true but misleading | no per-claim rule can reach it, so a second model judges responsiveness against the operator's reading time (B-32) | **advisory, not blocking — it warns beside send** |
-| Over-blocking makes the tool useless | mandatory control suite, reported as the headline | 9.1% blocked, and a measured **7.9-point responsiveness cost** (p = 0.016) |
+| Over-blocking makes the tool useless | mandatory control suite, reported as the headline | 9.1% blocked, and a **5.6–6.7 point responsiveness cost in every run** (paired p = 0.0009) |
 | Triage silently swallows a buyer | fails **open**: an unavailable classifier surfaces rather than drops, with a test for it | drop rate visible in the console |
 | The model changes underneath us | verification checks output, not provenance; the client is a 20-line Protocol | re-measure on model change |
 | Two platforms, two sellers is not a distribution | stated everywhere a number is quoted | **real — n is small** |

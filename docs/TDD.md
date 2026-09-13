@@ -6,7 +6,7 @@ decides which messages deserve the seller's attention, drafts replies that are
 showcase actions through a ledger that records how to undo them.
 
 > **How to read this.** `DECISIONS.md` holds 44 decisions with their rejected
-> alternatives. `BUILD-LOG.md` holds 60 entries on what building it taught us —
+> alternatives. `BUILD-LOG.md` holds 95 entries on what building it taught us —
 > mostly things we got wrong. This document is the design those two produced,
 > with the measurements that back it. Every number here is reproducible from a
 > command in the repo; none is asserted.
@@ -186,6 +186,20 @@ invisible (B-04).
 a superlative or a commitment, with no claim over it, blocks. This is why
 dropping an unknown claim type is safe — the sentence it was meant to cover
 becomes unbacked and blocks on its own merits.
+
+> **This is a heuristic, and the distinction is the honest headline of Spike 1.**
+> The per-type registry is a *guarantee*: a claim is checked against the fact it
+> cites, there is no exemption, and four adversarial waves never broke
+> `_require_kind`. Coverage detects **numbers, number-words, superlatives and an
+> enumerated list of commitment verbs** — so its recall is the size of that
+> list. B-126 found four fabricated commercial promises passing with zero claims
+> because the list had no word for *tracking*, *standing behind*, *returns* or
+> *insurance*. Those are in now; the next four are not.
+>
+> **Every adversarial finding in this project landed in coverage, not in the
+> registry.** That is not a coincidence and it is not a defect being hidden —
+> it is the difference between a rule that checks a claim against a fact and a
+> rule that guesses which sentences are claims.
 
 ### Repairability decides whether a retry is worth 2.4 seconds
 
@@ -421,12 +435,39 @@ Held-out Whatnot segment (161 messages, 27 seller-directed):
 **The architecture claim, on 189 held-out messages from *two platforms*:**
 
 ```
-A1 gate alone     P 47.1%  R 89.2%  F1 61.7%    37 false positives
-A2 gate + model   P 93.6%  R 79.3%  F1 85.8%     2 false positives
+A1 gate alone     P 50.0%  R 89.2%  F1 64.1%    33 false positives   (deterministic)
+A2 gate + model   P 84.4-87.5%  R 73.0-75.7%  F1 78.3-81.2%   4-5 FPs  (3 runs)
 
-stage 2 removes 35/37 false positives (95%), costing 3-4 true positives
-McNemar on errors: p < 0.0001
+stage 2 removes 28-29 of 33 false positives (85-88%), costing 5-6 true positives
 ```
+
+> **Every figure in that block was wrong until B-124**, and the block is the
+> reason. The 189-message two-platform population was published in the TDD and
+> the PRD and **nothing in the repo computed it** — `run_triage` scored
+> `triage_test` only, so `triage_show2` was read by no eval at all. With no
+> command behind them the numbers could not drift *visibly*: they drifted past a
+> weights refit and stayed.
+>
+> The worst of them was not stale but impossible. *"Stage 2 removes 35 of 37
+> false positives"* is a subtraction from a population that does not exist —
+> the shipped gate emits **33** — and `evals/run_triage.py` had said so, in this
+> repository, since B-101: *"a '37 false positives' the shipped gate cannot
+> produce because it emits 33."* I diagnosed it, corrected the two cells the doc
+> checker pinned, and left the impossible sentence in the README, this file and
+> `SUBMISSION.md`.
+>
+> A2's precision is the one that matters commercially: the PRD's headline
+> *"precision of the surfaced queue"* read **93.6%** and is **84.4–87.5%**.
+>
+> `--both-platforms` computes it now, results land in
+> `evals/results/triage_189.json`, and `tools/check_docs.py` pins them — to that
+> population, in a file named for it, because a single `triage.json` let the
+> 161-row and 189-row sets overwrite each other and a doc pinned to one was
+> checked against the other.
+>
+> **The McNemar p-value is withdrawn, not corrected.** It needs the paired
+> per-case predictions and the A2 arm is stochastic; the counts above are three
+> runs and that is what this population supports.
 
 That is the claim worth defending, because it needs no baseline: the gate trades
 precision for recall by design, and the model buys it back. **Neither arm alone
@@ -493,11 +534,11 @@ data ready.
 
 | suite | what it proves | result |
 |---|---|---|
-| **A** triage vs incumbent | reads intent, not punctuation | gate recall 88.9%, cascade precision 93.6% on held-out data from two platforms |
-| **B1** adversarial guardrails | nothing unsafe reaches the buyer | 96.6% safe against 46.1% for a bare model (ablated, §4) |
+| **A** triage vs incumbent | reads intent, not punctuation | gate recall 89.2%, cascade precision **84.4–87.5%** on held-out data from two platforms |
+| **B1** adversarial guardrails | nothing unsafe reaches the buyer | 96.6% safe against **49.4%** for a bare model (ablated, §4) |
 | **B2** false-positive control | the verifier is calibrated, not paranoid | 9.1% over-blocked; **7.9-point responsiveness cost, p = 0.016** |
 | **C** grounding & abstention | asks "which Mew?" exactly when it should | 36/36 curated; **77% under chat noise, and every loss is a silence, not a wrong card** |
-| **D** unit + golden replay | deterministic, CI-safe, no key | 269 fixtures; the tape raises on prompt drift |
+| **D** unit + golden replay | deterministic, CI-safe, no key | 288 fixtures; the tape raises on prompt drift |
 | **E** moment detection | hot/stalled/normal on 10 real labelled lots | 10/10 — **and so do 215 other threshold pairs** |
 
 **Train on synthetic, test on real**, with `triage_test.jsonl` never fit or tuned
@@ -616,7 +657,7 @@ it never changes whether verification happens.**
 
 ## 9. What we got wrong
 
-`BUILD-LOG.md` has 60 entries. These are the ones that changed the design.
+`BUILD-LOG.md` holds 95 entries. These are the ones that changed the design.
 
 **B-01 · The headline demo was silently broken.** The two-Mew abstention — "which
 Mew?" — never fired, because the resolver indexed on full card names. Nothing

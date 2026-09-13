@@ -2598,3 +2598,139 @@ the headline is *effective* mutants killed rather than mutants attempted.
 its own blind spot, B-121's list was written by the person it graded, and
 B-122's list contained entries that did nothing. Each layer of the instrument
 needed its own check, and none of them was going to come from me.
+
+## B-123 · The documentation was not stale — it was inverted, retracted, and impossible
+
+A fifth adversarial pass was asked, last, for *the strongest case that this
+submission should be rejected*. It made one, and every sentence of it checked
+out:
+
+**A number that exists in no run.** *"A bare model is 46.1% safe"* appeared in
+four documents. The four recorded S0 arms are 53.9, 49.4, 48.3, 49.4. `46.1` is
+`100 − 53.9` — `docs/PRD.md` printed the haiku bare model's **safe** rate in the
+**unsafe** column, and the complement propagated as measured fact.
+
+**A retracted result still leading the entry documents.** `docs/TDD.md` §4
+retracts `+2.3, p = 0.039` as *"a splice"*. `docs/PRD.md` and
+`docs/SUBMISSION.md` — the two files the README labels **"Start here"** — kept
+leading with `+2.3, p = 0.016`, against a current measurement of a sign-unstable
+delta at **p = 1.00**.
+
+**A subtraction from a population that does not exist.** *"Stage 2 removes 35 of
+37 false positives"* — the shipped gate emits **33**. `evals/run_triage.py` has
+said so since B-101, in this repository, in my own words: *"a '37 false
+positives' the shipped gate cannot produce because it emits 33."*
+
+**Each time I corrected the cell a checker pinned and left the claim
+everywhere else.** `tools/check_docs.py` verified 25 of roughly 695 numeric
+tokens across the four documents — **3.6%** — so the default was *unchecked
+unless pinned*, and three false claims survived five waves inside the 96% that
+nothing looked at.
+
+`--audit` inverts the default and reports every number nothing derives: **477**.
+That figure is uncomfortable and should be. It is the honest size of what is
+still only prose.
+
+## B-124 · A published population that no command computed
+
+The 189-message two-platform figures were in the TDD and the PRD, and
+`run_triage` scored `triage_test` **only** — `triage_show2` was read by no eval
+in the repository. With no command behind them the numbers could not drift
+*visibly*: they drifted past a weights refit and stayed.
+
+Measured now, with `--both-platforms`:
+
+```
+A1  P 50.0%       R 89.2%       F1 64.1%      33 FPs   deterministic
+A2  P 84.4-87.5%  R 73.0-75.7%  F1 78.3-81.2%  4-5 FPs  3 runs
+```
+
+Published: A1 `P 47.1 / F1 61.7 / 37 FPs`, A2 `P 93.6 / R 79.3 / F1 85.8 / 2
+FPs`. The PRD's headline product metric — *"precision of the surfaced queue"* —
+read **93.6%** and is **84.4–87.5%**.
+
+**The McNemar p-value is withdrawn rather than corrected.** It needs paired
+per-case predictions and the A2 arm is stochastic; three runs of counts is what
+this population supports.
+
+Results are namespaced `triage_161.json` / `triage_189.json`, because one
+`triage.json` let the two populations overwrite each other — so whichever ran
+last defined "the" numbers and a doc pinned to one was checked against the
+other. That is the same *"which population is this?"* error the PRD documents
+correcting for the incumbent's recall, reintroduced inside the checker built to
+prevent it.
+
+## B-125 · A denominator that could be filtered
+
+B-122 added inert-mutant detection so a mutant that patched nothing would not
+be reported as a coverage gap. The probe was nine hand-picked cases — and it
+could not see the reserve leak, the lexical pass, staleness or the structural
+pass. **23 of 41 mutants were silently removed from the denominator**, several
+of which the harness had killed in an earlier run.
+
+That is strictly worse than the problem it solved: B-122's inert mutants
+inflated the *survivor list*; this inflated the *score*. A probe narrow enough
+to miss a rule is a probe narrow enough to launder it.
+
+The denominator is every mutant attempted now, and the three buckets are named:
+**killed**, **SURVIVED** (it bit, nothing noticed — a real gap), and
+**unverified** (suite green, probe blind — needs a person). An `unverified`
+mutant is not a pass, and the exit code says so.
+
+## B-126 · Widening a vocabulary in one direction moved it in the other
+
+Four fabricated commercial promises passed the coverage backstop with **zero
+claims and zero facts** — *"goes out with tracking"*, *"we stand behind every
+card"*, *"returns are handled case by case"*, *"insured to full value"* —
+because the commitment list had no word for any of them. Two natural declines
+blocked at the same time, because `_refuses` demanded a negation token *and* a
+refusal pattern, and *"$300.00 is below where we are, sorry"* has no negation.
+("sorry" is not one — B-58 removed apologies deliberately.)
+
+Widening both immediately broke the single case the mechanism exists to block:
+`go` matched *"these **go for** $6,200"* and `going` matched *"the **going**
+rate"*. The two commonest ways to state a price in this domain were being read
+as refusals within a minute of the fix.
+
+Only complete phrases survive — *"let it go for"*, *"come down to"* — because a
+bare verb that appears in both an offer and a price quotation cannot carry the
+distinction. Both directions are pinned in `tests/test_offer.py`.
+
+**And the bound is now stated where it belongs.** `_coverage` detects numbers,
+number-words, superlatives and an **enumerated** list of commitment verbs, so
+its recall is the size of that list and no amount of widening closes an open
+vocabulary. Every adversarial finding in this project landed in coverage and
+none in the per-type registry — which is the difference between a rule that
+checks a claim against a fact and a rule that guesses which sentences are
+claims. The TDD and SUBMISSION say so now.
+
+## B-127 · Four rules the harness could still delete, and one it could not see
+
+With the denominator un-filterable (B-125) the harness reported **37/41** — and
+every survivor was a rule added in wave 3 or 4 to close an adversarial finding,
+with nothing pinning it:
+
+- `_denies`' **all-occurrences** rule. Reverting it to `any` lets a reply deny
+  the claimed value once and assert it again, and the earlier clause is free to
+  write: *"No 1st Edition copies were reprinted so this 1st Edition is genuine."*
+- `_INTERJECTION`, **in both directions**. Deleted, the commas around *however*
+  strand the value away from the negation governing it and a correct refusal
+  blocks UNREPAIRABLY — the worst severity in the file, on a true sentence.
+  Widened to any `,word,`, it merges two real clauses and the negation in the
+  first exempts an uncited assertion in the second.
+- `_soft`'s clause delimiters came back **`unverified`** rather than survived,
+  and the reason is instructive: the probe used an **ASCII hyphen**, which
+  `_norm` happens to keep, so reverting `_soft` changed nothing the probe could
+  see. B-118 had found six of eight dash forms defeating the flagship case while
+  the fix covered two — and the probe written afterwards tested one of the two
+  that already worked.
+
+All four are pinned now, dashes parametrised over all eight forms plus `;` and
+`:`, and the probe uses an em dash so the mutant is verifiable rather than
+invisible.
+
+**`unverified` earned its place.** A bucket that says *"the suite is green and I
+cannot tell you whether that means anything"* is the only honest answer when a
+probe is blind, and it is what pointed at the probe rather than at the code.
+Silently excluding those — which is what B-122's "inert" did — is how a harness
+reports 32/32 while four of its rules are unconstrained.

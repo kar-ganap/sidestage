@@ -205,3 +205,46 @@ def test_the_offer_fact_cannot_back_a_grade_or_a_bid():
                       quote="It's a PSA 10"),
                 facts=(offer_fact(10.0),))
         assert "mis_citation" in codes(r), kind.value
+
+
+# =====================================================================
+# B-126 — the vocabulary, in both directions at once
+#
+# Widening `_REFUSE_BEFORE` to catch more natural declines immediately
+# unblocked "these **go for** $6,200" — because `go` appears in both an offer
+# ("let it go for") and a price quotation. The same happened to `_REFUSE_VERB`
+# and "the **going** rate". These pin both sides so the next widening cannot
+# trade one for the other silently, which is this file's documented failure.
+# =====================================================================
+
+
+@pytest.mark.parametrize("text", [
+    "I'm not able to do $300.00 on this one.",
+    "$300.00 is below where we are, sorry.",
+    "We're not taking $300.00 today.",
+    "That's under my floor, $300.00 doesn't work.",
+])
+def test_natural_declines_are_not_blocked(text: str):
+    """A refusal PATTERN is sufficient on its own. Requiring a negation token
+    as well rejected "below where we are, sorry" — and "sorry" is not a
+    negation, which is exactly why B-58 removed apologies from `_NEGATION`."""
+    r = run(text,
+            Claim(type=ClaimType.PRICE, value="300", source_fact_id="fo",
+                  quote=text),
+            facts=(offer_fact(300.0),))
+    assert not blocked(r), codes(r)
+
+
+@pytest.mark.parametrize("text", [
+    "Yes — these go for $6,200.00.",
+    "The going rate is $6,200.00 on these.",
+    "I can't argue with $6,200.00 as the going rate.",
+])
+def test_a_price_quotation_is_never_read_as_a_refusal(text: str):
+    """`go for` and `the going rate` are the two commonest ways to STATE a
+    price in this domain, and both were briefly read as declines."""
+    r = run(text,
+            Claim(type=ClaimType.PRICE, value="$6,200.00", source_fact_id="fo",
+                  quote=text),
+            facts=(offer_fact(6200.0),))
+    assert blocked(r), f"{text!r} -> {codes(r)}"

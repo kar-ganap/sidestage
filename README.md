@@ -79,8 +79,10 @@ classification pass, then clustering and ranking. The ablation is the point:
 | A1 + stage-1 gate | 88.9% | 46.2% | 60.8% |
 | A2 + classification | 77.8% | 80.8% | 79.2% |
 
-Stage 2 removes 35 of 37 false positives (95%) for 3–4 true positives. McNemar on
-errors, p < 0.0001. **Neither arm alone does both**, which is the argument for a cascade
+Stage 2's contribution is measured on the 189-message two-platform set, where
+the gate emits **33** false positives. See `docs/TDD.md` §5 — the figure this
+line carried for most of the project was a subtraction from a population that
+does not exist (B-124). **Neither arm alone does both**, which is the argument for a cascade
 rather than one classifier.
 
 Two claims were tested on a second platform and **withdrawn**: "the cascade beats the
@@ -112,7 +114,7 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 306 tests, no credential needed
+uv run pytest                          # 329 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls

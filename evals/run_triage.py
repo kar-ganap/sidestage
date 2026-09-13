@@ -196,8 +196,16 @@ def _save(arms: dict[str, dict], extra: dict | None = None) -> None:
     import json as _json
     out = Path(__file__).parent / "results"
     out.mkdir(exist_ok=True)
-    (out / "triage.json").write_text(_json.dumps(
-        {"arms": arms, **(extra or {})}, indent=1), encoding="utf-8")
+    # B-124. Namespaced by POPULATION. One `triage.json` meant the 161-row
+    # held-out segment and the 189-row two-platform set overwrote each other,
+    # so whichever ran last defined "the" numbers — and a doc pinned to one
+    # population was silently checked against the other. That is the same
+    # "which population is this?" error the PRD documents correcting for the
+    # incumbent's recall, reintroduced inside the checker meant to prevent it.
+    n = (extra or {}).get("n_test", 0)
+    (out / f"triage_{n}.json").write_text(_json.dumps(
+        {"arms": arms, "population": f"{n} rows", **(extra or {})}, indent=1),
+        encoding="utf-8")
 
 
 def main() -> int:
@@ -205,13 +213,20 @@ def main() -> int:
     ap.add_argument("--no-llm", action="store_true", help="skip the cascade arm")
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--threshold", type=float, default=None)
+    ap.add_argument("--both-platforms", action="store_true",
+                    help="score the 189-message two-platform set (test + show2). "
+                         "B-124: the TDD and PRD published A1/A2 figures for this "
+                         "population and NOTHING in the repo computed it, so it "
+                         "drifted silently past a weights refit until 'stage 2 "
+                         "removes 35 of 37 false positives' became a subtraction "
+                         "from a population of 33.")
     a = ap.parse_args()
 
     model = Model.load()
     # Read, not chosen. See Model.threshold — picking it here would be
     # tuning on the held-out segment.
     thr = a.threshold if a.threshold is not None else model.threshold
-    rows = load(TEST)
+    rows = load(TEST) + (load("triage_show2") if a.both_platforms else [])
 
     print("=" * 86)
     print("SUITE A — triage vs. the incumbent, on the held-out segment")

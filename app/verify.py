@@ -70,8 +70,10 @@ _SUPERLATIVE = re.compile(
 _COMMITMENT = re.compile(
     r"\b(will|we'll|i'll|shall|promise[sd]?|guarantee[sd]?|refund(?:s|ed)?|"
     r"replace[sd]?|ship(?:s|ped|ping)?|deliver(?:s|ed|y)?|honou?r[sd]?|"
-    r"cover[sd]?|final|postage|dispatch(?:es|ed)?|send(?:s|ing)?|tracked|"
-    r"free)\b", re.I)
+    r"cover[sd]?|final|postage|dispatch(?:es|ed)?|send(?:s|ing)?|"
+    r"track(?:ed|ing)?|free|insur(?:e|ed|ance)|warrant(?:y|ed)?|"
+    r"stand behind|back(?:ed)? by|exchange[sd]?|return(?:s|ed)?|"
+    r"goes out|go out|handled?)\b", re.I)
 
 # A sentence ends at . ! or ? — but NOT at a decimal point (B-44). The naive
 # `[^.!?]+` split "$890.00" and "BGS 9.5" in two, which fired
@@ -831,6 +833,15 @@ def _coverage(draft: Draft, ctx: VerifyContext) -> list[Violation]:
         exempted itself against the domain's most common noun.
       - **A question asserts nothing.** The D-14 clarifier is interrogative by
         construction and was blocking on the very attributes it exists to offer.
+    WHAT THIS PASS DETECTS, precisely. Numbers, number-words, superlatives, and
+    an **enumerated** set of commitment verbs. Not "anything assertive" — it is
+    a lexical detector, so its recall is the size of that list. B-126 found four
+    fabricated commercial promises passing with zero claims and zero facts
+    because the list had no word for *tracking*, *standing behind*, *returns* or
+    *insurance*. Those four are in now; the next four are not, and no amount of
+    widening closes an open vocabulary. The per-type registry is what carries a
+    guarantee; this carries a measured best effort.
+
     KNOWN BOUND, stated rather than papered over. Exemption is per SENTENCE, not
     per phrase, so two occurrences of the same number in one sentence are
     indistinguishable: *"Orders ship within 2 business days, and we have 2 of
@@ -1222,8 +1233,25 @@ _CLAUSE = re.compile(
 # a false block over a false pass, because the false block costs one reply and
 # the false pass puts a number the seller never agreed to in front of a buyer.
 _REFUSE_BEFORE = re.compile(
-    r"\b(?:do|go|take|accept|make|part with|let (?:it|that) go(?: for)?|"
-    r"come down to|drop to)\s*(?:it\s*)?(?:for\s*)?\$?$", re.I)
+    # B-126. `go`/`going` came straight back out: "these **go for** $6,200" is
+    # an assertion and matched as a refusal, so widening this to catch more
+    # declines unblocked the single case the whole mechanism exists to block.
+    # Only the complete phrases — "let it go for", "come down to" — are
+    # unambiguous. A bare verb that appears in both an offer and a price
+    # quotation cannot carry the distinction.
+    r"\b(?:do(?:ing)?|tak(?:e|ing)|accept(?:ing)?|mak(?:e|ing)|"
+    r"part(?:ing)? with|let(?:ting)? (?:it|that) go(?: for)?|"
+    r"come down to|drop(?:ping)? to|sell(?:ing)? (?:it|that) (?:at|for))"
+    r"\s*(?:it\s*)?(?:for\s*)?\$?$", re.I)
+# The verb that makes a negation a refusal OF A TRANSACTION rather than of
+# something incidental — "we're not TAKING $300" against "I can't ARGUE with
+# $6,200" (B-126).
+# `go`/`going` are absent for the same reason as above — "the going rate" is
+# the commonest price quotation in this domain (B-126).
+_REFUSE_VERB = re.compile(
+    r"\b(?:do|doing|take|taking|accept|accepting|sell|selling|"
+    r"make|making|part|let|drop|come down|push|work|happen)\b", re.I)
+
 _REFUSE_AFTER = re.compile(
     r"^\s*\$?[\d,.]*\s*(?:wouldn'?t|won'?t|isn'?t|is not|ain'?t|doesn'?t)\b"
     r"|^\s*\$?[\d,.]*\s*(?:is\s+)?(?:too low|below|under|short)\b", re.I)
@@ -1246,9 +1274,20 @@ def _refuses(quote: str, value: str) -> bool:
         if _numkey(m.group(0)) not in nums:
             continue
         before, after = q[:m.start()], q[m.end():]
-        if not _NEGATION.search(_clause_around(q, m.start(), m.end())):
-            continue
+        # B-126. A refusal PATTERN is sufficient on its own — requiring a
+        # separate negation token as well rejected ordinary declines that carry
+        # no negation at all:
+        #
+        #   "$300.00 is below where we are, sorry."   BLOCKED
+        #
+        # ("sorry" is not a negation, and rightly so — B-58 removed apologies
+        # from `_NEGATION` precisely because they are not denials.) Either a
+        # refusal construction or a negation near the figure now suffices; both
+        # are evidence the figure is being turned down rather than asserted.
         if _REFUSE_BEFORE.search(before[-28:]) or _REFUSE_AFTER.search(after):
+            return True
+        if _NEGATION.search(_clause_around(q, m.start(), m.end())) and \
+                _REFUSE_VERB.search(_clause_around(q, m.start(), m.end())):
             return True
     return False
 

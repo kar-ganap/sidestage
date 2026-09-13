@@ -230,9 +230,12 @@ def _probe() -> tuple:
         ("These are not cheap; $6,200.00 is the going rate.",
          [Claim(ClaimType.PRICE, "not cheap", "fo", "These are not cheap")],
          (offer,)),
-        ("This is 1st Edition - no doubt about it.",
+        # An EM dash, not an ASCII hyphen: `_norm` happens to keep `-`, so a
+        # hyphen probe made `soft__drops_delimiters` look like a no-op and the
+        # harness reported it `unverified` (B-127).
+        ("This is 1st Edition \u2014 no doubt about it.",
          [Claim(ClaimType.VARIANT, "1st Edition", "fv",
-                "This is 1st Edition - no doubt about it.")], (variant,)),
+                "This is 1st Edition \u2014 no doubt about it.")], (variant,)),
         ("It is not, however, 1st Edition.",
          [Claim(ClaimType.VARIANT, "1st Edition", "fv",
                 "It is not, however, 1st Edition.")], (variant,)),
@@ -260,40 +263,49 @@ def main() -> int:
     a = ap.parse_args()
     chosen = {k: v for k, v in MUTANTS.items() if a.k in k}
 
-    killed, survived, inert = [], [], []
+    killed, survived, unverified = [], [], []
     for name, apply in chosen.items():
         restore()
         base = _probe()
         apply()
-        if _probe() == base:
-            # B-122. A mutant that changes no observable behaviour is not a
-            # mutant — reporting it as SURVIVED claims a coverage gap that does
-            # not exist, and reporting it as KILLED would claim a test that does
-            # not exist either. Six of the mutants adopted from an adversarial
-            # report were inert because they patched a module attribute while
-            # dispatch went through `REGISTRY`.
-            inert.append(name)
-            continue
+        moved = _probe() != base
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
             rc = pytest.main([*SUITE, "-x", "-q", "--no-header",
                               "-p", "no:cacheprovider", "-p", "no:randomly"])
-        (killed if rc != 0 else survived).append(name)
+        if rc != 0:
+            killed.append(name)
+        elif moved:
+            survived.append(name)          # real gap: it bit, no test noticed
+        else:
+            unverified.append(name)        # the probe could not see it bite
     restore()
 
-    live = len(chosen) - len(inert)
-    print(f"\n  {len(killed)}/{live} effective mutants killed"
-          f"{f'  ({len(inert)} inert, excluded)' if inert else ''}\n")
-    for m in sorted(inert):
-        print(f"     inert     {m}   <- patched nothing; not a coverage gap")
+    # B-125. The denominator is EVERY mutant attempted, never a filtered
+    # subset. The previous version excluded anything `_probe()` could not see
+    # change and called it "inert" — and the probe was nine hand-picked cases,
+    # so it could not see the reserve leak, the lexical pass, staleness or the
+    # structural pass. **23 of 41 mutants were silently removed from the
+    # denominator**, including several the harness had killed in an earlier run.
+    #
+    # That is strictly worse than the problem it was added to solve: B-122's
+    # inert mutants inflated the SURVIVED list, and this inflated the SCORE. A
+    # probe narrow enough to miss a rule is a probe narrow enough to launder it.
+    print(f"\n  {len(killed)}/{len(chosen)} mutants killed\n")
     for m in sorted(survived):
-        print(f"     SURVIVED  {m}")
+        print(f"     SURVIVED    {m}   <- it bit, and no test noticed")
+    for m in sorted(unverified):
+        print(f"     unverified  {m}   <- suite green, and the probe could not "
+              f"see it bite; may be a gap OR a broken mutant")
     if survived:
-        print(f"\n  A surviving mutant means NO test constrains that rule.")
-        print(f"  The suite is green with it deleted.\n")
-    else:
+        print("\n  A SURVIVED mutant bit and no test noticed: a real gap.")
+    if unverified:
+        print("\n  An `unverified` mutant is NOT a pass. Either it disables a")
+        print("  rule the probe cannot reach, or the mutant patches the wrong")
+        print("  dispatch point — both need a person to look (B-125).")
+    if not survived and not unverified:
         print("  every rule is constrained by at least one test\n")
-    return 1 if survived else 0
+    return 1 if (survived or unverified) else 0
 
 
 if __name__ == "__main__":

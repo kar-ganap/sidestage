@@ -16,7 +16,7 @@ with no API key.
 uv sync && uv run uvicorn app.main:app --reload     # → http://127.0.0.1:8000
 ```
 
-No credential needed — with `ANTHROPIC_API_KEY` unset it replays 269 recorded
+No credential needed — with `ANTHROPIC_API_KEY` unset it replays 288 recorded
 fixtures and the whole workflow still works, deterministically.
 
 1. **The demo case.** Ask the console *"is that 1st edition?"* about the
@@ -50,17 +50,21 @@ find those faster than the successes, so they are listed first.
 
 ### Held
 
-- **Spike 2 (triage).** Stage 2 removes 35 of 37 false positives (95%) for 3–4
-  true positives; McNemar on errors p < 0.0001. Cross-platform, the gate catches
+- **Spike 2 (triage).** On the 189-message two-platform set the gate emits
+  **33** false positives, and stage 2 removes most of them — the exact figure
+  is measured over three runs because that arm has a model in it, and is in
+  `docs/TDD.md` §5 rather than repeated here (B-124). Cross-platform, the gate catches
   16 seller-directed messages the regex misses and the regex catches 0 the gate
   misses, p = 3.05e-05. Strict dominance on recall.
-- **Spike 1 (verification).** Ablated three ways. A bare model is **46.1%** safe
-  on 89 adversarial cases; adding the evidence contract takes it to **94.3%**;
-  verification adds **+2.3** on top and costs **7.9 points of responsiveness**
-  (McNemar p = 0.016). Pooled over two drafting models: safety 8 caught vs 1
-  lost (p = 0.039), responsiveness 6 gained vs 21 lost (p = 0.006).
-  **Verification buys safety and costs responsiveness, and the cost is the
-  better-established effect.**
+- **Spike 1 (verification).** Ablated three ways, over **three runs**. A bare
+  model is **49.4%** safe on 89 adversarial cases; adding the evidence contract
+  takes it to **96.6%**; verification adds **nothing measurable** — the safety
+  delta is +0.0, +1.2, -1.1, so the sign is not stable, and paired it is 2 vs 2
+  discordant at p = 1.00. It costs **5.6–6.7 points of responsiveness in every
+  run** (paired p = 0.0009).
+  **So the defensible claim is not that verification makes replies safer.** It
+  is a guarantee — nothing unbacked ships regardless of how the model behaved —
+  and this suite, which is saturated at 96.6% without it, cannot measure that.
 
 ---
 
@@ -87,7 +91,14 @@ writes give 12 verified, 3 diverged, 4 idempotent replays off 4 lost responses.
 A divergent read-back is reported and **never retried**, because retrying a
 write that may have landed is how you double-apply.
 
-**Focused tests and evals.** **306 tests**, no credential. Five eval suites, each
+**The registry is a guarantee; coverage is a heuristic.** A claim is checked
+against the fact it cites and no exemption exists — four adversarial waves
+never broke `_require_kind`. The coverage backstop catches numbers,
+superlatives and an enumerated list of commitment verbs, so its recall is the
+size of that list; every adversarial finding in this project landed there, and
+`_coverage`'s docstring states the bound.
+
+**Focused tests and evals.** **329 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.
@@ -110,8 +121,8 @@ is part of that story.
 were written in a pair-programming loop. Stating that plainly matters more than
 the ratio, because the interesting part is what it did *not* do.
 
-**Where it helped most:** volume and consistency — five eval suites, 261 tests,
-and a build log of 51 entries are more bookkeeping than one person sustains in
+**Where it helped most:** volume and consistency — six eval suites, 306 tests,
+and a build log of 95 entries are more bookkeeping than one person sustains in
 three days.
 
 **Where it actively hurt, and this is the part worth reading.** Claude wrote a
@@ -123,7 +134,7 @@ exist, an experiment whose paired statistical test ran on **unpaired data**, and
 a `10/10` eval headline that could not fail.
 
 **What caught those:** adversarial review, run as a separate pass with the
-explicit instruction to break the thing — 30 defects across two passes, 8 fatal
+explicit instruction to break the thing — **five waves**, and each wave found its worst defects inside the previous wave's fixes
 — plus mutation testing, which found **11 mutants surviving all 53 tests** of
 the file those tests were written for. Both are recorded in
 [`BUILD-LOG.md`](BUILD-LOG.md) B-42, B-56 and B-70.
@@ -140,7 +151,7 @@ survived did so because something tried to kill it.
 
 - **n is small and said so everywhere.** Two shows, two sellers, 485 + 28
   messages. Every generalisation claim carries its population.
-- **Suite B1 is saturated.** Grounding alone reaches 94.3%, leaving 5.7 points
+- **Suite B1 is saturated.** Grounding alone reaches 96.6%, leaving 3.4 points
   of headroom, so the suite cannot measure what verification adds. This is why
   the original 97.8% was never attributable.
 - **The responsiveness judge is itself unmeasured.** It is the scoring
@@ -182,5 +193,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 94 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 100 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |
