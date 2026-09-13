@@ -181,7 +181,7 @@ function Queue({ queue, activeId, onPick, onSay }) {
 
 /* ---------------------------------------------------------------- draft */
 
-function Draft({ card, busy, onDraft, onSend, onDismiss, ledger }) {
+function Draft({ card, busy, judged, onDraft, onSend, onDismiss, ledger }) {
   if (!card) {
     return html`
       <div class="col">
@@ -262,6 +262,20 @@ function Draft({ card, busy, onDraft, onSend, onDismiss, ledger }) {
             </ul>
           </div>`}
 
+        ${judged && judged.pending === false && !judged.responsive && html`
+          <div class="block">
+            <h3>Second opinion</h3>
+            <div class="viol repairable">
+              <code>unresponsive</code> · advisory
+              <p>${judged.why}</p>
+              <p style="color:var(--ink-faint);margin-top:5px">
+                Every claim was verified. This is the check that cannot be made
+                from claims — whether the reply answers what was asked.
+                <b>A warning, not a block.</b>
+              </p>
+            </div>
+          </div>`}
+
         ${drafted && html`
           <div class="actions">
             <button class="primary" onClick=${() => onSend(card.id)}
@@ -305,6 +319,7 @@ function App() {
   const [activeId, setActive] = useState(null);
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [judged, setJudged] = useState(null);
 
   const refresh = useCallback(async () => setSt(await api("/api/state")), []);
   useEffect(() => { refresh(); }, [refresh]);
@@ -329,10 +344,18 @@ function App() {
   const say = async (text) => { await api("/api/chat", { text }); await refresh(); };
   const doDraft = async (id) => {
     setDrafting(true);
+    setJudged(null);
     try { await api(`/api/cards/${id}/draft`, {}); await refresh(); }
     finally { setDrafting(false); }
+    // The second opinion lands while the operator reads (B-32). Poll rather
+    // than block the draft on it; a pending judge must never hold up the reply.
+    for (let i = 0; i < 15; i++) {
+      const j = await api(`/api/cards/${id}/judgement`);
+      if (!j.pending) { setJudged(j); return; }
+      await new Promise(r => setTimeout(r, 400));
+    }
   };
-  const doSend = async (id) => { await api(`/api/cards/${id}/send`, {}); setActive(null); await refresh(); };
+  const doSend = async (id) => { await api(`/api/cards/${id}/send`, {}); setActive(null); setJudged(null); await refresh(); };
   const doDismiss = async (id) => { await api(`/api/cards/${id}/dismiss`, {}); setActive(null); await refresh(); };
   const reset = async () => { await api("/api/reset", {}); setActive(null); await refresh(); };
 
@@ -343,7 +366,7 @@ function App() {
       <div class="cols">
         <${ChatLog} log=${st.log} />
         <${Queue} queue=${st.queue} activeId=${activeId} onPick=${setActive} onSay=${say} />
-        <${Draft} card=${card} busy=${drafting} onDraft=${doDraft}
+        <${Draft} card=${card} busy=${drafting} judged=${judged} onDraft=${doDraft}
                   onSend=${doSend} onDismiss=${doDismiss} ledger=${st.ledger} />
       </div>
     </div>`;

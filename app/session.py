@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 
 from app.catalog import Catalog, get_catalog
 from app.entities import get_resolver
+from app.judge import JudgeRunner, Opinion
 from app.llm import LLMClient, get_client
 from app.models import Draft, Intent, Lot, Verdict
 from app.moments import MomentCall, classify as classify_moment, nudge as build_nudge
@@ -85,6 +86,9 @@ class Card:
     ttft_ms: int = 0
     total_ms: int = 0
     reasons: list[str] = field(default_factory=list)
+    # B-13/B-32: the second opinion, filled in while the operator reads.
+    judge_responsive: bool | None = None
+    judge_why: str = ""
 
 
 def _claim_rows(draft: Draft) -> list[dict]:
@@ -119,6 +123,7 @@ class Session:
         self._seq = itertools.count(1)
         self._ids = itertools.count(1)
         self._lock = threading.Lock()
+        self.judge = JudgeRunner()
         self.active_lot_id: str | None = self._first_live()
 
     # -- lots -------------------------------------------------------------
@@ -241,7 +246,28 @@ class Session:
         card.ttft_ms = res.ttft_ms
         card.total_ms = res.total_ms
         card.status = "blocked" if res.draft.verdict is Verdict.BLOCKED else "ready"
+
+        # Start the second opinion NOW and return immediately. The draft is on
+        # screen; the judge runs against the seconds the operator spends reading
+        # it rather than ahead of them (B-32). Only for sendable drafts — a
+        # blocked one is not going anywhere, and judging it would spend a model
+        # call on a reply nobody can send.
+        if card.status == "ready" and card.reply.strip():
+            self.judge.start(card.id, card.text, card.reply)
         return card
+
+    def judgement(self, card_id: str, *, timeout: float = 0.05) -> Opinion | None:
+        """Whatever the judge has concluded, without waiting for it.
+
+        The default timeout is deliberately tiny: this is polled by the console
+        on its ordinary refresh, and a state read must never block on a model.
+        """
+        card = self.cards.get(card_id)
+        op = self.judge.result(card_id, timeout=timeout)
+        if op is not None and card is not None:
+            card.judge_responsive = op.responsive
+            card.judge_why = op.why
+        return op
 
     # -- act --------------------------------------------------------------
 
@@ -257,6 +283,10 @@ class Session:
         card = self.cards.get(card_id)
         if card is None:
             return None
+        # Consult the judge before journalling. By now the operator has read the
+        # draft and decided, so this is usually already resolved; the wait is
+        # only for an operator faster than ~2s.
+        op = self.judgement(card_id, timeout=2.0)
         body = text if text is not None else (
             card.reply if card.status == "ready" else card.fallback)
         entry = {
@@ -266,6 +296,11 @@ class Session:
             "card_id": card_id,
             "verdict": card.verdict or "unverified",
             "overridden": card.status == "blocked",
+            # Recorded whether or not it warned: the ledger should show that the
+            # check ran, not only that it objected.
+            "judge": None if op is None else
+                     {"responsive": op.responsive, "why": op.why,
+                      "latency_ms": op.latency_ms},
             "text": body,
         }
         with self._lock:

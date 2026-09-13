@@ -169,6 +169,17 @@ def draft(card_id: str) -> JSONResponse:
     return JSONResponse(_card(card))
 
 
+@app.get("/api/cards/{card_id}/judgement")
+def judgement(card_id: str) -> JSONResponse:
+    """The second opinion, if it has landed. Never blocks (B-32)."""
+    op = get_session().judgement(card_id)
+    if op is None:
+        return JSONResponse({"pending": True})
+    return JSONResponse({"pending": False, "responsive": op.responsive,
+                         "why": op.why, "latency_ms": op.latency_ms,
+                         "model": op.model, "errored": op.errored})
+
+
 class SendIn(BaseModel):
     text: str | None = None
 

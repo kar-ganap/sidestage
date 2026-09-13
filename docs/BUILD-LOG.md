@@ -1059,3 +1059,122 @@ adversarial suite cannot see, exactly as B-24 found for the verifier: a system
 that abstains too much looks safe from every angle except the operator's. Suite
 C exists because "did it ask at the right time" is two-sided, and only one side
 shows up in a safety metric.
+
+---
+
+## B-31 · Precomputation was elegant and its premise was false
+
+**The plan.** D-36: warm a cache of drafts for upcoming lots, serve hits in
+milliseconds, and spend the reclaimed latency on the B-13 reply judge. D-38 put
+it first for exactly that reason — it was step one of a two-step plan.
+
+**Two things went wrong, and the second one ends it.**
+
+**First, the cache key was unsafe (D-36b).** Keying on `(lot, intent)` means
+`is that 1st edition?` and `is it shadowless?` share a slot. Re-verification does
+not catch the mismatch and never could: it checks claims against evidence, so it
+guards against the *world moving*, not against *the question being different*.
+Demonstrated rather than argued — serving the "what set" answer to "is it
+graded" re-verifies **clean**, every claim true, the answer about something
+nobody asked. The design would have manufactured B-13 deliberately and at volume.
+Corrected to `(lot, question)`.
+
+**Second, and fatally: viewers do not repeat questions.**
+
+```
+canonical warm, real transcript          0/24 hits   (0%)
+self-warmed (cache exactly what was
+  asked, serve on any later repeat)      1/27 hits   (4%)
+```
+
+The self-warmed number is the one that matters, because it removes my choice of
+canonical questions from the equation and tests the *mechanism*. At 0.85, 0.70
+and 0.60 similarity it is the same 4%, and the single hit is the only
+near-duplicate pair in 161 messages: `Any Blaziken?` / `Any Blazikens ?`.
+
+D-36 asserted "the intent distribution is concentrated — per lot the same handful
+of questions recur." **It is not, and they do not.** Twenty-seven seller-directed
+questions produced twenty-six distinct ones. Viewers ask about different cards in
+different words; the concentration is in *intent*, which is precisely the key
+that turned out to be unsafe.
+
+**What was kept, and why.** The implementation and its eval stay, unwired. The
+code is the evidence for the negative result, and `evals/run_precompute.py`
+reproduces all three findings: the 4% ceiling, that re-verification really does
+reject a hit once a bid moves (2.9 ms), and that a `(lot, intent)` key would have
+served the wrong answer to **16 of 24** surfaced questions.
+
+**What it cost the plan.** D-38 step 1 was going to fund step 2. It cannot. The
+judge needs a different way to pay for itself — see B-32.
+
+**Lesson.** The mechanism was sound, the safety argument was real, and the
+premise about user behaviour was never checked against the corpus that was
+sitting right there. I had 513 labelled messages and wrote "the same handful of
+questions recur" from intuition. One query against the data would have killed
+this before it was designed, let alone built.
+
+---
+
+## B-32 · B-13 closed, funded by the operator's reading time
+
+**The gap, restated.** Verification asks of each claim *"is this supported by
+the fact it cites?"* — answerable from evidence already in hand, hence 0.2 ms.
+That is also why it cannot see:
+
+```
+Q: "is the centering good on that zard?"
+A: "It's the Base Set Charizard 4/102, shadowless print."
+```
+
+Every claim true, every citation correct, nothing for any per-claim rule to
+object to. **Responsiveness is not a property of a claim**, so no amount of
+verifier work reaches it. Documented as the system's most honest limitation.
+
+**Why it stayed open, and why it could close now.** The fix is a second model
+call on a path already over budget. D-38 planned to fund it with precomputed
+drafts; B-31 measured that at a 4% hit rate and the plan died.
+
+**So it is funded the same way streaming was (B-14): by noticing the operator's
+reading time is dead time for the system.** The draft goes on screen the instant
+it verifies; the judge runs *while they read it*. On the path that matters —
+question asked to message sent — it is usually free. Not always: `send()`
+deliberately waits out the remainder for an operator faster than two seconds,
+rather than skipping the check.
+
+**It catches the thing, and stays quiet on the thing it must not flag.**
+
+| | |
+|---|---:|
+| unresponsive-but-true replies caught | **4/4** |
+| correct refusals, clarifying questions, terse answers flagged | **0/8** |
+
+That second row is the one that mattered. B-24 is recent: a check that fires on
+correct refusals would re-create exactly the failure the verifier just had, on a
+surface no adversarial suite can audit. Every "must not flag" case is one the
+verifier itself prescribes — *"that's raw so I can't say for sure"*, *"not enough
+recent sales to quote a comp"*, *"which Mew do you mean?"*
+
+**Sonnet, not Opus, and measured rather than assumed.** D-17 says the eval grader
+should be stronger than what it judges — right, because an offline grader has no
+latency budget. **Same role, different position, opposite answer:**
+
+```
+claude-opus-5     12/12 correct   p50 2505ms   p95 6100ms
+claude-sonnet-5   12/12 correct   p50 2059ms   p95 2115ms
+```
+
+Identical accuracy at this n, and a tail three times tighter. On a path racing an
+operator's attention the tail *is* the number. Same shape as B-20 — the same
+question having opposite right answers depending on where it runs.
+
+**Advisory, not blocking, and that is a decision rather than a limitation.** The
+verifier blocks because it can point at a fact and say *this contradicts the
+record*. A judge can only say *this reads as beside the point*, which is a
+judgement. It surfaces as a warning next to send, is recorded in the ledger
+whether or not it objected, and degrades **open** — an unavailable judge produces
+no warning at all, never a block.
+
+**Lesson.** Twice now the way to afford something on a latency-bound path has
+been to stop measuring wall-clock from the system's side and ask what the human
+was doing meanwhile. Streaming bought the read; this buys the decision. Neither
+made anything faster.

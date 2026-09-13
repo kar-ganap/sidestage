@@ -826,6 +826,47 @@ the world changed, which is exactly the failure the re-verification design avoid
 
 ---
 
+### D-36b · The cache key was wrong, and the design would have manufactured B-13 — corrected 2026-09-13
+**D-36 above says "the top-k `(lot × intent)` pairs". Keying on intent is unsafe**, and it is
+unsafe in the specific way this project already documents as its worst failure mode.
+
+`is that 1st edition?`, `is it shadowless?` and `what set is it from?` are all
+`attribute_q` about the same lot with **different correct answers**. Serving any of them to
+a viewer who asked another is a reply where every claim is true and the answer is about
+something nobody asked. That is B-13 exactly, and the precomputation design would have
+produced it deliberately and at volume.
+
+**Re-verification does not catch it, and it was never going to.** Demonstrated rather than
+reasoned about — serving the "what set" answer to "is it graded" on the same lot:
+
+```
+question asked : is that zard graded
+answer served  : It's the Base Set Charizard, 4/102, holo, and this copy is the
+                 shadowless print.
+re-verification: PASS   violations=[]
+```
+
+Re-verification checks **claims against evidence**. It protects against the *world moving* —
+a bid that changed, a lot that sold, a comp window gone stale. It has nothing to say about
+whether the reply answers *this* question, because that is not a property of any claim.
+Two different threats, and D-36 conflated them.
+
+**Correction.** The cache key is `(lot_id, question)`, never `(lot_id, intent)`. A hit
+requires the incoming question to be a near-duplicate of the cached one, at a **higher**
+similarity bar than queue clustering uses: collapsing two questions wrongly shows the
+operator one card instead of two, which is visible and recoverable, while serving a cached
+answer wrongly sends the wrong reply to a buyer.
+
+**What that costs.** Coverage. D-36 promised a hit on any question of a known intent; this
+hits only on genuine repeats and near-repeats. The honest version of the claim is therefore
+much narrower, and the hit rate is measured rather than asserted (see `evals/run_precompute.py`).
+
+**Why it is still worth building.** Repeats are real — `Any Blaziken?` and `Any Blazikens ?`
+in the same twenty minutes — and a hit is ~2 ms against ~4 s. But it is a warm cache, not a
+predictive one, and calling it predictive was the error.
+
+---
+
 ## Evaluation
 
 ### D-26 · Five suites, and B2 is mandatory — settled, amended 2026-09-12
