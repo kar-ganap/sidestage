@@ -1884,3 +1884,55 @@ its contents were not read and the stack is unrelated. What was borrowed is the
 *shape*: that a reviewer deserves one front door, and that how a thing was built
 should be declared. Recording where an idea came from costs nothing and is the
 same discipline as citing a fact.
+
+## B-84 · "The incumbent" was a regex wearing a product's name
+
+Suite A's baseline arm was `arm_incumbent`, and its body is:
+
+```python
+return ["?" in r["text"] for r in rows]
+```
+
+**On Whatnot that is entirely legitimate, and the justification is measured.**
+Across all 485 observed Whatnot messages, `highlighted` and `"?" in text` agree
+**485 / 485 — zero disagreements.** The platform's highlighter *is* a question
+mark test, and saying so is a finding about the platform rather than a
+flattering name for a regex.
+
+**The justification does not travel, and the code let it.** The docstring cited
+the Whatnot verification and the function was then run on any row set, including
+`triage_show2.jsonl`. So the cross-platform line read:
+
+> *"the cascade beats the incumbent on a new platform" — A2's mean F1 over five
+> runs is 79.4% against the incumbent's 80.0%.*
+
+eBay Live has **no visible highlight at all.**
+`docs/research/observation-ebaylive-2026-09-13.md` records that `highlighted`
+"cannot be read off" there, so every row in that file carries
+`highlighted: false` as an **absence marker** — not as an observation that the
+platform declined to highlight. There is no incumbent on that platform to beat
+or fail to beat. The arm is a naive `?` baseline.
+
+The conclusion is unchanged — it was a withdrawal either way — but *the reason
+it was withdrawn has to be the true one*, and "we did not beat the platform"
+and "we did not beat a regex" are different sentences.
+
+Knock-on: the withdrawn "the incumbent is unstable" claim ran chi-square
+homogeneity over **four** segments reading 40.0 / 40.7 / 68.8 / 60.0. The fourth
+is the eBay Live `?` baseline, so that test pooled two different things even to
+reach its null.
+
+Renamed to `arm_question_mark`, with `arm_incumbent` kept as an alias so anyone
+grepping the old name lands on the docstring explaining the distinction.
+
+**Also corrected: the count was 477 and is 485.** Eight rows were added to
+`triage_extra_batch0.jsonl` after the chat analysis was written, and the
+research table still says 75 where the file holds 83. Every rate is unchanged —
+53.6% recall, 80.4% precision, 64.3% F1 — because all eight are
+non-seller-directed and unhighlighted, so only the denominator label was wrong.
+That it survived this long in four places is the argument for
+`tools/check_docs.py`.
+
+**Lesson, and it is the same one as B-78.** A name can carry a claim. `_judge`
+in an eval is a grader; `arm_incumbent` asserts that something in the world does
+this. The second is falsifiable and nobody checked it on the second platform.

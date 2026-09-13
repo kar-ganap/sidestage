@@ -1,5 +1,13 @@
 """Suite A — triage against a measured incumbent. Spike 2's headline.
 
+WHAT "INCUMBENT" MEANS HERE, PRECISELY (B-84). On Whatnot it means the
+platform's own highlighter, and the comparison is legitimate because the two
+were shown to be the same rule: across 485 observed messages `highlighted` and
+`"?" in text` agree 485/485. On eBay Live there is no highlighter to compare
+against, so the same arm is a **naive `?` baseline** and is labelled that way.
+The distinction matters because "we beat the platform" and "we beat a regex" are
+different claims, and only one of them is available on each platform.
+
     uv run python -m evals.run_triage              # full, with the model arm
     uv run python -m evals.run_triage --no-llm     # free, deterministic arms only
 
@@ -110,11 +118,36 @@ def row(label: str, s: dict) -> str:
 # --- the three arms --------------------------------------------------------
 
 
-def arm_incumbent(rows: list[dict]) -> list[bool]:
-    """What the platform does. Verified in the chat analysis: across all 477
-    observed messages every highlighted row contains `?` and no unhighlighted
-    row does."""
+def arm_question_mark(rows: list[dict]) -> list[bool]:
+    """A bare `?` test — and on Whatnot, demonstrably the incumbent.
+
+    **The equivalence is measured, not assumed:** across all 485 observed
+    Whatnot messages, every highlighted row contains `?` and no unhighlighted
+    row does. 485/485, zero disagreements. So on that platform this function and
+    Whatnot's highlighter are the same rule, and calling its score "the
+    incumbent's" is a statement about the platform rather than a flattering
+    name for a regex.
+
+    **It is NOT the incumbent anywhere else** (B-84). eBay Live has no visible
+    highlight at all — `docs/research/observation-ebaylive-2026-09-13.md` records
+    that `highlighted` "cannot be read off" there, so every row in
+    `triage_show2.jsonl` carries `highlighted: false` as an ABSENCE MARKER, not
+    as an observation that the platform declined to highlight it.
+
+    This function was previously named `arm_incumbent` and its docstring cited
+    the Whatnot verification to justify running it on any row set. That made the
+    cross-platform line read "the cascade does not beat the incumbent on a new
+    platform", when what it actually compares against is a naive `?` baseline on
+    a platform where no incumbent exists to compare against. The conclusion
+    survives — it was a withdrawal either way — but the reason it was withdrawn
+    has to be the true one.
+    """
     return ["?" in r["text"] for r in rows]
+
+
+# Kept as an alias so a reader grepping for the old name lands on the docstring
+# above rather than on nothing.
+arm_incumbent = arm_question_mark
 
 
 def arm_gate(rows: list[dict], model: Model, thr: float) -> list[bool]:

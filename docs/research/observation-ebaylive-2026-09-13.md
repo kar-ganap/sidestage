@@ -87,7 +87,7 @@ is structural in `catalog.comp_key`, and raw comps have no grade to match on.
 
 A persistent banner carries **`$5.00 Flat`** shipping plus cancellation terms.
 
-`shipping_returns_q` appears **zero times in 477 Whatnot messages** despite the
+`shipping_returns_q` appears **zero times in 485 Whatnot messages** despite the
 primer calling it "the highest-volume policy question". The standing hypothesis
 was that the primer was wrong. A better one: **the platform already answers it
 in a banner nobody has to ask about.** That is a different finding, and it

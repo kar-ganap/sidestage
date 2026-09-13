@@ -138,7 +138,7 @@ survived did so because something tried to kill it.
 
 ## Known limitations
 
-- **n is small and said so everywhere.** Two shows, two sellers, 477 + 28
+- **n is small and said so everywhere.** Two shows, two sellers, 485 + 28
   messages. Every generalisation claim carries its population.
 - **Suite B1 is saturated.** Grounding alone reaches 94.3%, leaving 5.7 points
   of headroom, so the suite cannot measure what verification adds. This is why
@@ -182,5 +182,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 56 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 58 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

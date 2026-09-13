@@ -123,13 +123,13 @@ segments of the same show were transcribed: `triage_extra_batch0.jsonl` (before)
 
 | segment | msgs | seller-directed | highlighted | recall | precision | F1 |
 |---|---:|---:|---:|---:|---:|---:|
-| batch0 · before | 75 | 10 | 5 | 40.0% | 80.0% | 53.3% |
+| batch0 · before | 83 | 10 | 5 | 40.0% | 80.0% | 53.3% |
 | batch1 · middle | 161 | 27 | 16 | 40.7% | 68.8% | 51.2% |
 | batch2 · after | 241 | 32 | 25 | **68.8%** | **88.0%** | 77.2% |
-| **POOLED** | **477** | **69** | **46** | **53.6%** | **80.4%** | **64.3%** |
+| **POOLED** | **485** | **69** | **46** | **53.6%** | **80.4%** | **64.3%** |
 
 > **Correction, and it matters.** Earlier drafts quoted **41% / 69%** as *the* baseline. That
-> was one segment. Across 477 messages the incumbent scores **53.6% recall, 80.4% precision**,
+> was one segment. Across 485 messages the incumbent scores **53.6% recall, 80.4% precision**,
 > which is a materially harder bar. Quote the pooled figure, or quote the range — never the
 > middle segment alone.
 >
@@ -167,7 +167,7 @@ The corpus contains two natural experiments — the same person asking the same 
 | `Back again plz ?? Sorry` | `Back again plz` |
 | `What are these silver boarders out of ??` | `what set is that pikachu silver border from` |
 
-Same user, same request, opposite detection outcome. Confirmed structurally too: across all 477
+Same user, same request, opposite detection outcome. Confirmed structurally too: across all 485
 messages, **every** highlighted row contains `?` and **no** unhighlighted row does.
 
 ### A small inter-rater check

@@ -55,8 +55,13 @@ messages are directed at the seller**. The other 84% is banter, viewers talking
 to each other, and platform events. The problem is *precision at low volume*.
 
 **② The platform's own triage is a question mark.** Whatnot highlights messages
-in its UI. Across 477 messages, **every** highlighted row contains `?` and **no**
-un-highlighted row does. Measured: 53.6% recall, 80.4% precision.
+in its UI. Across 485 messages, **every** highlighted row contains `?` and **no**
+un-highlighted row does — 485/485, zero disagreements. Measured: 53.6% recall,
+80.4% precision.
+
+That equivalence is what licenses calling a `?` test "the incumbent", and it is
+a claim about **Whatnot only**. eBay Live shows no highlight at all, so there is
+no incumbent to measure there and the same arm is a naive baseline (B-84).
 
 So roughly **half of the questions asked of a seller are never surfaced by the
 tool they already have**, including the highest-intent traffic in the room:
@@ -185,11 +190,11 @@ verification happens.** Nothing skips the verifier, at any tier.
 ## 6. Success metrics
 
 **Primary — questions answered that would otherwise have been missed.** The
-incumbent surfaces 53.6% of seller-directed messages across the full 477-message
+incumbent surfaces 53.6% of seller-directed messages across the full 485-message
 Whatnot observation. Every point above that is a buyer who got an answer.
 
 **Two populations, and the table below uses the smaller one.** 53.6% is the
-incumbent's recall over all 477 observed messages; 45.9% is its recall over the
+incumbent's recall over all 485 observed messages; 45.9% is its recall over the
 37 held-out seller-directed messages from *both* platforms, which is the set the
 cascade was scored on and therefore the only fair comparison. Quoting 53.6% in
 the incumbent column would flatter the cascade by scoring the two arms on

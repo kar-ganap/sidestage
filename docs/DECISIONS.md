@@ -883,10 +883,10 @@ everything. Thresholds tuned on train, reported on held-out test.
 >
 > Whatnot highlights questions in its own UI. `evals/data/triage_test.jsonl` records that
 > per message, so the incumbent's score is computable from the dataset: **53.6% recall, 80.4%
-> precision, F1 64%** pooled over 477 real messages - a question-mark heuristic, measured rather than guessed. Segment recall swings 40-69%, so quote the pooled figure or the range, never one segment.
+> precision, F1 64%** pooled over 485 real messages - a question-mark heuristic, measured rather than guessed. Segment recall swings 40-69%, so quote the pooled figure or the range, never one segment.
 >
 > The suite's claim moves from *"here is a PR curve, here is why I chose this point"* to
-> **"here is us against the feature the platform already ships, on 477 real messages the
+> **"here is us against the feature the platform already ships, on 485 real messages the
 > classifier never saw."** That is a far stronger artifact, and the cost-asymmetry argument
 > sharpens with it: the incumbent's ~20% false-positive rate is the noise level sellers
 > already tolerate, so it is a defensible ceiling for ours rather than a number I picked.

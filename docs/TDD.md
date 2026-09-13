@@ -28,7 +28,7 @@ precision at low volume, not backpressure. *(This falsified the original
 load-shedding justification for the cascade — D-15.)*
 
 **The platform's own triage is a question-mark regex.** Whatnot highlights
-messages in its UI; across 477 messages **every** highlighted row contains `?`
+messages in its UI; across 485 messages **every** highlighted row contains `?`
 and **no** un-highlighted row does. It scores 53.6% recall / 80.4% precision
 pooled. So the job is not "detect questions" — it is detecting *intent without
 interrogative syntax* (`lugia next!`, `320 for gare plz`, `You got any
@@ -433,12 +433,24 @@ The eBay Live set (28 messages, 10 seller-directed) was labelled independently
 and nothing was refitted.
 
 **Does not survive:** "the cascade beats the incumbent on a new platform." A2's
-mean F1 over five runs is 79.4% against the incumbent's 80.0% on the original
-labels. A wash (B-21b).
+mean F1 over five runs is 79.4% against 80.0% for a bare `?` rule on the
+original labels. A wash (B-21b).
+
+**And the word "incumbent" does not belong in that sentence** (B-84). eBay Live
+has **no visible highlight at all** — the observation record states that
+`highlighted` cannot be read off there, so every row in `triage_show2.jsonl`
+carries `highlighted: false` as an *absence marker*, not as an observation that
+the platform declined. The arm it was compared against is therefore a naive `?`
+baseline, not a product. On Whatnot the same arm genuinely is the incumbent,
+because `highlighted` and `"?" in text` agree on **485 of 485** observed
+messages — but that justification does not travel, and the function is now named
+`arm_question_mark` so it cannot be read as travelling.
 
 **Does not survive:** "the incumbent is unstable." Per-segment recall reads
 40.0 / 40.7 / 68.8 / 60.0, which looks erratic, but chi-square homogeneity over
-four segments gives **p = 0.097**. It does not reject. Withdrawn.
+four segments gives **p = 0.097**. It does not reject. Withdrawn — and note that
+the fourth of those segments is the eBay Live `?` baseline rather than an
+incumbent, so the test was pooling two different things even to reach a null.
 
 **Survives:** paired McNemar over the 37 held-out seller-directed messages from
 both platforms — the gate catches **16** the regex misses and the regex catches
