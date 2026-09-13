@@ -1,0 +1,29 @@
+{"_meta": "HELD-OUT CROSS-PLATFORM TEST. eBay Live, Old Skool Pokemon, 2026-09-13, ~63 viewers, raw $1-start singles. 218 frames @5s. Labelled by the author independently of the Whatnot corpus. OCR artefacts dropped, not labelled. eBay Live has NO platform highlight, so `highlighted` is false throughout and the incumbent must be SIMULATED by applying the question-mark rule characterised on Whatnot. NEVER fit or tune against this file."}
+{"text": "Got any sealed promo cards or banned cards buddy?", "intent": "availability_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "With that tail it\u2019s like a chipmunk in body", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Any Jirachi?", "intent": "availability_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Ok now imma sleep", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Isn\u2019t it a theory ash is wicked strong with some of the Pok\u00e9mon he picks up that are like", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "why are ghost types so heavy", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "I\u2019m back, had to go get some munchies", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "got anything from the original 151? Like the fossil or jungle sets?", "intent": "availability_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "I\u2019m cross eyed but I still made it", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "its not running a)", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "I like the bulby eevees in 151 too", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Night night Nick and night to everyone see everyone Sunday and Diet Coke queen tomorrow night", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Ok I\u2019m back again. I\u2019m sure I missed all the e readers", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Yeah I think the bulb evo line is best out of the three OG starters", "intent": "off_topic_abuse", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "The squirtle is amazing, wortortle and blastoise are meh", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "I didn\u2019t notice for months that the 151 zard had no neck", "intent": "off_topic_abuse", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "The flying lizard is overrated", "intent": "off_topic_abuse", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Just 151 lizard", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "nick did you see that galade SAR the tourney promo", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Could have been beautiful", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "That\u2019s the old school teg card?", "intent": "attribute_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Nick you should led a campaign to reduce price of Charizard from overrated to rated with 50% off flash deals", "intent": "request", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Lmao yeah and u said the slowpoke was u opening the shop so I said it\u2019s the old school", "intent": "unknown", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "When are u selling 30th and do u know the prices yet", "intent": "availability_q", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "I thought the new store was named old school tcg?", "intent": "unknown", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "arbok ultra rare 151?", "intent": "unknown", "seller_directed": true, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Luv that vulpix art", "intent": "hype_noise", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}
+{"text": "Got 4 DR ETBs today for cheap today!", "intent": "off_topic_abuse", "seller_directed": false, "highlighted": false, "source": "observed", "show": "ebaylive-2026-09-13"}

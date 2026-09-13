@@ -551,3 +551,61 @@ plausible — a threshold of 0.69 reported against a model fit for 0.59.
 **Lesson.** Never read a result through a pipe that can swallow the exit status.
 Any harness whose output is a number needs the run to fail loudly, because a
 stale artifact and a fresh one are indistinguishable once the traceback is gone.
+
+---
+
+## B-21 · The cross-platform test, and the cascade does not win it
+
+**What was tested.** 28 labelled messages from a different seller on a
+**different platform** (eBay Live, `docs/research/observation-ebaylive-2026-09-13.md`),
+against a cascade whose weights and threshold were fitted entirely on Whatnot.
+Nothing was refitted. The incumbent is *simulated* here — eBay Live has no
+platform highlight, so the question-mark rule characterised on Whatnot is
+applied rather than observed.
+
+| arm | recall | precision | F1 |
+|---|---|---|---:|
+| A0 question-mark regex | 66.7% [35-88] | **100.0%** [61-100] | **80.0%** |
+| A1 + stage-1 gate | **88.9%** [56-98] | 57.1% [33-79] | 69.6% |
+| A2 + classification | 66.7% [35-88] | 85.7% [49-97] | 75.0% |
+
+**The incumbent's F1 beats the full cascade on this show.** Stated plainly
+because it is the result. Its precision is perfect here — every question mark in
+these 28 messages belonged to a seller-directed question.
+
+**With n=9 positives nothing above is distinguishable from anything else.** The
+intervals overlap completely; a single message is eleven points of recall. No
+claim in either direction survives this sample size, including the flattering
+reading that we nearly matched it.
+
+**What DOES survive, because it is the same measurement at a fourth segment:**
+
+| segment | platform | incumbent recall | A1 gate recall |
+|---|---|---:|---:|
+| batch0 | whatnot | 40.0% | 90.0% |
+| batch1 (held out) | whatnot | 40.7% | 88.9% |
+| batch2 | whatnot | 68.8% | 90.6% |
+| **show2 (held out)** | **ebaylive** | **66.7%** | **88.9%** |
+
+The incumbent swings **40-69%**. The gate sits at **89-91% across four segments
+and two platforms**, on weights it never saw either held-out set of. That is the
+stability claim from the chat analysis, and it is the first evidence for it that
+is not from the show it was fitted on.
+
+**Where the loss actually is: stage 2, not the gate.** A1 caught 8 of 9 here —
+the same recall it gets on Whatnot. A2 then **vetoed two true positives**, which
+it never did on the Whatnot test set. The classifier's prior about what counts
+as seller-directed is the part that failed to transfer, not the features.
+
+**And one veto is arguably correct labelling, not a model error.**
+`nick did you see that galade SAR the tourney promo` was labelled `hype_noise`
+by the annotator and surfaced by the cascade. It is a question, addressed to the
+seller by name. Whether that is a false positive depends on a judgement call
+that two reasonable people make differently — which is itself the finding, and
+why the `at_mention`/first-name gap predicted in the observation doc could not
+be confirmed here.
+
+**Lesson.** A second dataset is worth more when it refuses to confirm you. The
+headline number did not transfer; the *mechanism* claim did, and it is the one
+worth defending — the features read intent, and intent does not depend on how
+many people in a given twenty minutes happened to press shift-slash.
