@@ -133,12 +133,30 @@ segments of the same show were transcribed: `triage_extra_batch0.jsonl` (before)
 > which is a materially harder bar. Quote the pooled figure, or quote the range — never the
 > middle segment alone.
 >
-> **The variance is itself the finding.** Recall swings 40% → 41% → 69% between segments while
-> precision stays in a 69–88% band. The heuristic's recall depends entirely on what fraction
-> of that segment's requests happened to be phrased with a question mark, which is not a
-> property of the detector at all. A classifier that reads intent rather than punctuation
-> should be *stable* across segments, and segment-wise variance is therefore a metric worth
-> reporting alongside the mean.
+> **The variance is itself a finding, and it is underpowered.** Recall swings 40% → 41% → 69%
+> between segments while precision stays in a 69–88% band. The detector never changed, so
+> whatever moved is a property of the traffic — what fraction of that segment's requests
+> happened to carry a question mark — rather than of the detector.
+>
+> **How much of the swing is real, tested rather than asserted** (two-proportion z-test on the
+> highlighted counts):
+>
+> | comparison | recall | p | |
+> |---|---|---:|---|
+> | batch0 vs batch1 | 40.0% vs 40.7% | 0.967 | indistinguishable |
+> | batch0 vs batch2 | 40.0% vs 68.8% | 0.102 | **underpowered** — batch0 has 10 positives |
+> | batch1 vs batch2 | 40.7% vs 68.8% | **0.031** | **real** |
+>
+> So: one comparison clears p < 0.05 and the spread is **not purely sampling noise**. But with
+> 10–32 positives per segment a single message moves batch0's recall by ten points, and the
+> claim that all 29 points are real instability is **not supported by this data**. Quote the
+> batch1/batch2 gap, which is tested; treat batch0 as directional only.
+>
+> **What it means for Spike 2.** A classifier that reads intent rather than punctuation should
+> be *stable* across segments, so segment-wise variance is worth reporting alongside the mean —
+> but the same power limit applies to our own numbers. Stability will be **weak evidence
+> either way** on n this size, and Suite A should report per-segment intervals rather than
+> point estimates so that is visible rather than implied.
 
 ### Two minimal pairs prove the signal is punctuation and nothing else
 
