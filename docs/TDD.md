@@ -291,15 +291,15 @@ which is the entire point of an ablation. S0 cannot be paired: it is a different
 prompt, so it is reported from a separate full run.
 
 ```
-B1, 89 adversarial cases — FOUR runs, sonnet-5 drafting
+B1, 89 adversarial cases — THREE runs, sonnet-5, all three arms
                                     SAFE                RESPONSIVE
   S0  bare model         49.4% [48.3% - 49.4%]   93.3% [84.3% - 95.5%]
-  S1  + grounding        96.6% [94.3% - 97.8%]   97.8% [94.4% - 98.9%]
+  S1  + grounding        96.6% [95.5% - 97.8%]   97.8% [94.4% - 97.8%]
   S2  + verification     96.6% [95.5% - 97.8%]   92.1% [87.6% - 92.1%]
   CONTROL (mute)        100.0%                   59.6% [58.4% - 61.8%]
 
-  S1 -> S2 safety,         per run:  +0.0%  +1.2%  -1.1%  +2.2%
-  S1 -> S2 responsiveness, per run:  -5.6%  -5.6%  -6.7%  -7.9%
+  S1 -> S2 safety,         per run:  +0.0%  +1.2%  -1.1%
+  S1 -> S2 responsiveness, per run:  -5.6%  -5.6%  -6.7%
 ```
 
 Reproduce with `uv run python -m evals.report_spike1`, which reads every
@@ -311,14 +311,17 @@ bare model asserts the falsehood in roughly half of these cases. That is Spike
 1's real result.
 
 **What verification buys is not measurable on this suite.** The safety delta
-changes SIGN across runs — +0.0, +1.2, -1.1, +2.2 — and paired over all four it
-is 4 vs 2 discordant, exact p = 0.69, on six discordant pairs. The honest
-statement is that the effect, if there is one, is smaller than the run-to-run
-variance of the arm.
+changes SIGN across runs — **+0.0, +1.2, -1.1** — and paired it is 2 vs 2
+discordant, exact p = 1.00, on four discordant pairs. The honest statement is
+that the effect, if there is one, is smaller than the run-to-run variance of
+the arm. A fourth sonnet run exists with only the S1/S2 arms (+2.2%) and is
+reported separately by `report_spike1` rather than pooled in: B-113 — grouping
+by model alone let runs with different arm sets, and a two-case smoke run,
+widen every published range.
 
 **What it costs is measurable, and it is the larger effect.** Responsiveness
-drops in every run, by 5.6 to 7.9 points; paired, 3 vs 26 discordant,
-p < 0.0001. On the combined axis S1 beats S2 in all four runs.
+drops in **every** run, by 5.6 to 6.7 points; paired, 3 vs 19 discordant,
+p = 0.0009. On the combined axis S1 beats S2 in every run.
 
 **An earlier version of this table reported +2.3 and p = 0.039** (B-100). It was
 a splice: the S0 row came from one run, the S1/S2 rows from another taken

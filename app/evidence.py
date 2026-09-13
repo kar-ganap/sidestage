@@ -139,7 +139,7 @@ def assemble(
         facts += _market(mint, item, cat, now, want)
         facts += _observational(mint, item, cat, now, want)
 
-    facts += _offer(mint, resolution, now, want)
+    facts += _offer(mint, resolution, now, want, intent)
     facts += _policy(mint, subject, cat, now, want)
     facts += _queue(mint, resolution, cat, now, want, subject)
 
@@ -155,7 +155,7 @@ def assemble(
 _OFFER = re.compile(r"\$?\b(\d[\d,]*(?:\.\d{1,2})?)\b")
 
 
-def _offer(m, res: Resolution, now, want) -> list[Fact]:
+def _offer(m, res: Resolution, now, want, intent: Intent) -> list[Fact]:
     """What the BUYER just said a figure was (B-92).
 
     A reply that repeats an offer in order to refuse it — *"we're at $890, so
@@ -176,7 +176,13 @@ def _offer(m, res: Resolution, now, want) -> list[Fact]:
     true about anything. A claim asserting the offer is *correct*; a claim using
     it to assert a fact about the card mis-cites and blocks.
     """
-    if ClaimType.PRICE not in want and ClaimType.BID not in want:
+    # B-111. Gated on INTENT, not on the want-set. `PRICE`/`BID` are wanted by
+    # availability_q, authenticity_q, request and — critically — `unknown`,
+    # which is where `prompt_injection` routes. So every number in any message
+    # was minted: "how many of these 8 do you have left" produced an offer fact
+    # for 8. An offer is something a buyer makes while negotiating or asking
+    # what a thing is worth; everywhere else a bare number is just a number.
+    if intent not in (Intent.NEGOTIATION, Intent.PRICE_VALUE_Q):
         return []
     seen: list[float] = []
     for raw in _OFFER.findall(res.text or ""):

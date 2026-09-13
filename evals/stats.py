@@ -65,13 +65,18 @@ def mcnemar(b: int, c: int) -> McNemar:
     k = min(b, c)
     tail = sum(math.comb(n, i) for i in range(k + 1)) / 2 ** n
     p = min(1.0, 2 * tail)
-    note = ""
+    # B-112: these used to overwrite rather than accumulate, so `mcnemar(0, 3)`
+    # — three discordant pairs, about as underpowered as a test can be — lost
+    # its warning entirely to the one-sided note. The existing test probed (1,8)
+    # and (8,12), neither of which has a zero cell, so it was written around the
+    # bug rather than at it.
+    notes = []
     if n < 10:
-        note = f"only {n} discordant pairs — underpowered"
+        notes.append(f"only {n} discordant pairs — underpowered")
     if 0 in (b, c):
-        note = (f"one-sided by construction (b={b}, c={c}) — check whether that "
-                f"is an empirical finding or forced by the design")
-    return McNemar(b, c, p, note)
+        notes.append(f"one-sided by construction (b={b}, c={c}) — check whether "
+                     f"that is an empirical finding or forced by the design")
+    return McNemar(b, c, p, "; ".join(notes))
 
 
 # =====================================================================
@@ -139,6 +144,13 @@ def chi_square_homogeneity(counts: list[tuple[int, int]]) -> ChiSquare:
             if expected > 0:
                 stat += (observed - expected) ** 2 / expected
     dof = k - 1
+    if dof < 1:
+        # B-112. One group has nothing to be homogeneous WITH, and `_chi2_sf`
+        # divides by `k/2` — so this raised ZeroDivisionError on 230 of the 820
+        # single-group inputs swept, whenever floating-point residue in the
+        # second cell made `stat` a tiny positive number instead of exactly
+        # zero. A degenerate question deserves a degenerate answer, not a crash.
+        return ChiSquare(stat, 0, 1.0, min_exp)
     return ChiSquare(stat, dof, _chi2_sf(stat, dof), min_exp)
 
 
@@ -207,7 +219,16 @@ class Spread:
 
     @property
     def mid(self) -> float:
-        return sorted(self.values)[len(self.values) // 2]
+        """True median, not the upper-middle element (B-113).
+
+        `sorted(v)[len(v)//2]` is biased high on even n and for n = 2 it IS the
+        maximum — so the aggregate written to stop a hand picking the favourable
+        number picked it automatically. The haiku S1 figure printed 93.2% where
+        the median of its two runs is 91.0%.
+        """
+        xs = sorted(self.values)
+        n = len(xs)
+        return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
 
     def line(self, label: str, pct: bool = True) -> str:
         f = (lambda v: f"{v:.1%}") if pct else (lambda v: f"{v:.2f}")

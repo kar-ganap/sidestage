@@ -67,6 +67,24 @@ def test_small_samples_are_flagged_as_underpowered():
     assert "underpowered" not in mcnemar(8, 12).note
 
 
+def test_both_warnings_survive_together():
+    """B-112. The notes used to overwrite, so a result that is BOTH one-sided
+    and underpowered — which is every dominance claim in this repo — reported
+    only one of the two problems."""
+    r = mcnemar(0, 3)
+    assert "underpowered" in r.note and "one-sided" in r.note
+
+
+def test_one_group_is_degenerate_not_a_crash():
+    """B-112. `dof = 0` and `_chi2_sf` divides by `k/2`, so a single group
+    raised ZeroDivisionError whenever floating-point residue made the statistic
+    a tiny positive number rather than exactly zero — 230 of 820 swept inputs."""
+    r = chi_square_homogeneity([(4, 5)])
+    assert r.dof == 0 and r.p == 1.0
+    for hit in range(0, 40):
+        chi_square_homogeneity([(hit, 39)])   # must not raise
+
+
 def test_concordant_pairs_do_not_change_the_result():
     """The property that makes McNemar right for this and also makes it easy to
     over-read: 16-of-37 and 16-of-37000 give the same p."""

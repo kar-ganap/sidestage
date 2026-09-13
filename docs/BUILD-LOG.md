@@ -2220,3 +2220,230 @@ the set rather than being asserted into it.
 a generation that exhibits the failure. That is legitimate for a demo, whose job
 is to show the mechanism, and it is not how anything is measured: B1 scores
 whatever the model produces unselected, which is why its block rate is ~19%.
+
+## B-100 · The ablation table was a splice of two runs
+
+`docs/TDD.md` published one table. The **S0** row came from
+`spike1_sonnet-5_S0S1S2_both.log`; the **S1/S2** rows came from a different run
+seventeen minutes later. In the run S0 actually came from, S2 scored **below**
+S1 — verification costing safety — and the published table reported +2.3 the
+other way.
+
+Nobody chose that dishonestly. There was no aggregation step, so building the
+table meant copying numbers by hand from two logs, and the hand copied the
+favourable pair. The repo already applies the right discipline elsewhere — B2's
+over-block rate is quoted as *"7.8% in four of five runs, 10.4% in one"* — and
+did not apply it to the one experiment whose effect is smaller than its
+run-to-run variance.
+
+Three properly paired runs later:
+
+```
+S1 -> S2 safety,         per run:  +0.0%  +1.2%  -1.1%
+S1 -> S2 responsiveness, per run:  -5.6%  -5.6%  -6.7%
+```
+
+**The safety sign is not stable; the cost is negative every time.**
+`evals/report_spike1.py` reads every recorded run so no hand copies again.
+
+## B-101 · Numbers from a weights file that no longer exists
+
+Every Spike 2 figure in the README, the TDD and SUBMISSION was computed against
+weights refit in `dd68f1e` **before those documents were written**. A1 is
+**46.2% / 60.8%**, not 42.9% / 57.8%, and "37 false positives" is 33. The arms
+are deterministic and model-free up to A2, so nothing was stochastic: a table
+was copied forward past a refit.
+
+Worse, the paragraph doing the honesty work was arithmetically false. It said
+dominance was *"close to structural… not guaranteed: all negative weights sum to
+−2.66, and a question-mark message carrying all five negatives scores 0.200 and
+fails."* Shipped: **six** negatives summing to −2.6767, that message scores
+**0.2367 and PASSES**, and an exhaustive sweep of all 2^15 combinations with
+`question_mark = 1` finds **0 that fail**. See B-88.
+
+`evals/run_triage.py` now writes `evals/results/triage.json` and
+`tools/check_docs.py` reads it, so a refit breaks the check instead of the
+argument.
+
+## B-103 · A golden tape that asserted the entire enum
+
+```python
+assert r.draft.verdict in (Verdict.PASS, Verdict.REPAIRED, Verdict.BLOCKED)
+```
+
+Every member of `Verdict` — true of any value the field can hold. It proved the
+call returned without raising, and that is how a keyless reviewer seeing **zero
+blocks** survived: the tape contains *"is that 1st edition?"*, the flagship demo
+case, and could not notice when it stopped blocking.
+
+It now asserts the verdict each case is recorded at, and a second test fails if
+**no** taped case blocks at all — because a safety component with no observable
+effect on the only path a keyless reviewer can walk is not a safety component
+they can evaluate.
+
+## B-104 · Three settings read by nothing
+
+`stock_quantifier_floor`, `authenticity_value_floor` and `escalate_high` were in
+`Settings` with comments describing behaviour, and `grep` found **zero** reads.
+`SIDESTAGE_STOCK_QUANTIFIER_FLOOR` and friends were inert. A setting whose
+comment describes a rule the code does not have is worse than no setting: it
+tells a reader the behaviour is configurable when it is not.
+
+`stock_quantifier_floor` now does what it said — an unbounded quantifier is a
+violation *below* that many units and simply true at or above it, which also
+removes a mild over-block. The other two are deleted: the real authenticity gate
+is `min_item_value` in `data/policies.json`, and a second copy in config is a
+second place to be wrong.
+
+## B-105 · The mutation harness was cited as evidence and was not in the repo
+
+`SUBMISSION.md` uses it as one of two pillars of *"what caught those"*, and B-70
+reports **15/15 mutants killed**. The harness lived in a scratch directory
+outside the repository, so a reviewer could not run it — an assertion, in a
+document about not making assertions.
+
+Moved to `tools/mutate.py`. On first run it reported **23/32**, with nine rules
+constrained by no test at all, including `observational_assertion` — which is
+**D-12, the authority model the whole domain argument rests on**. B-70's 15/15
+was true of the fifteen mutants that pass happened to define.
+
+## B-106 · Fixing a false positive opened a false negative, again
+
+B-96 stopped the ordinary word *"Well,"* being read as `we'll` by requiring the
+apostrophe. But coverage runs on `_norm`ed text and **`_norm` deletes
+apostrophes**, so `I'll` and `we'll` stopped being detected as commitments at
+all. Two surviving mutants pointed straight at it.
+
+`_soft` keeps the characters that carry meaning. This is the file's recurring
+failure and the reason the harness now lives in `tools/`: a green suite cannot
+see a fix that trades one direction for the other.
+
+## B-107 · A drift checker that checked what was never in doubt
+
+`tools/check_docs.py` reported *"25 claims checked · 0 stale"* while B-100 and
+B-101 were both live. It covered decision counts, heading counts and fixture
+counts — none of which had ever been wrong in a way that mattered — and none of
+the Spike 2 arms, the weights, `n_train`, the ablation spread or the latency
+table.
+
+It also treated an **unmatched** claim as a warning while returning 0, and its
+docstring called that *"the other half of the guarantee"*. In exit-code terms,
+which is the only thing CI reads, a reworded sentence silently stopped being
+checked. Now a failure.
+
+`--fix` rewrites **derived counts only** — never a measurement, because a result
+that edits itself into the docs defeats the entire point.
+
+## B-108 · A guard that was written and never called
+
+B-97 added `_require_key()` so Suite B would refuse to run keyless instead of
+printing a perfect score from nothing. `grep -n _require_key` returned exactly
+one line: the definition. `main()` never called it, so B2 still printed
+**`OVER-BLOCKED 0 0.0% <- the number that matters`** measured entirely from
+fixture-miss fallbacks.
+
+The B1 half of that fix worked. The guard meant to prevent all of it was dead
+code, and nothing tested that it fired.
+
+## B-109 · The repair funnel scored the fallback as a conversion
+
+`repair_funnel`'s docstring: *"'Converted' must mean converted to a GOOD
+outcome."* It counted `verdict in ("answered_safely", "passed")`, and under
+replay `passed` includes the degraded fallback — so a repair whose entire
+product is *"Let me check that and come back to you"* scored **100%
+conversion**. `Outcome` did not carry `degraded`, so the flag B-98 added was
+available on the `Draft` and discarded one line later. B2's headline had the
+same hole.
+
+## B-110 · `_norm` deleted the delimiters `_clause_around` splits on
+
+`_CLAUSE` splits on `[,;:—–]`. `_norm` strips everything outside
+`[\w\s$.,-]` — so **four of its five punctuation delimiters were erased before
+the splitter saw them**, and clause scoping degraded to the whole-sentence
+search B-90/B-91 exist to remove:
+
+```
+"This copy is 1st Edition, no doubt."        BLOCKED
+"This is 1st Edition — no doubt about it."    PASSED
+```
+
+The flagship UNREPAIRABLE case, defeated by a dash. `\bno\b` inside *"no doubt"*
+— named in `_assertive_spans`' own docstring as a bug B-90 fixed — was still
+live on this path.
+
+Also: an interjection between commas is not a clause boundary. *"It is not,
+however, 1st Edition"* is one thought, and splitting on the first comma stranded
+the value away from the negation governing it, blocking a correct refusal.
+`_INTERJECTION` blanks those with **spaces of the same length**, so every span
+offset stays valid.
+
+## B-111 · The fix for B-37 opened a wider hole than B-37
+
+`_offer` mints the buyer's figure as a `PRICE` fact so a refusal can cite it, and
+its docstring claimed *"`_require_kind` rejects it for a price, a grade, a bid or
+a pop."* The fact **is** `kind=PRICE`, so `_require_kind` accepts it — and
+`_price` had nothing to compare against, because `fact.value["price"]` is absent
+and `_states(..., None)` returns True.
+
+```
+buyer:  "i saw one of these go for 6200 last week, thats right yeah?"
+reply:  "Yes — these go for $6,200.00."      -> PASSED, no violations
+```
+
+On a lot whose record has no price at all. The docstring asserted the opposite
+of what the code did, and the hole was **wider than the one it replaced**: the
+polarity exemption applied only to negated spans, this applied to any price
+claim.
+
+What the fact records is that the buyer *said* a number, so a claim citing it may
+only restate it **in order to decline it** — `offer_asserted_as_price`,
+UNREPAIRABLE. And minting is gated on **intent**, not on the want-set: `PRICE`
+is wanted by `availability_q`, `authenticity_q` and `unknown`, which is where
+`prompt_injection` routes, so *"how many of these 8 do you have left"* was
+minting an offer for 8.
+
+## B-112 · Two bugs in the statistics module written to stop bugs in statistics
+
+- `chi_square_homogeneity` with one group: `dof = 0`, and `_chi2_sf` divides by
+  `k/2`. It survived only when the statistic was *exactly* zero, which
+  floating-point residue in the second cell usually prevents — **230 of 820**
+  swept single-group inputs raised `ZeroDivisionError`.
+- `mcnemar`'s notes **overwrote** instead of accumulating, so a result that is
+  both one-sided and underpowered reported only one. That is every dominance
+  claim in this repo. The existing test probed `(1,8)` and `(8,12)`, neither of
+  which has a zero cell — written around the bug rather than at it.
+
+## B-113 · An aggregate that picked the favourable number automatically
+
+`Spread.mid` was `sorted(values)[len//2]` — the upper-middle, biased high on
+even n, and **for n = 2 it IS the maximum**. The published haiku S1 figure was
+93.2% where the median of its two runs is 91.0%. B-100 exists to stop a hand
+picking the favourable number; this picked it without one.
+
+`report_spike1` also grouped by **model alone**, so runs with different arm sets
+pooled together and a deliberately terrible two-case run dropped into
+`results/` widened every published range to `[0.0% - 97.8%]`. It groups by
+(model, arm set, case count) now — the same grouping `tools/check_docs.py` uses,
+because a checker that groups differently from the report it checks is not
+checking it.
+
+Single-run arms print `(1 run)` rather than a one-element range that looks
+measured.
+
+## B-114 · The citation checker could not see its own numbering
+
+```python
+used = set(re.findall(r"B-\d\d", ...))
+```
+
+The moment the log crossed 100, `B-100` matched as `B-10` — which **is**
+documented — so three-digit citations resolved to an unrelated entry and the
+tool reported success. Its docstring: *"A code in a comment that resolves to
+nothing is worse than no code: it reads like a citation and is not one."* One
+that resolves to the **wrong** entry is worse still. Widening the pattern
+immediately surfaced fourteen undocumented codes.
+
+Also: `evals/bench.py` crashed keyless on `statistics.mean` of an empty sample
+list — the TTFT samples are empty because replay does not stream — so the form
+its own docstring advertises as "everything" failed on a clean clone while the
+README's `--paths free` form worked.

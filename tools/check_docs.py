@@ -146,7 +146,8 @@ def _triage_meta(key: str) -> Callable[[], object]:
     return go
 
 
-def _spike1_spread(model: str, arm: str, axis: str, which: str) -> Callable[[], float]:
+def _spike1_spread(model: str, arm: str, axis: str, which: str,
+                   arms: tuple[str, ...] = ("S0", "S1", "S2")) -> Callable[[], float]:
     """The LOW or HIGH end of an arm's range across every recorded run.
 
     B-100. The published table was a splice of two runs. A fact pinned to one
@@ -157,7 +158,11 @@ def _spike1_spread(model: str, arm: str, axis: str, which: str) -> Callable[[], 
         vals = []
         for f in sorted((ROOT / "evals/results").glob("spike1_*.json")):
             d = json.loads(f.read_text())
-            if d["draft_model"] != model:
+            # B-113: group the way `report_spike1` groups — by model AND arm
+            # set. Pooling by model alone mixes a three-arm run with a two-arm
+            # one, which is the splice this whole mechanism exists to prevent,
+            # reintroduced inside the checker meant to catch it.
+            if d["draft_model"] != model or tuple(d.get("arms", [])) != arms:
                 continue
             sub = [r for r in d["rows"] if r["arm"] == arm]
             if not sub:

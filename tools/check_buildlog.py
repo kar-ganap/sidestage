@@ -23,13 +23,19 @@ def main() -> int:
     # A code is documented if it has its own heading OR a row in the sub-code
     # index — B-42 and B-56 each cover one adversarial pass and would otherwise
     # need thirty headings of three lines.
-    documented = set(re.findall(r"^## (B-\d\d)", doc, re.M))
-    documented |= set(re.findall(r"^\| (B-\d\d) \|", doc, re.M))
+    # B-114: these were `B-\d\d`, so the moment the log crossed 100 every
+    # three-digit citation silently truncated — `B-100` matched as `B-10`, which
+    # IS documented, so both resolved to an unrelated entry and the tool
+    # reported success. Its own docstring says "a code that resolves to nothing
+    # is worse than no code: it reads like a citation and is not one." A code
+    # that resolves to the WRONG one is worse still.
+    documented = set(re.findall(r"^## (B-\d{2,})", doc, re.M))
+    documented |= set(re.findall(r"^\| (B-\d{2,}) \|", doc, re.M))
 
     out = subprocess.run(
-        ["grep", "-rho", "B-[0-9][0-9]", "app", "tests", "evals", "tools"],
+        ["grep", "-rhoE", "B-[0-9]{2,}", "app", "tests", "evals", "tools"],
         cwd=ROOT, capture_output=True, text=True).stdout
-    used = set(re.findall(r"B-\d\d", out))
+    used = set(re.findall(r"B-\d{2,}", out))
 
     missing = sorted(used - documented)
     orphan = sorted(d for d in documented - used if d > "B-32")

@@ -73,6 +73,14 @@ class Samples:
         return xs[k]
 
     def line(self, budget: int | None) -> str:
+        if not self.ms:
+            # B-114. `statistics.mean` raises on an empty list, and the TTFT
+            # samples ARE empty under replay because the replay client does not
+            # stream. So `uv run python -m evals.bench` — the form this file's
+            # own docstring advertises as "everything" — crashed on a keyless
+            # clone, while the README's `--paths free` form worked.
+            return (f"   {self.name:<28}{'—':>5}{'':>36}"
+                    f"   no samples (not measurable in this mode)")
         p95 = self.pct(0.95)
         verdict = "" if budget is None else ("  OK" if p95 <= budget else "  OVER")
         b = f"{budget:>7}" if budget is not None else "      -"

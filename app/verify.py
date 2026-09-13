@@ -656,6 +656,37 @@ def _availability(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violatio
 def _price(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if (v := _require_kind(claim, fact, ClaimType.PRICE, "a price claim must cite a price fact")):
         return v
+    # B-111. `_offer` mints the buyer's figure as a PRICE fact so a refusal can
+    # cite it — and `_require_kind(claim, fact, PRICE)` therefore ACCEPTS it,
+    # while `_price` had nothing to compare against (`fact.value["price"]` is
+    # absent, and `_states(..., None)` returns True). So a buyer could type a
+    # number in chat and the system would assert it:
+    #
+    #   buyer:  "i saw one of these go for 6200 last week, thats right yeah?"
+    #   reply:  "Yes — these go for $6,200.00."      -> PASSED, no violations
+    #
+    # The docstring on `_offer` claimed `_require_kind` rejected it. It asserted
+    # the opposite of what the code did, and the hole was WIDER than B-37's:
+    # the old exemption applied only to negated spans, this applied to any
+    # price claim. What the fact records is that the buyer SAID a number, so a
+    # claim citing it may only restate it in order to decline it.
+    if fact.value.get("is_offer"):
+        said = {float(x) for x in fact.value.get("buyer_said", [])}
+        stated = _numbers(claim.value)
+        if any(x not in said for x in stated):
+            return [Violation(
+                code="offer_misquoted", severity=Severity.REPAIRABLE,
+                message=(f"the buyer named {', '.join(f'${x:,.2f}' for x in sorted(said))}"
+                         f" — cite only what they said."),
+                expected=sorted(said), actual=claim.value)]
+        if not _denies(claim.quote, claim.value):
+            return [Violation(
+                code="offer_asserted_as_price", severity=Severity.UNREPAIRABLE,
+                message=("that figure is what the BUYER said, not what the "
+                         "record says. It can be repeated to decline it, never "
+                         "stated as a price."),
+                actual=claim.value)]
+        return []
     if fact.value.get("operator_only"):
         return [Violation(
             code="operator_only_leaked", severity=Severity.UNREPAIRABLE,
@@ -1166,14 +1197,20 @@ def _denies(quote: str, value: str) -> bool:
     already requires the quote to be in the reply, so there is nothing to be
     permissive about.
     """
-    q = _norm(quote)
-    words = [w for w in _WORD.findall(_norm(value)) if len(w) > 1]
-    if not words:
+    q = _soft(quote)
+    # Numbers are located by CANONICAL value, not by spelling (B-110). "$1,320"
+    # in the quote and "1320" in the claim are the same figure, and `find`
+    # cannot see that — which made a correctly declined four-figure offer block,
+    # the same comma/canonical mismatch B-90 removed from coverage.
+    want_nums = {_numkey(m.group(0)) for m in _NUMBER_RUN.finditer(_soft(value))}
+    spans = [(m.start(), m.end()) for m in _NUMBER_RUN.finditer(q)
+             if _numkey(m.group(0)) in want_nums]
+    words = [w for w in _WORD.findall(_soft(value))
+             if len(w) > 1 and not w.isdigit()]
+    spans += [(q.find(w), q.find(w) + len(w)) for w in words if q.find(w) >= 0]
+    if not spans:
         return False
-    hits = [q.find(w) for w in words if q.find(w) >= 0]
-    if not hits:
-        return False
-    return _negated_at(q, min(hits), max(hits) + 1)
+    return _negated_at(q, min(a for a, _ in spans), max(b for _, b in spans))
 
 
 def _near_quote(reply: str, quote: str, lookahead: int = 1) -> str:
@@ -1195,6 +1232,17 @@ def _near_quote(reply: str, quote: str, lookahead: int = 1) -> str:
     return reply
 
 
+# An interjection set off by commas is not a clause boundary: "it is not,
+# however, 1st Edition" is one thought, and splitting on the first comma
+# stranded the value away from the negation that governs it — blocking a
+# correct refusal as an UNREPAIRABLE fabricated variant (B-110).
+#
+# Replaced with spaces of the SAME LENGTH so every span offset stays valid.
+_INTERJECTION = re.compile(
+    r",\s*(?:however|though|mind you|honestly|actually|frankly|to be fair)\s*,",
+    re.I)
+
+
 def _clause_around(sentence: str, start: int, end: int) -> str:
     """The clause the span sits in, not the sentence.
 
@@ -1210,6 +1258,7 @@ def _clause_around(sentence: str, start: int, end: int) -> str:
     bid of $1,320, a fabricated postage promise, and a fabricated floor price,
     all licensed by a negation that had nothing to do with them.
     """
+    sentence = _INTERJECTION.sub(lambda m: " " * len(m.group(0)), sentence)
     lo = 0
     for m in _CLAUSE.finditer(sentence, 0, start):
         lo = m.end()
@@ -1352,10 +1401,18 @@ def _soft(s: str) -> str:
     Detecting on the raw sentence fixed the apostrophe collision and broke the
     slash agreement: raw "4/102" yields the two numbers 4 and 102, which the
     fact's normalised keys (`4102`) cannot match, so a correctly cited card
-    number started blocking. Both passes use this instead, so the only
-    difference from `_norm` is the one character that carries meaning here.
+    number started blocking. Both passes use this instead.
+
+    B-110: it must also keep `;` `:` `—` `–`, because `_clause_around` splits on
+    them and `_norm` deleted four of its five punctuation delimiters before the
+    splitter ever saw one. Clause scoping therefore degraded to the
+    whole-sentence search B-90/B-91 exist to remove, and the flagship
+    UNREPAIRABLE case was defeated by a dash:
+
+        "This copy is 1st Edition, no doubt."      BLOCKED
+        "This is 1st Edition — no doubt about it."  PASSED
     """
-    return re.sub(r"[^\w\s$.,'-]", "", s.lower()).strip()
+    return re.sub(r"[^\w\s$.,';:—–-]", "", s.lower()).strip()
 
 
 def _slug(v: object) -> str:

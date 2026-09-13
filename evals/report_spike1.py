@@ -42,16 +42,22 @@ def _rate(rows: list[dict], fn) -> float | None:
 
 
 def main() -> int:
-    runs: dict[str, list[Path]] = collections.defaultdict(list)
+    # B-113. Group by (model, arm-set, case count), not by model alone. The
+    # filename already encodes the arm set — `run_spike1` namespaces it
+    # precisely so runs cannot clobber each other — and pooling by model undid
+    # that: a two-case smoke run dropped into `results/` silently widened every
+    # published range to `[0.0% - 97.8%]`.
+    runs: dict[tuple, list[Path]] = collections.defaultdict(list)
     for f in sorted(RESULTS.glob("spike1_*.json")):
-        model = json.loads(f.read_text())["draft_model"]
-        runs[model].append(f)
+        d = json.loads(f.read_text())
+        cases = len({r["case_id"] for r in d["rows"]})
+        runs[(d["draft_model"], tuple(d.get("arms", [])), cases)].append(f)
 
     print("=" * 78)
     print("SPIKE 1 — every recorded run, and the spread")
     print("=" * 78)
 
-    for model, files in sorted(runs.items()):
+    for (model, arms_key, cases), files in sorted(runs.items()):
         per_arm: dict[str, dict[str, list[float]]] = collections.defaultdict(
             lambda: collections.defaultdict(list))
         paired: dict[str, list[int]] = collections.defaultdict(list)
@@ -84,16 +90,23 @@ def main() -> int:
                     paired["resp_c"].append(1 if (y and not x) else 0)
 
         n_runs = len(files)
-        print(f"\n  {model}   {n_runs} run{'s' if n_runs != 1 else ''}\n")
+        print(f"\n  {model}   {n_runs} run{'s' if n_runs != 1 else ''}"
+              f"   arms {'/'.join(arms_key) or '?'}   {cases} cases\n")
         print(f"      {'arm':<14}{'SAFE':>24}{'RESPONSIVE':>26}")
         for arm in ("S0", "S1", "S2", "MUTE"):
             if arm not in per_arm:
                 continue
             s = Spread(per_arm[arm]["safe"]) if per_arm[arm]["safe"] else None
             r = Spread(per_arm[arm]["responsive"])
-            cell = (f"{s.mid:.1%} [{s.lo:.1%}-{s.hi:.1%}]" if s else "—")
-            print(f"      {arm:<14}{cell:>24}"
-                  f"{f'{r.mid:.1%} [{r.lo:.1%}-{r.hi:.1%}]':>26}")
+            # B-113: an arm present in fewer runs than the group must say so,
+            # rather than printing a one-element "range" that looks measured.
+            def cell(sp: Spread | None) -> str:
+                if sp is None:
+                    return "—"
+                if len(sp.values) == 1:
+                    return f"{sp.mid:.1%}  (1 run)"
+                return f"{sp.mid:.1%} [{sp.lo:.1%}-{sp.hi:.1%}]"
+            print(f"      {arm:<14}{cell(s):>24}{cell(r):>26}")
 
         # the delta, per run, which is the number the splice hid
         if "S1" in per_arm and "S2" in per_arm:
@@ -120,7 +133,7 @@ def main() -> int:
                   f"{mcnemar(rb, rc).line()}")
 
     print("\n  NOTE. Pooling runs of the same model is pooling repeated measures")
-    print("  of the same 89 cases, so the pooled p is optimistic: case difficulty")
+    print("  of the SAME cases, so the pooled p is optimistic: case difficulty")
     print("  is a shared effect and the pairs are not independent. The per-run")
     print("  spread above is the honest summary; the test is a cross-check.\n")
     return 0
