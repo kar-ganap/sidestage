@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideStage Labeller</title>
+<style>
+/* Single-theme dark on purpose: this sits next to a video feed, same as the
+   console it feeds. Self-contained — no network, no server, opens from file://
+   so it cannot fail on a consent dialog the way the field-notes page did (B-02). */
+:root{
+  --bg:#0e1116; --panel:#151a21; --panel-2:#1b212a; --line:#262e39;
+  --ink:#e6ebf2; --dim:#93a1b3; --faint:#5d6b7c; --accent:#4db6a0;
+  --warn:#d9a441; --bad:#d96b6b;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px;padding-left:18px;padding-right:18px}
+h1{font-size:18px;margin:0 0 2px;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{color:var(--faint);font-size:12.5px;margin-bottom:18px}
+
+textarea{width:100%;min-height:160px;background:var(--panel-2);color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:11px;font:13px/1.5 var(--mono);
+  resize:vertical}
+button{font:500 13px var(--sans);color:var(--ink);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:6px;padding:8px 13px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--faint)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:#06110e;border-color:var(--accent);font-weight:600}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:11px}
+.spacer{flex:1}
+
+/* --- labelling --- */
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .15s}
+.counts{font:12px var(--mono);color:var(--faint);margin-bottom:14px;
+  display:flex;gap:16px;flex-wrap:wrap}
+.msg{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:8px;padding:18px 20px;font-size:20px;line-height:1.45;word-wrap:break-word;
+  min-height:78px;display:flex;align-items:center}
+.ctx{font:12px var(--mono);color:var(--faint);margin:9px 2px 0;
+  display:flex;gap:14px;flex-wrap:wrap}
+.ctx b{color:var(--dim);font-weight:500}
+
+.keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:7px;margin-top:16px}
+.k{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;padding:8px 10px;cursor:pointer;text-align:left;font-size:13px}
+.k:hover{border-color:var(--faint)}
+.k kbd{font:600 11px var(--mono);background:var(--line);border-radius:3px;
+  padding:3px 7px;color:var(--ink);min-width:22px;text-align:center}
+.k.sd kbd{background:rgba(77,182,160,.2);color:var(--accent)}
+.k small{color:var(--faint);font-size:11px;display:block;margin-top:1px}
+.grp{font:600 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);margin:18px 0 7px}
+
+.toggles{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.tg{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+  border-radius:6px;padding:8px 12px;cursor:pointer;background:var(--panel);font-size:13px}
+.tg.on{border-color:var(--warn);background:rgba(217,164,65,.12);color:var(--warn)}
+.tg.on.sd{border-color:var(--accent);background:rgba(77,182,160,.12);color:var(--accent)}
+.tg kbd{font:600 11px var(--mono);background:var(--line);border-radius:3px;padding:2px 6px}
+
+details{margin-top:22px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+summary{cursor:pointer;padding:10px 13px;font-weight:600;font-size:13px}
+details .body{padding:0 14px 14px;font-size:13px;color:var(--dim)}
+details table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+details td{padding:5px 7px;border-bottom:1px solid var(--line);vertical-align:top}
+details td:first-child{font-family:var(--mono);color:var(--accent);white-space:nowrap}
+code{font:12px var(--mono);color:var(--warn)}
+
+.done{background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:18px}
+pre{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:11px;
+  overflow-x:auto;font:11.5px/1.5 var(--mono);max-height:240px}
+.hint{color:var(--faint);font-size:12px;margin-top:10px}
+@media (max-width:560px){ .msg{font-size:17px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SideStage <span>Labeller</span></h1>
+  <div class="sub">Second show, different seller. Paste the transcript, label with one keypress, export <code>.jsonl</code>.</div>
+  <div id="app"></div>
+
+  <details>
+    <summary>Decision rules — the three traps</summary>
+    <div class="body">
+      <p><b>The question is not "is this a question."</b> It is: <i>would the seller
+      be wrong to ignore this?</i> If yes, it is seller-directed.</p>
+      <table>
+        <tr><td>base set?</td><td><b>not</b> seller-directed — one viewer answering
+          another. Has a question mark, isn't for you. This class is 141 of 485 real
+          messages and the biggest source of false positives.</td></tr>
+        <tr><td>lugia next!</td><td><b>seller-directed</b> — no question mark, no
+          interrogative anything, and the highest-intent traffic in the room.</td></tr>
+        <tr><td>Did it crash? It was $100 sealed last year</td><td><b>not</b>
+          seller-directed — commentary with a question mark attached.</td></tr>
+      </table>
+      <p style="margin-top:12px"><b>Type text verbatim.</b> <code>dragonight</code>,
+      <code>rakwaza</code>, <code>Any Blazikens ?</code> with the floating space. The
+      misspellings are the test — a tidied corpus tests a resolver nobody will use.</p>
+      <p><b>Highlighted</b> = did the platform's own UI mark it orange. It is the
+      incumbent's answer, and it is what makes this a second <i>competition</i>
+      rather than just a second test set. Easy to skip; don't.</p>
+      <p><b><code>unknown</code> is a real label</b>, not a cop-out — it routes to
+      "surface without an automatic draft". Use it for a genuine ask you cannot
+      bucket rather than forcing a fit.</p>
+      <p><b>Don't consult the existing corpus while labelling.</b> Independent labels
+      make an overlap check a real inter-rater number.</p>
+    </div>
+  </details>
+</div>
+
+<script>
+const INTENTS = [
+  // key, value, description, seller_directed default
+  ["n","hype_noise",        "reactions, banter, emoji",            false],
+  ["c","cross_user",        "talking to another viewer",           false],
+  ["m","market_comment",    "supplying comps / pop figures",       false],
+  ["y","system_event",      "platform: joined, won, unlocked",     false],
+  ["x","off_topic_abuse",   "off-topic or abusive",                false],
+  ["r","request",           "asks you to DO something",            true],
+  ["a","attribute_q",       "1st ed? shadowless? reverse?",        true],
+  ["v","availability_q",    "any X? how many left?",               true],
+  ["g","grade_condition_q", "centering? swirl? cert?",             true],
+  ["p","price_value_q",     "what's it worth? last sold?",         true],
+  ["s","shipping_returns_q","shipping, returns, refunds",          true],
+  ["t","authenticity_q",    "is it real / authenticated?",         true],
+  ["b","buy_commit",        "I'll take it",                        true],
+  ["o","negotiation",       "an offer: 320 for gare",              true],
+  ["k","unknown",           "a real ask you cannot bucket",        true],
+];
+const BY_KEY = Object.fromEntries(INTENTS.map(i => [i[0], i]));
+const SAVE = "sidestage.label.v1";
+
+let msgs = [], out = [], i = 0, highlighted = false, sdOverride = null;
+
+const $ = (s) => document.querySelector(s);
+const app = $("#app");
+
+/* localStorage is wrapped because it throws outright in some contexts (private
+   windows, blocked site data). A labelling session that dies at message 80
+   because a read failed would be worse than having no recovery at all. */
+function save() {
+  try { localStorage.setItem(SAVE, JSON.stringify({ msgs, out, i })); } catch (e) {}
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE) || "null");
+    if (d && Array.isArray(d.msgs) && d.msgs.length) { msgs = d.msgs; out = d.out || []; i = d.i || 0; return true; }
+  } catch (e) {}
+  return false;
+}
+
+/* Frames sampled every 15s overlap, so the same message appears in several of
+   them. Dedup keeps the FIRST occurrence and preserves order — matching how the
+   first transcript was reconstructed ("deduped against each frame's tail"). */
+function ingest(raw) {
+  const seen = new Set();
+  return raw.split("\n").map(s => s.trim())
+    .filter(s => s.length > 0)
+    .filter(s => { const k = s.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+function renderPaste(note) {
+  app.innerHTML = `
+    <p style="color:var(--dim);margin:0 0 9px">
+      One message per line, in the order they appeared. Duplicates from overlapping
+      frames are removed automatically.</p>
+    <textarea id="raw" placeholder="Any blazikens?
+wtf lmaooo
+run the charizard next
+@someone check the sold tab"></textarea>
+    <div class="row">
+      <button class="primary" id="go">Start labelling</button>
+      ${note ? `<span style="color:var(--warn);font-size:12.5px">${note}</span>` : ""}
+      <div class="spacer"></div>
+      <button id="resume" ${localStorage.getItem(SAVE) ? "" : "disabled"}>Resume saved session</button>
+    </div>`;
+  $("#go").onclick = () => {
+    const lines = ingest($("#raw").value);
+    if (!lines.length) return renderPaste("Nothing to label — paste some messages first.");
+    const dropped = $("#raw").value.split("\n").filter(s => s.trim()).length - lines.length;
+    msgs = lines; out = []; i = 0; save();
+    renderLabel(dropped ? `${dropped} duplicate line${dropped > 1 ? "s" : ""} removed` : "");
+  };
+  $("#resume").onclick = () => { if (load()) renderLabel(""); };
+}
+
+function renderLabel(note) {
+  if (i >= msgs.length) return renderDone();
+  const text = msgs[i];
+  const counts = {};
+  out.forEach(r => counts[r.intent] = (counts[r.intent] || 0) + 1);
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([k, v]) => `${k} ${v}`).join("   ");
+  const sd = out.filter(r => r.seller_directed).length;
+
+  const group = (label, list) => `
+    <div class="grp">${label}</div>
+    <div class="keys">${list.map(([k, v, d, s]) => `
+      <div class="k ${s ? "sd" : ""}" data-k="${k}">
+        <kbd>${k}</kbd><div><div>${v}</div><small>${d}</small></div>
+      </div>`).join("")}</div>`;
+
+  app.innerHTML = `
+    <div class="bar"><i style="width:${(i / msgs.length) * 100}%"></i></div>
+    <div class="counts">
+      <span><b style="color:var(--ink)">${i}</b> / ${msgs.length} labelled</span>
+      <span>${sd} seller-directed (${i ? Math.round(sd / i * 100) : 0}%)</span>
+      ${top ? `<span>${top}</span>` : ""}
+      ${note ? `<span style="color:var(--warn)">${note}</span>` : ""}
+    </div>
+    <div class="msg">${escape_(text)}</div>
+    <div class="ctx">
+      <span><b>${text.split(/\s+/).length}</b> tokens</span>
+      <span>${text.includes("?") ? "has ?" : "<b>no question mark</b>"}</span>
+      <span>${/@\w+/.test(text) ? "has @mention" : ""}</span>
+    </div>
+    <div class="toggles">
+      <div class="tg ${highlighted ? "on" : ""}" id="th">
+        <kbd>h</kbd> platform highlighted it${highlighted ? " ✓" : ""}</div>
+      <div class="tg sd ${sdOverride !== null ? "on" : ""}" id="td">
+        <kbd>d</kbd> ${sdOverride === null ? "seller-directed: auto from intent"
+          : `seller-directed: forced ${sdOverride}`}</div>
+      <div class="tg" id="tb"><kbd>←</kbd> back</div>
+      <div class="spacer"></div>
+      <div class="tg" id="tx">export what I have</div>
+    </div>
+    ${group("Not seller-directed", INTENTS.filter(x => !x[3]))}
+    ${group("Seller-directed", INTENTS.filter(x => x[3]))}`;
+
+  app.querySelectorAll(".k").forEach(el => el.onclick = () => pick(el.dataset.k));
+  $("#th").onclick = () => { highlighted = !highlighted; renderLabel(""); };
+  $("#td").onclick = () => { cycleSd(); renderLabel(""); };
+  $("#tb").onclick = back;
+  $("#tx").onclick = renderDone;
+}
+
+function cycleSd() {
+  sdOverride = sdOverride === null ? true : sdOverride === true ? false : null;
+}
+
+function pick(key) {
+  const spec = BY_KEY[key];
+  if (!spec) return;
+  const [, intent, , sdDefault] = spec;
+  out.push({
+    text: msgs[i],
+    intent,
+    seller_directed: sdOverride === null ? sdDefault : sdOverride,
+    highlighted,
+    source: "observed",
+  });
+  i++; highlighted = false; sdOverride = null;
+  save(); renderLabel("");
+}
+
+function back() {
+  if (i === 0) return;
+  i--; out.pop(); highlighted = false; sdOverride = null;
+  save(); renderLabel("stepped back");
+}
+
+function renderDone() {
+  const jsonl = out.map(r => JSON.stringify(r)).join("\n") + "\n";
+  const sd = out.filter(r => r.seller_directed).length;
+  const hl = out.filter(r => r.highlighted).length;
+  // The incumbent's score, computed live — the reason `highlighted` is worth
+  // recording at all.
+  const tp = out.filter(r => r.seller_directed && r.highlighted).length;
+  const fp = hl - tp, fn = sd - tp;
+  const p = tp + fp ? tp / (tp + fp) : 0, rc = sd ? tp / sd : 0;
+  app.innerHTML = `
+    <div class="done">
+      <h2 style="margin:0 0 10px;font-size:16px">${out.length} messages labelled</h2>
+      <div class="counts" style="margin-bottom:12px">
+        <span>${sd} seller-directed (${out.length ? Math.round(sd / out.length * 100) : 0}%)</span>
+        <span>${hl} highlighted by the platform</span>
+      </div>
+      ${hl ? `<p style="color:var(--dim);margin:0 0 12px">
+        <b>Incumbent on this show:</b> recall ${(rc * 100).toFixed(1)}% ·
+        precision ${(p * 100).toFixed(1)}% — compare with 53.6% / 80.4% on show one.
+      </p>` : `<p style="color:var(--warn);margin:0 0 12px">
+        Nothing marked highlighted — the head-to-head will not be computable on this show.</p>`}
+      <div class="row">
+        <button class="primary" id="dl">Download .jsonl</button>
+        <button id="cp">Copy to clipboard</button>
+        <div class="spacer"></div>
+        <button id="more">Keep labelling</button>
+        <button id="fresh">Start over</button>
+      </div>
+      <p class="hint">Save as
+        <code>evals/data/triage_show2.jsonl</code> in the repo.</p>
+      <pre>${escape_(jsonl.slice(0, 1800))}${jsonl.length > 1800 ? "\n…" : ""}</pre>
+    </div>`;
+  $("#dl").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([jsonl], { type: "application/x-ndjson" }));
+    a.download = "triage_show2.jsonl"; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $("#cp").onclick = async (e) => {
+    try { await navigator.clipboard.writeText(jsonl); e.target.textContent = "Copied"; }
+    catch (_) { e.target.textContent = "Copy failed — use Download"; }
+  };
+  $("#more").onclick = () => renderLabel("");
+  $("#fresh").onclick = () => { try { localStorage.removeItem(SAVE); } catch (e) {}
+    msgs = []; out = []; i = 0; renderPaste(""); };
+}
+
+function escape_(s) {
+  return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (i >= msgs.length || !msgs.length) return;
+  const k = e.key.toLowerCase();
+  if (k === "h") { e.preventDefault(); highlighted = !highlighted; return renderLabel(""); }
+  if (k === "d") { e.preventDefault(); cycleSd(); return renderLabel(""); }
+  if (k === "arrowleft" || k === "backspace") { e.preventDefault(); return back(); }
+  if (BY_KEY[k]) { e.preventDefault(); pick(k); }
+});
+
+if (load()) renderLabel("resumed"); else renderPaste("");
+</script>
+</body>
+</html>
