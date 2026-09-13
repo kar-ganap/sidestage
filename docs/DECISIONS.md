@@ -329,8 +329,24 @@ of *kind* — "do you do consignment?" — is what `unknown` is for. Conflating 
 blaming the taxonomy for a scorer problem.
 
 **`buy_commit` routes to an action, not a reply.** "I'll take lot 4" should produce a
-proposed write, not a sentence. This is where the ladder meets the write path and where GMV
-actually comes from.
+proposed write, not a sentence.
+
+> **Corrected 2026-09-13 — `buy_commit` does not occur in auction chat, and the claim that
+> it is "where GMV comes from" was wrong for the persona we chose.** Zero instances in
+> **513 real messages across two platforms and two sellers.** The reason is structural, not
+> sampling: in an auction you do not type "I'll take it", you **bid**, and the bid goes
+> through the platform UI where chat cannot see it. Intent to buy is expressed by an action
+> we do not receive as text.
+>
+> The class stays in the taxonomy — the catalogue carries 5 BIN and 5 shop lots where "I'll
+> take it" is the natural phrasing, and it is the right route when it appears. What is
+> withdrawn is its billing as the commercial centre of the product under D-03's
+> auctions-read-only decision.
+>
+> **The purchase signal on an auction show already has a home, and D-13 named it one
+> paragraph later:** `system_event` — *"a win is a purchase event and feeds the engagement
+> layer"*. Twelve instances observed. The taxonomy was right; this entry attributed the role
+> to the wrong class.
 
 **Measured, not assumed.** Every `unknown` is logged with its text; the session debrief
 surfaces them; the eval carries a **tail-coverage metric**. Working assumption is 10–15% of
@@ -611,9 +627,32 @@ no longer have.
 L0 observe · L1 suggest (default) · L2 auto-send · L3 auto-send + reversible auto-action ·
 L4 consequential auto-action (never in v1).
 
-Ceilings differ by class. `shipping_returns_q` is highest-volume and lowest-risk and
-graduates first. `attribute_q` caps at L1. `negotiation` and `authenticity_q` are
+Ceilings differ by class. `attribute_q` caps at L1. `negotiation` and `authenticity_q` are
 human-gated permanently.
+
+> **Amended 2026-09-13 — the first rung was empty.** This decision designated
+> `shipping_returns_q` to graduate first, on the grounds that it is "highest-volume and
+> lowest-risk". It is **0 of 513 messages** across two platforms and two sellers. The
+> promotion order was derived from an assumption about what buyers ask, and the assumption
+> was wrong in the most basic way available: the class does not occur.
+>
+> eBay Live supplies the likely mechanism — a persistent banner carrying **`$5.00 Flat`**
+> shipping. The question is absent because the platform pre-empts it, which is a better
+> reason than "the primer was wrong" and predicts it stays absent.
+>
+> **Re-derived from observed volume**, seller-directed classes only:
+>
+> | class | observed | first rung? |
+> |---|---:|---|
+> | `request` | 29 | no — maps to a *write* (`push_lot`), not an auto-send |
+> | `attribute_q` | 16 | no — variant and 1st-edition claims are D-12/D-11 territory, capped at L1 |
+> | **`availability_q`** | **15** | **yes** — answerable from the catalogue record, and its failure mode (claiming stock we do not have) is exactly what the verifier's availability check already catches |
+> | `grade_condition_q` | 4 | no — observational on raw cards, which is most of eBay Live |
+> | `price_value_q` | 4 | no — comp rules, D-11 |
+>
+> **`availability_q` replaces `shipping_returns_q` as the first class to graduate.** Same
+> argument as before — highest volume among the safely-answerable — applied to volume that
+> was measured rather than assumed.
 
 **Promotion is earned, not configured.** A class graduates only after N shadow observations
 with an operator accept-unedited rate above threshold and zero guardrail violations. The
