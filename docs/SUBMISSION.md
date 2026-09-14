@@ -19,6 +19,13 @@ uv sync && uv run uvicorn app.main:app --reload     # → http://127.0.0.1:8000
 No credential needed — with `ANTHROPIC_API_KEY` unset it replays 335 recorded
 fixtures and the whole workflow still works, deterministically.
 
+**Run it this way for the walkthrough below.** The outcomes named in step 1 are
+the recorded ones and they are exact. A deployed instance with a key calls the
+model live, and the same question can land on a different verdict run to run —
+B-21b measured one input scoring F1 75.0%–82.4% across live runs. That variance
+is the honest behaviour of the system, not a defect, but it is why the scripted
+demo is the keyless one: I can tell you in advance what it will do.
+
 1. **The demo case**, both halves of it. Put the **Champion's Path Charizard**
    up with the lot selector in the header — the evidence block is built around
    the active lot, so it decides what the answer is about.
