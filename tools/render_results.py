@@ -217,7 +217,11 @@ def line_chart(pts: list[dict], op: dict, marks: list[dict]) -> str:
     # Label with the SHIPPED threshold, not the nearest distinct score the sweep
     # happened to land on. The point is right either way; the label would
     # otherwise read 0.22 for a gate that is configured at 0.23.
-    out.append(label(px(op["r"]), py(op["p"]), f'gate @ {op["shipped"]:.2f}', -8))
+    # B-140. "gate @ 0.23" told a reader where the point was and not what it
+    # was — a threshold with no units beside it reads as a magic number. The
+    # marker now carries the scores it buys.
+    out.append(label(px(op["r"]), py(op["p"]),
+                     f'gate @ {op["shipped"]:.2f} — P {op["p"]:.0f} / R {op["r"]:.0f}', -8))
     for mk in marks:
         out.append(f'<rect x="{px(mk["r"])-4:.1f}" y="{py(mk["p"])-4:.1f}" width="8" '
                    f'height="8" fill="{mk["hue"]}" stroke="var(--panel)" stroke-width="2"/>')
@@ -390,6 +394,19 @@ def build() -> str:
     # Built here rather than inside the page template: `{{` inside an f-string
     # expression is a set literal, not an escaped brace, and a dict inside one
     # is unhashable. Assembling it first is also just easier to read.
+    sweep = []
+    for t in (0.10, 0.23, 0.40, 0.60, 0.80):
+        near = min(pr["points"], key=lambda d: abs(d["t"] - t))
+        missed = round(pr["pos"] * (1 - near["r"] / 100))
+        shipped = abs(t - pr["threshold"]) < 0.005
+        sweep.append(
+            f'<tr><td class="k">{"<b>" if shipped else ""}{t:.2f}'
+            f'{" — shipped</b>" if shipped else ""}</td>'
+            f'<td class="n">{near["p"]:.1f}%</td><td class="n">{near["r"]:.1f}%</td>'
+            f'<td class="n">{missed} of {pr["pos"]}</td>'
+            f'<td class="s">{"the operating point" if shipped else ""}</td></tr>')
+    sweep_rows = "\n".join(sweep)
+
     pr_svg = line_chart(pr["points"], pr["op"], [
         {"r": 100 * t189["A0"]["r"], "p": 100 * t189["A0"]["p"],
          "label": "A0 regex", "hue": "var(--slate)"},
@@ -545,6 +562,18 @@ that trade-off looks like rather than an assertion about it.</p>
 <p><b>A2 sits above the curve</b>, which is the cascade's whole argument: stage 2
 buys back precision at a recall the gate alone could only reach by accepting far
 more false positives.</p>
+
+<h3>What a different threshold would cost</h3>
+<div class="scroll"><table>
+<tr><th>threshold</th><th>precision</th><th>recall</th><th>questions missed</th><th></th></tr>
+{sweep_rows}
+</table></div>
+<p><b>This table is the argument for 0.23</b>, and it is D-27 stated in numbers
+rather than in prose. Moving to 0.60 nearly doubles precision — and misses
+<b>17 of {pr['pos']}</b> real questions instead of 4. A missed question is a lost
+sale; a false positive costs the operator about two seconds of attention. The
+costs are not symmetric, so the operating point should not sit where F1 is
+highest.</p>
 <p>A2 has a model in it, so it moves: precision
 <b>{100*t189['A2']['p']:.1f}–{100*best['A2']['p']:.1f}%</b>, false positives
 <b>{t189['A2']['fp']}–{best['A2']['fp']}</b>. A0 and A1 are deterministic.</p>
