@@ -2872,3 +2872,43 @@ went red — correctly. It is green again on a genuine block
 **Lesson.** A guard written as "no numbers at all" is a guard that has not
 decided what it is protecting. Both times, the rule's own violation message
 described the reply it rejected.
+
+## B-131 · The corrected sentence was still in the two places people read first
+
+**Found by being asked where the hosted URL should go.** Opening `README.md` to
+add it, the pull-quote under the title read: *"A viewer asks 'is that 1st
+edition?'… The model says yes. The verifier blocks it."* B-129 had established
+that it does not — on the tape the model denies the premise, cites the set
+catalog, and the reply **passes**.
+
+**Three documents carried it; I had corrected one.** `SUBMISSION.md` was fixed
+in B-129. The README's hero quote and `DOMAIN_PRIMER.md`'s "the demo case" were
+not, and between them they are the first paragraph of the repo and the file that
+teaches the domain. **The wave-5 root cause exactly: fix the pinned cell, leave
+the claim elsewhere** — except this one is not a number, so `check_docs.py`
+could never have seen it.
+
+**What the rule actually does**, and the corrected text now says both halves.
+`_variant` blocks the assertion as `variant_not_printed` — UNREPAIRABLE, because
+a false variant cannot be fixed by rewording, only by not saying it — and
+**passes the denial**, since `negated` plus never-printed is a true statement.
+That second branch is why the model's usual answer sends as written. Blocking is
+the minority outcome; describing it as the behaviour oversold the verifier.
+
+The guard is for generations that go the other way, and they do: a live run of
+the same question asserted the variant about *this copy* and was blocked
+`variant_not_on_copy`. Both codes are real, both are UNREPAIRABLE, and the
+difference is set-level versus copy-level authority.
+
+**Fix, and the part that generalises.** The prose is corrected in all three. But
+prose cannot be pinned the way `check_docs.py` pins a count, so the two
+questions the docs *name* are now pinned by OUTCOME —
+`test_the_documented_demo_case_does_what_the_docs_say` asserts one comes back
+`blocked` with `mis_citation` and the other `pass`, and fails if a re-record
+flips either. It also asserts neither is degraded, because a documented case
+served by `_safe_draft` is not being demonstrated at all (B-129).
+
+**Lesson.** A verdict in a document is a claim about the code, and the repo had
+a tool for pinning claims that only understood numbers. The fix is not more
+proofreading — it is making the behavioural claims executable, so the doc and
+the tape fail together.

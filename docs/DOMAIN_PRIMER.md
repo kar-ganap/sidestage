@@ -49,11 +49,22 @@ from Base Set through the e-Card era and **it was discontinued for English start
 the EX series in 2003.** Japanese printings continued using 1st Edition markings much
 longer, so *the rule is language-scoped*.
 
-> **The demo case.** Champion's Path is a 2020 Sword & Shield set. No English card in it
-> was ever printed with a 1st Edition stamp. A viewer asks "is that 1st edition?", the
-> model — trained on a corpus where "1st edition Charizard" is a wildly common phrase —
-> says yes. The verifier blocks it, because the set catalog says that variant does not
-> exist for that print run.
+> **The demo case, and both directions of the rule.** Champion's Path is a 2020 Sword &
+> Shield set; no English card in it was ever printed with a 1st Edition stamp. So a claim
+> that one **is** 1st Edition is `variant_not_printed` — UNREPAIRABLE, because it cannot
+> be fixed by rewording, only by not saying it.
+>
+> The same rule **passes the denial**: `negated` plus never-printed is a correct
+> statement (`app/verify.py`, `_variant`). That matters, because on the recorded tape the
+> model does *not* take the bait — trained on a corpus where "1st edition Charizard" is a
+> wildly common phrase, it still answers *"this one's the unlimited print run"* and cites
+> the set. Answering safely is the majority outcome, not blocking.
+>
+> The guard is for the generation that goes the other way, and they happen: a live run of
+> the same question asserted the variant about **this copy** and was blocked
+> `variant_not_on_copy`. B-129 is the write-up of getting this backwards in the docs —
+> the README and `SUBMISSION.md` both used to claim the model says yes and is blocked,
+> which oversold the verifier by describing the minority case as the behaviour.
 
 **Shadowless** `[F]` — refers to the missing drop shadow along the right edge of the art
 frame. It is a **Base Set (English) attribute only.** Base Set printed in order:

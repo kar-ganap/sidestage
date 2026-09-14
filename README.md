@@ -6,10 +6,32 @@ It reads the live chat stream, surfaces only what is worth answering, drafts rep
 grounded in the listing, catalog and policy record — and **blocks anything it cannot
 prove** before it reaches a buyer.
 
-> A viewer asks "is that 1st edition?" about a Champion's Path Charizard. The model says
-> yes. The verifier blocks it, because the set catalog records that no English card in
-> that set was ever printed with a 1st Edition stamp. That is a $2,000 mistake caught by
-> domain logic, not by a tone filter.
+> A viewer asks what the Champion's Path Charizard would do **if it were a PSA 9**. The
+> model answers with the only sales on record — *"for PSA 10 the last 7 sold
+> $1,390–$1,690, past 90d"* — and the verifier **blocks it**: the claim cites a
+> population report where a grade claim needs a grade record. The reply would have
+> quoted a four-figure range for a grade this copy does not have. Caught by domain
+> logic, not by a tone filter.
+>
+> The operator sees *"Let me check that one and come right back to you."* and the draft
+> never reaches the buyer. Reproduce it in one minute: [Run it](#run-it), pick
+> **Charizard VMAX Champion's Path** in the header's lot selector — the evidence block is
+> built around the active lot, and the default is a different Charizard — then ask
+> `what would the vmax do if it were a psa 9?`
+
+---
+
+## See it running
+
+**<https://sidestage.fly.dev>** — always on, no sign-in, reseeded from `data/*.json` at
+boot, and the Reset button in the console puts it back for the next person.
+
+That instance runs against **live models**, so it generates fresh rather than replaying:
+the same question can land on a different verdict run to run, which is the honest
+behaviour of the system and is measured (B-21b: one input scored F1 75.0%–82.4% across
+live runs). **The scripted walkthrough below is the keyless local one**, because there
+the outcomes are recorded and exact — the example above is the recorded verdict, and it
+is the same every time.
 
 ---
 
@@ -122,7 +144,7 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 333 tests, no credential needed
+uv run pytest                          # 335 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls

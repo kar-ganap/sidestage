@@ -265,3 +265,41 @@ def test_every_card_the_console_can_surface_has_a_fixture():
         f"will silently serve the safe refusal:\n" +
         "\n".join(f"  {src}  {intent:16} {text[:48]!r}  key={key}"
                   for src, intent, text, key in missing))
+
+
+# --- the outcomes the docs promise, pinned to the tape ----------------------
+
+
+@pytest.mark.parametrize("msg,lot_id,expected,code", [
+    ("what would the vmax do if it were a psa 9?", "lot_007", "blocked", "mis_citation"),
+    ("is the champions path zard 1st edition", "lot_007", "pass", None),
+])
+def test_the_documented_demo_case_does_what_the_docs_say(msg, lot_id, expected, code):
+    """B-131. `check_docs.py` pins NUMBERS; a verdict is a claim too.
+
+    The README's opening quote, `SUBMISSION.md` step 1 and `DOMAIN_PRIMER.md`
+    all described the model asserting a false 1st-Edition variant and being
+    blocked. On the tape it does the opposite — it denies the premise, cites the
+    set, and PASSES. Three documents, one wrong sentence, and nothing could
+    catch it because no tool reads prose.
+
+    So the two questions the docs actually name are pinned here by outcome. If a
+    re-record flips either verdict, this fails and the sentence gets revisited
+    instead of quietly becoming false again.
+    """
+    sess = Session(client=ReplayClient(strict=False))
+    sess.set_active_lot(lot_id)
+    sess.ingest(msg)
+    cards = [c for c in sess.cards.values() if c.text == msg]
+    assert cards, f"{msg!r} no longer surfaces — the docs point at a dead case"
+    card = sess.draft(cards[0].id)
+    assert not card.degraded, (
+        f"{msg!r} degraded: no fixture, so the documented outcome is not being "
+        f"demonstrated at all (B-129)")
+    verdict = getattr(card.verdict, "value", card.verdict)
+    assert verdict == expected, (
+        f"the docs say {msg!r} comes back {expected!r}; the tape says "
+        f"{verdict!r}. Fix the docs or re-record deliberately.")
+    if code:
+        codes = [v.code if hasattr(v, "code") else v["code"] for v in card.violations]
+        assert code in codes, f"expected {code} among {codes}"

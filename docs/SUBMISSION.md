@@ -115,7 +115,7 @@ superlatives and an enumerated list of commitment verbs, so its recall is the
 size of that list; every adversarial finding in this project landed there, and
 `_coverage`'s docstring states the bound.
 
-**Focused tests and evals.** **333 tests**, no credential. Five eval suites, each
+**Focused tests and evals.** **335 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.
@@ -210,5 +210,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 103 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 104 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |
