@@ -529,8 +529,9 @@ the regex misses and the regex catches **0** the gate misses, p = 3.05e-05.
 
 ## 6. Evaluation
 
-Five suites (D-26). A, B and the bench are built; C, D and E are specified with
-data ready.
+Six suites, all built. Five were planned (D-26); **F was added later** (B-89),
+when it became clear the responsiveness judge was scoring an axis of Spike 1
+while having no validation of its own beyond twelve cases.
 
 > **Every measured figure, with its population and its reproduce command, is
 > collected in [`RESULTS.md`](RESULTS.md)** — including the ablation tables, the
@@ -544,6 +545,7 @@ data ready.
 | **C** grounding & abstention | asks "which Mew?" exactly when it should | 36/36 curated; **77% under chat noise, and every loss is a silence, not a wrong card** |
 | **D** unit + golden replay | deterministic, CI-safe, no key | 335 fixtures; the tape raises on prompt drift |
 | **E** moment detection | hot/stalled/normal on 10 real labelled lots | 10/10 — **and so do 215 other threshold pairs** |
+| **F** the judge, as an instrument | whether the responsiveness grader can score anything | ~a fifth disagreement on identical inputs (B-89) — the bound on every other number here |
 
 **Train on synthetic, test on real**, with `triage_test.jsonl` never fit or tuned
 against. Every file carries `source`, so the two can never be silently mixed.

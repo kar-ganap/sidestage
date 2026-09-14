@@ -173,9 +173,15 @@ survived did so because something tried to kill it.
 - **Suite B1 is saturated.** Grounding alone reaches 96.6%, leaving 3.4 points
   of headroom, so the suite cannot measure what verification adds. This is why
   the original 97.8% was never attributable.
-- **The responsiveness judge is itself unmeasured.** It is the scoring
-  instrument for one axis of Spike 1 and has no suite of its own. The weakest
-  link in the evaluation.
+- **The responsiveness judge is now measured, and the result bounds everything
+  else.** Suite F (`evals/run_judge.py`, B-89) turned the ablation's MUTE arm —
+  the same fixed string against the same 89 questions, three runs on disk — into
+  a test-retest study that was already paid for. The judge **disagrees with
+  itself on roughly a fifth of identical inputs**. Its prior validation was 12
+  cases at 12/12, whose Wilson 95% interval is [75.7%, 100%] — consistent with a
+  judge wrong a quarter of the time. This is still the weakest link in the
+  evaluation; the difference is that it now has a number instead of a shrug, and
+  that number is why the S1→S2 safety delta is reported as inside the noise.
 - **One adversarial finding is open**, stated rather than papered over:
   coverage is per-sentence, so two occurrences of the same number in one
   sentence are indistinguishable. `"Orders ship within 2 business days, and we
@@ -183,6 +189,13 @@ survived did so because something tried to kill it.
   parsing, not matching.
 - **The catalog is modelled** from public collector references, not licensed
   eBay or TCGplayer data, and the marketplace adapter is a mock.
+- **The deployed demo has one shared session.** The console is a single seller's
+  cockpit: chat log, queue and ledger live in one process with no per-visitor
+  isolation (D-33), and `fly.toml` pins the app to one machine because splitting
+  that state would make the queue empty at random. Correct for the product,
+  wrong for a link several people open at once — two simultaneous visitors see
+  each other's session and Reset clears it for both. Running it locally avoids
+  this and is the deterministic path regardless.
 
 ---
 
@@ -212,5 +225,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 107 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 108 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

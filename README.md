@@ -26,6 +26,15 @@ prove** before it reaches a buyer.
 **<https://sidestage.fly.dev>** — always on, no sign-in, reseeded from `data/*.json` at
 boot, and the Reset button in the console puts it back for the next person.
 
+> **One shared session, by design and worth knowing before you click.** The
+> operator console is a single seller's cockpit: the chat log, the queue and the
+> ledger live in one process with no per-visitor isolation (D-33), and `fly.toml`
+> pins the app to exactly one machine because splitting that state across two
+> would make the queue empty at random. The consequence for a *shared demo link*
+> is that two people browsing at the same time see each other's session, and
+> Reset clears it for both. If the state looks strange, press Reset — or run it
+> locally, which is the deterministic path anyway.
+
 That instance runs against **live models**, so it generates fresh rather than replaying:
 the same question can land on a different verdict run to run, which is the honest
 behaviour of the system and is measured (B-21b: one input scored F1 75.0%–82.4% across

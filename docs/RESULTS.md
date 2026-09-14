@@ -201,7 +201,7 @@ uv run python -m evals.bench --paths free
 | **C** grounding & abstention | asks *"which Mew?"* exactly when it should | 36/36 curated; **77% under chat noise** — and every loss is a silence, not a wrong card |
 | **D** unit + golden replay | deterministic, CI-safe, no credential | 335 fixtures; the tape raises on prompt drift |
 | **E** moment detection | hot / stalled / normal on 10 real labelled lots | 10/10 — **and so do 216 of 2,500 threshold pairs** |
-| **F** the judge | measures the grader, not the system | ~a fifth disagreement on identical inputs |
+| **F** the judge | measures the grader, not the system | ~a fifth disagreement on identical inputs — the bound on every other number here |
 
 **Suite E quantifies its own powerlessness on purpose.** `216 of 2,500`
 threshold pairs score the same 10/10, and that count is printed next to the

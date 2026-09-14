@@ -3009,3 +3009,45 @@ under interview conditions, needing the population that goes with a number
 before quoting it. Both are served by the same rule — **no figure without its
 denominator** — which is stated at the top of the page and is the discipline
 this build log spent a hundred entries learning.
+
+## B-135 · Preparing the submission found a limitation the docs never stated
+
+**Found by filling in the submission form,** which asks for *"known limitations
+or broken paths"* — a question the repo could not answer about its own deployed
+demo.
+
+**One shared session for every visitor.** `get_session()` is a module-level
+singleton, there is no cookie, no session id, no per-visitor isolation, and
+`fly.toml` pins the app to exactly one machine. Verified against production: one
+client drove a bid to $900 and an independent client read it back. Two reviewers
+browsing at the same time see each other's chat log, queue and ledger, and either
+one pressing Reset clears it for both.
+
+**It is correct for the product and wrong for the link.** The console is one
+seller's cockpit; D-33 puts reads in memory precisely because there is one
+operator, and the single-machine pin exists because splitting that state across
+instances makes the queue empty at random. Neither decision anticipated a URL
+several strangers open at once. Now stated in the README beside the URL and in
+`SUBMISSION.md`.
+
+**And the limitations list had a stale entry pointing the wrong way.** It said
+*"the responsiveness judge is itself unmeasured… has no suite of its own."*
+Suite F has existed since B-89 — `evals/run_judge.py`, 116 lines — and it found
+the judge disagrees with itself on roughly a fifth of identical inputs. So the
+"Start here" document was **understating** what had been done, while the number
+it was missing is the one that bounds every other number in the project.
+
+**The suite count was stale in both directions at once.** `TDD.md` §6 opened
+*"Five suites (D-26). A, B and the bench are built; C, D and E are specified with
+data ready."* All six are built — C is `run_grounding.py`, D is
+`test_golden_replay.py`, E is `run_moments.py` — and F was not in the table at
+all. A sentence written when three suites were pending, never revisited once
+they landed.
+
+**Lesson.** Doc rot is not only optimism. This repo has spent a hundred entries
+catching claims that were too strong; here were two that were too weak and one
+that was absent, and they survived exactly as long because nothing checks
+"is this still what we do?" — only "is this number still right?". The fix that
+generalises is the one from B-131: make the claim executable. A suite table that
+listed a suite the repo does not contain would be catchable; a suite table
+missing one that exists is not, until someone reads it.
