@@ -153,3 +153,43 @@ def test_the_pr_sweep_agrees_with_the_recorded_eval():
         f"swept precision {op['p']:.1f} vs recorded {100*rec['p']:.1f}")
     assert abs(op["r"] - 100 * rec["r"]) < 0.05, (
         f"swept recall {op['r']:.1f} vs recorded {100*rec['r']:.1f}")
+
+
+def test_no_chart_label_is_drawn_outside_its_viewbox():
+    """B-139. `gate @ 0.23` sits at 89% recall, which put its label 7 px past the
+    right edge of a 520-wide canvas — clipped, and the chart silently lied about
+    where its own operating point was. The dot plot had the same bug one pixel
+    wide, on the only string that reaches it: the MUTE control scores exactly
+    `100.0%`.
+
+    Both are placement rules now (labels flip side near an edge; the margin fits
+    the widest value), and this is what keeps them true. Rotated axis titles are
+    excluded because they run vertically, so a horizontal extent says nothing
+    about them.
+    """
+    import re
+    from pathlib import Path
+
+    page = (Path(__file__).parent.parent / "static/results.html").read_text(
+        encoding="utf-8")
+    charts = re.findall(r'<svg viewBox="0 0 (\d+) (\d+)"[^>]*>(.*?)</svg>',
+                        page, re.S)
+    assert charts, "no charts in the results page"
+    offenders = []
+    for w, h, body in charts:
+        W, H = int(w), int(h)
+        for m in re.finditer(r"<text ([^>]*)>([^<]*)</text>", body):
+            attrs, text = m.group(1), m.group(2)
+            if not text.strip() or "rotate" in attrs:
+                continue
+            x = float(re.search(r'x="([\d.-]+)"', attrs).group(1))
+            y = float(re.search(r'y="([\d.-]+)"', attrs).group(1))
+            anchor_m = re.search(r'text-anchor="(\w+)"', attrs)
+            anchor = anchor_m.group(1) if anchor_m else "start"
+            width = len(text) * 5.9          # ~11px sans; generous
+            left = {"start": x, "middle": x - width / 2, "end": x - width}[anchor]
+            if left < -1 or left + width > W + 1 or not (0 <= y <= H):
+                offenders.append(f"{text!r} in {W}x{H} spans "
+                                 f"{left:.0f}..{left + width:.0f}, y={y}")
+    assert not offenders, "chart labels drawn outside the canvas:\n  " + \
+        "\n  ".join(offenders)

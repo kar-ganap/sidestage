@@ -3223,3 +3223,43 @@ stops being reproduced, and then stops being true. The split here was between
 "free to verify" and "costs a credential", and it accidentally sorted the
 results into "pinned" and "unpinned" along exactly the same line as "passes" and
 "fails".
+
+## B-139 · The chart drew outside its own canvas
+
+**Reported by looking at it:** *"the PR curve has legend screwed up."* Two
+placement bugs and one missing thing, and the first is the one worth keeping.
+
+**`gate @ 0.23` was clipped.** The shipped operating point sits at **89% recall**
+— near the right edge by construction, because that is what the gate is tuned
+for — and the label was anchored `start` at `x + 9`, putting it 7 px past a
+520-wide viewBox. So the chart was silently wrong about where its own operating
+point was, in exactly the region the gate was chosen to occupy. Labels now pick
+their side from the space available and clamp y into the plot area.
+
+**The dot plot had the same bug, one pixel wide, on the only string that reaches
+it.** The right margin was 42 px and the value labels needed 43 for `100.0%` —
+which is precisely what the MUTE control scores, every run. A margin sized for
+the typical case fails on the case the axis exists to show.
+
+**And there was no key.** Point annotations named the two comparison markers but
+nothing said what the *curve* was. It now carries one, placed in the bottom-left
+of the plot area — a precision–recall curve runs high-left to low-right, so that
+corner is the one region it can never occupy, which is why the key can sit
+inside the axes without ever colliding with the data.
+
+**What pins it.** `test_no_chart_label_is_drawn_outside_its_viewbox` parses
+every `<text>` in every generated chart, estimates its extent from the anchor,
+and fails if it leaves the canvas. Rotated axis titles are excluded because they
+run vertically and a horizontal extent says nothing about them.
+
+**Worth recording separately:** the PR curve is swept from `Model.load()` over
+the 189 labelled rows, and it **reproduces the recorded eval exactly** — P 50.0 /
+R 89.2 at the shipped threshold, against `triage_189.json` computed by a
+different code path months of commits earlier. `test_the_pr_sweep_agrees_with_
+the_recorded_eval` pins the two to each other, because a chart and a table that
+disagree leave a reviewer no way to tell which is wrong.
+
+**Lesson.** A chart is a claim about where things are, and it can be wrong in a
+way prose cannot: the number was right, the drawing of it was not. Nothing in
+this repo checked drawings until a chart was looked at — the same gap as B-132,
+where a reply was journalled correctly and rendered nowhere.

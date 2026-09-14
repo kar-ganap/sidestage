@@ -187,6 +187,24 @@ def line_chart(pts: list[dict], op: dict, marks: list[dict]) -> str:
         grid.append(f'<text x="{L-7}" y="{py(v)+3.5:.1f}" text-anchor="end" '
                     f'font-size="10" fill="var(--ink-faint)">{v}</text>')
 
+    def label(x: float, y: float, text: str, dy: float = 0.0) -> str:
+        """Place an annotation so it stays inside the viewBox.
+
+        A label anchored `start` beside a point near the right edge runs off the
+        canvas — `gate @ 0.23` sits at recall 89%, which put it 7 px past the
+        edge and clipped it. So the side is chosen from the space available
+        rather than fixed, and y is clamped into the plot area. Same reason the
+        axis margins exist: a chart that draws outside its own box is a chart
+        that lies about where its points are.
+        """
+        w = len(text) * 5.9                      # ~11px sans, good enough
+        flip = x + 9 + w > W - R
+        tx = x - 9 if flip else x + 9
+        ty = min(max(y + dy, T + 10), H - B - 4)
+        anchor = "end" if flip else "start"
+        return (f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="{anchor}" '
+                f'font-size="11" fill="var(--ink)">{html.escape(text)}</text>')
+
     path = " ".join(f"{px(d['r']):.1f},{py(d['p']):.1f}" for d in pts)
     out = [f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" '
            f'aria-label="precision against recall for the triage gate">']
@@ -199,13 +217,32 @@ def line_chart(pts: list[dict], op: dict, marks: list[dict]) -> str:
     # Label with the SHIPPED threshold, not the nearest distinct score the sweep
     # happened to land on. The point is right either way; the label would
     # otherwise read 0.22 for a gate that is configured at 0.23.
-    out.append(f'<text x="{px(op["r"])+9:.1f}" y="{py(op["p"])-7:.1f}" font-size="11" '
-               f'fill="var(--ink)">gate @ {op["shipped"]:.2f}</text>')
+    out.append(label(px(op["r"]), py(op["p"]), f'gate @ {op["shipped"]:.2f}', -8))
     for mk in marks:
         out.append(f'<rect x="{px(mk["r"])-4:.1f}" y="{py(mk["p"])-4:.1f}" width="8" '
                    f'height="8" fill="{mk["hue"]}" stroke="var(--panel)" stroke-width="2"/>')
-        out.append(f'<text x="{px(mk["r"])+9:.1f}" y="{py(mk["p"])+4:.1f}" font-size="11" '
-                   f'fill="var(--ink)">{html.escape(mk["label"])}</text>')
+        out.append(label(px(mk["r"]), py(mk["p"]), mk["label"], 4))
+    # Key, in the bottom-left. A precision-recall curve runs high-left to
+    # low-right, so that corner is the one region it can never occupy — which
+    # is why the key can sit inside the plot rather than stealing height below
+    # it, and why it cannot collide with the data at any threshold.
+    ky = H - B - 52
+    legend = [("line", "var(--ok)", "A1 gate, swept across every score"),
+              ("dot", "var(--ok)", f'shipped threshold {op["shipped"]:.2f}'),
+              ("sq", "var(--slate)", "A0 regex baseline"),
+              ("sq", "var(--warn)", "A2 full cascade")]
+    for i, (kind, hue, text) in enumerate(legend):
+        y = ky + i * 13
+        if kind == "line":
+            out.append(f'<line x1="{L+8}" y1="{y}" x2="{L+24}" y2="{y}" '
+                       f'stroke="{hue}" stroke-width="2"/>')
+        elif kind == "dot":
+            out.append(f'<circle cx="{L+16}" cy="{y}" r="4" fill="{hue}"/>')
+        else:
+            out.append(f'<rect x="{L+12}" y="{y-4}" width="8" height="8" fill="{hue}"/>')
+        out.append(f'<text x="{L+30}" y="{y+3.5}" font-size="10.5" '
+                   f'fill="var(--ink-soft)">{html.escape(text)}</text>')
+
     out.append(f'<text x="{(L+W-R)/2:.0f}" y="{H-6}" text-anchor="middle" '
                f'font-size="11" fill="var(--ink-soft)">recall %</text>')
     out.append(f'<text x="12" y="{(T+H-B)/2:.0f}" text-anchor="middle" font-size="11" '
@@ -221,7 +258,10 @@ def dot_plot(arms: dict, axis: str, labels: list[tuple[str, str]]) -> str:
     support; three dots and the span show what was actually observed. This is
     the same argument the page's second rule makes in words."""
     W, H = 520, 34 * len(labels) + 34
-    L, R = 168, 42
+    # R leaves room for the value label at the right edge. 42 was one pixel
+    # short of "100.0%", which the MUTE control scores exactly — the widest
+    # string the axis can produce, and of course the one it actually hits.
+    L, R = 168, 52
     lo = min(min(arms[a][axis]) for a, _ in labels)
     span_lo = max(0.0, lo - 8)
     px = lambda v: L + (v - span_lo) / (100 - span_lo) * (W - L - R)
