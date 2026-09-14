@@ -337,3 +337,34 @@ input[type=text]:focus-visible { outline: 2px solid var(--accent); outline-offse
 }
 .msg.out .t { font-weight: 500; }
 .msg.out .why span { opacity: .85; }
+
+/* Research: the record behind a lot, grouped by fact kind.
+   Authority is a badge rather than prose because it is the thing an operator
+   scans for — "is this the listing, the set catalog, a third party, or
+   something only I can see?" — and D-12 is the reason that question has an
+   answer at all. */
+.rfact { display: flex; gap: 10px; padding: 5px 0; border-top: 1px solid var(--line); }
+.rfact:first-of-type { border-top: 0; }
+.rkind {
+  flex: 0 0 92px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--ink-faint);
+  padding-top: 2px;
+}
+.rrow { font-size: 12.5px; line-height: 1.5; }
+.auth {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  border: 1px solid var(--line);
+  color: var(--ink-faint);
+}
+/* Only the one that changes behaviour gets a colour: an observational fact is
+   the one the copilot will never assert (D-12). The rest are informational. */
+.auth.a-observational { border-color: var(--warn); color: var(--warn); }

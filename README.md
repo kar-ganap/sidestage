@@ -10,8 +10,9 @@ prove** before it reaches a buyer.
 > model answers with the only sales on record — *"for PSA 10 the last 7 sold
 > $1,390–$1,690, past 90d"* — and the verifier **blocks it**: the claim cites a
 > population report where a grade claim needs a grade record. The reply would have
-> quoted a four-figure range for a grade this copy does not have. Caught by domain
-> logic, not by a tone filter.
+> quoted a four-figure range for a grade this copy does not have. Caught by knowing
+> what a grade record is, not by spotting a bad word — though register is enforced
+> too, four rules of it.
 >
 > The operator sees *"Let me check that one and come right back to you."* and the draft
 > never reaches the buyer. Reproduce it in one minute: [Run it](#run-it), pick
@@ -88,6 +89,14 @@ for a in 900 925 950 975 1000 1025 1050 1075 1100; do
 curl -s localhost:8000/api/state | jq '.nudge'
 ```
 
+```bash
+# 6. On-demand product research for a lot: the whole record behind it —
+#    identity, variant, grade, comps with their quotable flag, pop report,
+#    policy, and the operator-only reserve, each with its authority. No model
+#    call, so it returns in single-digit milliseconds against a 2 s budget.
+curl -s localhost:8000/api/research/lot_007 | jq '{fact_count, latency_ms, budget_ms, within_budget}'
+```
+
 `POST /api/reset` puts everything back, catalog included.
 
 **All five are also clickable in the console**, which is the faster way to see
@@ -153,13 +162,13 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 336 tests, no credential needed
+uv run pytest                          # 346 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls
 uv run python tools/check_buildlog.py  # every B-NN cited in code is written up
 uv run python tools/check_docs.py      # every pinned number, against the code
-uv run python tools/mutate.py          # 43 mutants: delete a rule, see if a test notices
+uv run python tools/mutate.py          # 44 mutants: delete a rule, see if a test notices
 ```
 
 `tools/mutate.py` is the answer to *"how do you know the tests are any good?"* —

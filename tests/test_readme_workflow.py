@@ -61,6 +61,15 @@ def test_the_documented_workflow_runs_end_to_end(client):
         client.post("/api/lot/lot_006/bid", json={"amount": amount})
     assert client.get("/api/state").json()["nudge"]["moment"] == "hot"
 
+    # 6 — on-demand product research, under the 2 s budget. The README prints
+    #     exactly these four fields, so they are what this asserts.
+    res = client.get("/api/research/lot_007")
+    assert res.status_code == 200
+    rj = res.json()
+    assert rj["fact_count"] >= 10
+    assert rj["budget_ms"] == 2000
+    assert rj["within_budget"] is True and rj["latency_ms"] < 2000
+
     # ...and reset means reset (B-76)
     assert client.post("/api/reset").status_code == 200
     back = client.get("/api/state").json()

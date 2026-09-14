@@ -133,6 +133,8 @@ flowchart TD
 | R7 | Work with no API key, so a reviewer can run it cold | built — 335 fixtures |
 | R8 | Propose showcase actions with an undo recorded at journal time | built — and two of the four turn out not to *have* an undo |
 | R9 | Nudge the seller when a lot is hot or stalled | built — 10/10 on real bid data |
+| R10 | Enforce register, not only truth — no hype, no emoji, no sign-off | built — 4 register rules in `_tone`, plus 5 overclaim rules in `_lexical` |
+| R11 | On-demand product research, under 2 s | built — `GET /api/research/{lot_id}`, p99 **55 ms** against a 2,000 ms budget |
 
 ---
 

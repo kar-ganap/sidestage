@@ -3051,3 +3051,83 @@ that was absent, and they survived exactly as long because nothing checks
 generalises is the one from B-131: make the claim executable. A suite table that
 listed a suite the repo does not contain would be catchable; a suite table
 missing one that exists is not, until someone reads it.
+
+## B-136 · Two brief requirements were partly met and described as met
+
+**Found by re-reading the brief against the code** rather than against the docs.
+Four functional requirements; two were solid, two were not.
+
+### Tone was half-enforced and described as declined
+
+The brief asks for *"price, availability, policy, and **tone** guardrails before
+any reply is sent."* Price, availability and policy block. Tone split in two and
+only one half was real:
+
+- **Overclaim language WAS enforced.** `_lexical` reads five patterns from
+  `policies.json` — investment advice, unbounded quantifiers, bare comps,
+  authenticity overclaim, observational assertion — and fires *even on a
+  well-cited claim*, with `investment_advice` unrepairable. That is the
+  commercially dangerous half of tone and it was already working.
+- **Register was a request, not a guardrail.** `DRAFT_SYSTEM` asks for *"one or
+  two sentences. Plain, warm, no exclamation marks, no emoji. Do not greet, do
+  not sign off."* Nothing enforced it. A style rule that lives only in a prompt
+  is revoked by a model swap, a prompt edit or a temperature change, silently.
+
+Worse, `SUBMISSION.md` opened with *"Domain logic, not a tone filter"*, which
+reads as declining the requirement rather than meeting half of it.
+
+**Fix.** `_tone` enforces the four unambiguous register rules — exclamation,
+emoji, greeting, sign-off — as REPAIRABLE, because register is exactly what a
+rewrite fixes. **Measured before writing it:** across the 181 replies on the
+tape there are zero exclamations, zero emoji, zero greetings and zero sign-offs.
+So the pass does not fire today, and that is the argument *for* it: the model
+complying is not the same as the system enforcing.
+
+**What it deliberately does not enforce**, and this is the interesting half.
+STYLE also says "one or two sentences". One reply on the tape exceeds it — it
+declines an investment question, then cites the comps and the bid. Blocking that
+would be the verifier enforcing brevity over substance, which is a worse failure
+than a long reply. A sentence count is a length preference, not a tone failure,
+and a pass that cannot tell those apart becomes a style opinion with a block
+attached.
+
+### On-demand research did not exist, and a decision record described it
+
+The brief asks for *"on-demand product research with a sub-2-second reply-latency
+target."* There was no route and no function. `budget_research_ms=2000` existed
+as config and was reported by `/healthz`, and **D-20 justified a design choice by
+reference to "the on-demand research path"** — a path that had never been built,
+on the assumption that research means generated prose.
+
+**It does not, and the correction is the good part.** `GET /api/research/{lot_id}`
+returns the assembled RECORD — identity, variant, grade, comps with their
+quotable flag, pop report, policy, and the operator-only reserve, each carrying
+its authority and as-of. Evidence is assembled before generation anyway (D-09),
+so research is that assembly handed back: **p50 9 ms, p99 55 ms against a 2,000
+ms budget**, about 36× under. No model call, so nothing to stream and nothing to
+verify. **The target is met by not making the expensive call, not by making it
+faster.**
+
+Measured in `evals/bench.py --paths free` through the ROUTE, not through
+`assemble`, because the budget is a promise about what an operator waits for.
+Free of model calls by design, which is why it can be in the free block at all:
+a research path needing a credential could not be measured on a clone.
+
+**The contrast is worth stating.** The path that *does* generate is p50 **4,237
+ms** end to end on the adversarial suite. D-35 already splits that honestly into
+time-to-first-token and time-to-sendable and calls 2.4 s *"a truer metric, not a
+pass"*. Neither meets 2 s. Quoting the research figure as though it covered
+drafting would be the population error this repo has spent a hundred entries
+learning not to make.
+
+### Also found
+
+`mutants` was pinned by B-130 but left out of `_DERIVED_COUNTS`, so `--fix`
+reported it stale and then declined to fix it. And the README workflow test
+asserted five of the six documented steps once step 6 was added.
+
+**Lesson.** Both gaps had the same shape: the capability was *described* at the
+level the brief asks for, and *implemented* one level short — tone as a prompt
+instruction, research as a config value. Documentation checks cannot catch that,
+because the doc and the code agree at the level either one states. Only reading
+the requirement against the implementation does.

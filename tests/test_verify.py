@@ -35,6 +35,7 @@ from app.models import (
     Draft,
     Evidence,
     Fact,
+    Severity,
     Verdict,
 )
 from app.verify import REGISTRY, verify
@@ -1162,3 +1163,49 @@ def test_a_decline_may_not_quote_the_range_it_is_withholding():
     q = "Not enough recent sales to quote, though they ran $1,150 to $1,310"
     d = draft(q + ".", claim(ClaimType.COMP, "insufficient sample", "f1", q))
     assert "comp_not_quotable" in codes(run(d, e))
+
+
+# --- tone: the STYLE rules, enforced rather than requested -------------------
+
+
+@pytest.mark.parametrize("text,code", [
+    ("Yes, that's the shadowless print!", "tone_exclamation"),
+    ("Yes, that's the shadowless print 🔥", "tone_emoji"),
+    ("Hey! it's the shadowless print", "tone_greeting"),
+    ("That's the shadowless print. Cheers", "tone_signoff"),
+])
+def test_register_violations_are_caught(text, code):
+    """DRAFT_SYSTEM asks for this; the prompt is a request a model swap revokes.
+    All REPAIRABLE — register is exactly what a rewrite fixes."""
+    e = ev(fact("f1", ClaimType.IDENTITY))
+    d = draft(text)
+    got = [v for v in run(d, e).violations if v.code == code]
+    assert got, f"{text!r} should raise {code}; got {codes(run(d, e))}"
+    assert got[0].severity is Severity.REPAIRABLE
+
+
+def test_tone_does_not_fire_on_the_recorded_house_style():
+    """The 181 replies on the tape contain zero exclamations, emoji, greetings
+    and sign-offs. A tone pass that blocked any of them would be a style
+    opinion with a block attached, so this pins the negative."""
+    e = ev(fact("f1", ClaimType.IDENTITY))
+    for text in (
+        "Yes, it's the Base Set Charizard 4/102, holo, and this copy is shadowless.",
+        "Not sure which item you mean by that, can you clarify what you're bidding on?",
+        "Orders ship within 2 business days of payment clearing.",
+        "Last 5 sold $305–$370, past 90d.",
+        "I don't have pop report data on hand for this one, sorry.",
+    ):
+        assert not [c for c in codes(run(draft(text), e)) if c.startswith("tone_")], \
+            f"tone fired on house style: {text!r}"
+
+
+def test_sentence_count_is_deliberately_not_a_tone_violation():
+    """STYLE says "one or two sentences", and this pass does NOT enforce it.
+    The one reply on the tape that exceeds it declines an investment question
+    and then cites the comps and the bid — blocking that would be the verifier
+    enforcing brevity over substance."""
+    e = ev(fact("f1", ClaimType.IDENTITY))
+    three = ("Can't call it an investment. Recent sales show a range. "
+             "The current bid is on screen.")
+    assert not [c for c in codes(run(draft(three), e)) if c.startswith("tone_")]

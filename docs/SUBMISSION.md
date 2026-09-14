@@ -39,7 +39,11 @@ demo is the keyless one: I can tell you in advance what it will do.
      model denies the false premise correctly and cites the set catalog, and it
      **passes**. Blocking is the minority outcome by design — B1 answers safely
      far more often than it blocks — and a copilot that only ever blocked would
-     be useless. Domain logic, not a tone filter.
+     be useless. **Domain logic, and register on top of it**: five overclaim
+     rules fire even on well-cited claims (investment advice, "plenty left",
+     bare comps, authenticity, observational), and four register rules enforce
+     what the prompt only asks for — no exclamations, emoji, greetings or
+     sign-offs (B-136).
 2. **The workflow**, five calls, all keyless — README §*Exercise the core
    workflow*. Replay real recorded chat, see what was dropped **and why**,
    draft, write with a read-back, drive an auction into a nudge.
@@ -117,7 +121,7 @@ superlatives and an enumerated list of commitment verbs, so its recall is the
 size of that list; every adversarial finding in this project landed there, and
 `_coverage`'s docstring states the bound.
 
-**Focused tests and evals.** **336 tests**, no credential. Five eval suites, each
+**Focused tests and evals.** **346 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.
@@ -225,5 +229,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 108 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 109 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

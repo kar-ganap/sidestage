@@ -266,7 +266,10 @@ def _spike1(model: str, arm: str, axis: str) -> Callable[[], float]:
 # move on every commit and `--fix` may rewrite them. Nothing derived from a run
 # is in here: an eval result that edited itself into the docs would defeat the
 # entire purpose of the check.
-_DERIVED_COUNTS = {"tests", "fixtures", "build-log entries", "decisions"}
+_DERIVED_COUNTS = {"tests", "fixtures", "build-log entries", "decisions",
+                   # B-136: pinned in B-130 but left out of this set, so
+                   # --fix reported it stale and then declined to fix it.
+                   "mutants"}
 # B-119. "observed messages" came OUT. It is a count of repository contents in
 # one sense and the DENOMINATOR of a measured proportion in another: one of its
 # claim sites is `pooled 69/485`, and `--fix` rewrote the 485 while leaving the

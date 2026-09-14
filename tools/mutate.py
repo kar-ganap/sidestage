@@ -109,6 +109,10 @@ MUTANTS: dict[str, object] = {
     "staleness_off":      lambda: setattr(V, "_staleness", lambda e, c, n: []),
     "operator_only_off":  lambda: setattr(V, "_operator_only", lambda d, c: []),
     "dedupe_off":         lambda: setattr(V, "_dedupe", lambda v: v),
+    # The register pass. It does not fire on the recorded corpus by design —
+    # the model already complies — so without a mutant it would be a rule no
+    # test constrains, which is exactly B-127's finding.
+    "tone_off":           lambda: setattr(V, "_tone", lambda d, c: []),
     "structural_off":     lambda: setattr(V, "_structural", lambda i, c, x: []),
     # the helpers the coverage rewrite rests on
     "numkey_id":          lambda: setattr(V, "_numkey", lambda x: x),

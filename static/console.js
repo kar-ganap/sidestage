@@ -15,7 +15,7 @@
  *           the refused text and the reason beside it (D-23).
  */
 
-import { h, render } from "preact";
+import { h, render, Fragment } from "preact";
 import { useState, useEffect, useCallback } from "preact/hooks";
 import htm from "htm";
 
@@ -473,6 +473,63 @@ function Actions({ lots, busy, onAct }) {
     </div>`;
 }
 
+/* On-demand product research for the active lot.
+ *
+ * Everything here is a RECORD, not a generated sentence, which is why it lands
+ * in single-digit milliseconds against a 2 s budget — it is the same evidence
+ * `assemble` builds before any draft, handed straight back. The latency is
+ * printed because a budget a panel cannot show it meets is a target, and this
+ * project does not display targets as results.
+ *
+ * The reserve appears here and is flagged. This is the seller's own console;
+ * withholding their own reserve from them would be absurd. `_operator_only` in
+ * app/verify.py is what stops it reaching a buyer through a draft.
+ */
+function Research({ lotId, busy }) {
+  const [data, setData] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => { setData(null); }, [lotId]);
+  const load = async () => {
+    if (open) { setOpen(false); return; }
+    setOpen(true);
+    if (data || !lotId) return;
+    setLoading(true);
+    try { setData(await api(`/api/research/${lotId}`)); }
+    finally { setLoading(false); }
+  };
+  if (!lotId) return null;
+  return html`
+    <div class="block" style="margin-top:22px">
+      <h3>
+        Research <em>the record behind this lot, no model call</em>
+        <button class="ghost" style="float:right;font-size:11px;padding:3px 8px"
+                disabled=${busy} onClick=${load}>
+          ${open ? "hide" : "look it up"}
+        </button>
+      </h3>
+      ${open && loading && html`<div class="hint">looking…</div>`}
+      ${open && data && html`
+        <div class="hint" style="margin-bottom:8px">
+          ${data.fact_count} facts ·
+          <b>${data.latency_ms} ms</b> against a ${data.budget_ms} ms budget ·
+          ${data.within_budget ? "within" : "OVER"}
+        </div>
+        ${Object.entries(data.facts).sort().map(([kind, fs]) => html`
+          <div class="rfact" key=${kind}>
+            <div class="rkind">${kind}</div>
+            <div>
+              ${fs.map(f => html`
+                <div key=${f.id} class="rrow">
+                  <span class=${"auth a-" + f.authority}>${f.authority}</span>
+                  <span>${f.note}</span>
+                  ${f.operator_only && html`<span class="ov"> · operator only</span>`}
+                </div>`)}
+            </div>
+          </div>`)}`}
+    </div>`;
+}
+
 function Ledger({ ledger }) {
   return html`
     <div class="block" style="margin-top:22px">
@@ -595,7 +652,10 @@ function App() {
         <${Queue} queue=${st.queue} activeId=${activeId} onPick=${setActive} onSay=${say} />
         <${Draft} card=${card} busy=${drafting} judged=${judged} onDraft=${doDraft}
                   onSend=${doSend} onDismiss=${doDismiss} ledger=${st.ledger}
-                  actions=${html`<${Actions} lots=${lots} busy=${busy} onAct=${act} />`} />
+                  actions=${html`<${Fragment}>
+                    <${Research} lotId=${st.lot && st.lot.id} busy=${busy} />
+                    <${Actions} lots=${lots} busy=${busy} onAct=${act} />
+                  <//>`} />
       </div>
     </div>`;
 }

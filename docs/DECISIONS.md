@@ -599,12 +599,24 @@ interleaved or both look cold.
 
 ---
 
-### D-20 · Don't stream drafts — settled
-**Decision.** Drafts are generated non-streamed. Only the on-demand research path streams.
+### D-20 · Don't stream drafts — settled, research clause corrected 2026-09-13
+**Decision.** Drafts are generated non-streamed.
 
 **Why.** At p95 ~700ms there is no perceived-latency win, and structured output means
-streaming partial JSON — real parsing complexity for nothing. Research outputs run 400+
-tokens and genuinely benefit.
+streaming partial JSON — real parsing complexity for nothing.
+
+**Corrected (B-136).** This entry used to read *"Only the on-demand research path
+streams"*, and justified it with *"research outputs run 400+ tokens and genuinely
+benefit"* — describing a streaming path that was never built, on the assumption that
+research means generated prose. **It does not.** `GET /api/research/{lot_id}` returns the
+assembled RECORD: identity, variant, grade, comps with their quotable flag, pop report,
+policy, and the operator-only reserve, each carrying its authority and as-of. No model
+call, nothing generated, therefore nothing to stream and nothing to verify.
+
+That is D-09 paying a second dividend. Evidence is assembled before generation anyway, so
+handing it back directly costs **p50 9 ms, p99 55 ms against a 2 s budget**
+(`evals/bench.py`, `--paths free`) — roughly two orders under. The brief's sub-2-second
+research target is met by not making the expensive call, not by making it faster.
 
 **Note.** This supersedes an earlier idea of "stream to the human, gate to the buyer." The
 gating principle survives; the streaming half didn't earn its complexity.

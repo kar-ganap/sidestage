@@ -157,3 +157,59 @@ def test_a_sent_reply_reaches_the_chat(client):
         f"no logged message carries card_id {entry['card_id']!r}, so the reply "
         f"has nothing to sit under and the chat cannot show it")
     assert entry["verdict"], "the chat shows the verdict beside a sent reply"
+
+
+# --- on-demand product research (brief requirement 4) -----------------------
+
+
+def test_research_returns_the_record_not_a_paragraph(client):
+    """The brief asks for on-demand product research under 2 s.
+
+    It is served from the catalog rather than from a model, which is the whole
+    reason it fits the budget: `assemble` already builds every fact before any
+    generation happens (D-09), so research is that assembly handed back. There
+    is nothing generated, therefore nothing to verify, therefore no model call
+    and no seconds.
+    """
+    r = client.get("/api/research/lot_007")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["fact_count"] >= 10, "research that returns a handful of facts is not research"
+    kinds = set(d["facts"])
+    for expected in ("identity", "grade", "comp", "pop", "variant", "shipping"):
+        assert expected in kinds, f"no {expected} facts in research for a graded slab"
+    for fs in d["facts"].values():
+        for f in fs:
+            assert f["authority"] in {"record", "catalog", "third_party", "observational"}
+            assert f["note"], "a fact with no note cannot be read by an operator"
+
+
+def test_research_meets_the_two_second_budget(client):
+    """Reported by the route itself, not asserted in prose. The budget is
+    `SIDESTAGE_BUDGET_RESEARCH_MS` (default 2000)."""
+    d = client.get("/api/research/lot_006").json()
+    assert d["budget_ms"] == 2000
+    assert d["within_budget"] is True
+    assert d["latency_ms"] < 2000
+    # It is not close to the budget: this is dict lookups, not a model call.
+    assert d["latency_ms"] < 200, f"research took {d['latency_ms']} ms — is something calling a model?"
+
+
+def test_research_flags_the_operator_only_reserve(client):
+    """The reserve IS returned — this is the seller's own console — and it is
+    flagged. `_operator_only` in app/verify.py is what stops it reaching a buyer
+    through a draft; this flag is what keeps the distinction visible on screen.
+    """
+    d = client.get("/api/research/lot_007").json()
+    reserves = [f for fs in d["facts"].values() for f in fs if f["operator_only"]]
+    assert reserves, "the reserve should be present for the operator"
+    assert any("reserve" in f["note"].lower() for f in reserves)
+    for fs in d["facts"].values():
+        for f in fs:
+            if not f["operator_only"]:
+                assert "OPERATOR ONLY" not in f["note"], \
+                    "an operator-only note on a fact that is not flagged"
+
+
+def test_research_404s_on_an_unknown_lot(client):
+    assert client.get("/api/research/not_a_lot").status_code == 404

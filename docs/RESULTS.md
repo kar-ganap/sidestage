@@ -173,6 +173,7 @@ paths.
 | entity resolve | 966 | 3.893 | 35.042 | 66.388 |
 | triage stage 1 (gate) | 966 | 3.747 | 36.931 | 67.871 |
 | evidence assemble | 1200 | 0.096 | 0.129 | 2.657 |
+| **research route** (brief req 4) | 90 | 9.0 | 22.7 | 54.6 |
 | **verify — CPU (the work)** | 1188 | 0.638 | **1.016** | 1.201 |
 | verify — wall (this machine) | 1188 | 0.668 | 5.695 | 19.556 |
 
@@ -186,6 +187,21 @@ three significant figures.
 the evidence is assembled *before* generation — so checking a claim is a lookup,
 not a fetch. That is the reason the safety pass is affordable at all, and the
 reason "just call the model twice to check it" was rejected (D-09).
+
+**The research row is the same dividend, collected twice.** The brief asks for
+on-demand product research under **2 seconds**. `GET /api/research/{lot_id}`
+comes back at **p99 55 ms** — about 36× under budget — because it returns the
+assembled *record* (identity, variant, grade, comps with their quotable flag,
+pop report, policy, and the operator-only reserve, each with its authority and
+as-of) rather than a generated paragraph. No model call, so nothing to stream
+and nothing to verify. The target is met by not making the expensive call.
+
+For contrast, the path that *does* generate: end-to-end draft latency on the
+adversarial suite is **p50 4,237 ms**, where repairs fire often. D-35 splits
+that into time-to-first-token and time-to-sendable and reports the latter at
+2.4 s — explicitly *"a truer metric, not a pass."* Neither figure meets 2 s, and
+the docs say so rather than quoting the research number as if it covered
+drafting.
 
 ```bash
 uv run python -m evals.bench --paths free
@@ -219,8 +235,8 @@ answer is unchanged — dropped it to **77%** (B-82).
 
 | | |
 |---|---|
-| tests | **336**, no credential needed |
-| mutation | **43 / 43** mutants killed |
+| tests | **346**, no credential needed |
+| mutation | **44 / 43** mutants killed |
 | pinned doc claims | **40**, zero stale |
 | recorded fixtures | **335** |
 | build-log entries | **105** |

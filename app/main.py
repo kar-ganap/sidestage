@@ -23,6 +23,7 @@ the features that dropped them. That is the product, not a debug view.
 
 from __future__ import annotations
 
+import time
 from dataclasses import asdict
 
 from fastapi import FastAPI
@@ -30,7 +31,10 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.catalog import get_catalog
 from app.config import STATIC_DIR, settings
+from app.entities import get_resolver
+from app.evidence import assemble
 from app.models import Intent
 from app.actions.adapter import AdapterError
 from app.actions.ledger import LedgerError
@@ -277,6 +281,78 @@ def act(body: ActionIn) -> JSONResponse:
         return JSONResponse(
             {"error": f"{body.action} needs different params: {exc}"},
             status_code=422)
+
+
+@app.get("/api/research/{lot_id}")
+def research(lot_id: str) -> JSONResponse:
+    """On-demand product research for one lot, inside the 2 s budget (D-20).
+
+    **Research here returns RECORDS, not prose, and that is the design claim
+    rather than a shortcut.** Everything a seller needs mid-show — what the set
+    printed, what this copy is, what it has sold for, how many exist — already
+    lives in the catalog, already carries an authority and an as-of, and is
+    already what `assemble` builds before any generation happens (D-09). Handing
+    that back directly is sub-millisecond and verifiable by construction,
+    because there is nothing generated to verify. Generating a paragraph would
+    cost seconds (measured: p50 4.2 s on the adversarial suite, where repairs
+    fire) and would then need checking against the very facts being returned.
+
+    So the latency target is met by not making the expensive call, not by making
+    it faster. The reply path still generates, because a buyer needs a sentence;
+    research is for the operator, who needs the record.
+
+    Operator-only facts (the reserve) ARE included and flagged. This is the
+    seller's own console — withholding their own reserve price from them would
+    be absurd — but `_operator_only` in `app/verify.py` is what stops it
+    reaching a buyer through a draft, and the flag here is what keeps the
+    distinction visible on screen.
+    """
+    t0 = time.perf_counter()
+    cat = get_catalog()
+    lot = cat.lots.get(lot_id)
+    if lot is None:
+        return JSONResponse({"error": f"no lot {lot_id!r}"}, status_code=404)
+
+    # Research wants EVERY fact kind, not the slice one question needs.
+    # `_NEEDS` maps nine intents to narrow want-sets — `PRICE_VALUE_Q` pulls 5
+    # of 14 claim types — and anything absent from that table falls through to
+    # `_WIDE`, which is all 14. `UNKNOWN` is the honest label here: research is
+    # not answering a question, so naming one would be a lie that also happened
+    # to narrow the result.
+    #
+    # Safe despite `UNKNOWN` being where prompt injection routes (D-13), because
+    # `_offer` is gated on the INTENT being NEGOTIATION or PRICE_VALUE_Q rather
+    # than on the want-set — B-111 moved it there precisely so a wide want-set
+    # could not mint a buyer's figure as an assertable fact. Nothing here comes
+    # from a buyer: the resolver is handed the lot's own title.
+    ev = assemble(intent=Intent.UNKNOWN,
+                  resolution=get_resolver().resolve(lot.title),
+                  catalog=cat, lot=lot)
+
+    groups: dict[str, list[dict]] = {}
+    for f in ev.facts:
+        operator_only = bool(isinstance(f.value, dict)
+                             and f.value.get("operator_only"))
+        groups.setdefault(f.kind.value, []).append({
+            "id": f.id,
+            "note": f.note,
+            "authority": f.authority.value,
+            "as_of": f.as_of.isoformat(timespec="seconds") if f.as_of else None,
+            "operator_only": operator_only,
+            "value": f.value if isinstance(f.value, dict) else str(f.value),
+        })
+
+    ms = (time.perf_counter() - t0) * 1000
+    return JSONResponse({
+        "lot": _lot(lot),
+        "facts": groups,
+        "fact_count": len(ev.facts),
+        # Reported, not asserted. A budget a route cannot show it meets is a
+        # target, and this project does not publish targets as results.
+        "latency_ms": round(ms, 3),
+        "budget_ms": settings.budget_research_ms,
+        "within_budget": ms < settings.budget_research_ms,
+    })
 
 
 @app.get("/api/actions/lots")

@@ -174,6 +174,7 @@ def verify(draft: Draft, evidence: Evidence, *, catalog: Catalog | None = None,
 
     v += _coverage(draft, ctx)
     v += _lexical(draft, ctx)
+    v += _tone(draft, ctx)
     v += _operator_only(draft, ctx)
     v += _staleness(evidence, cat, now)
 
@@ -1486,6 +1487,65 @@ def _lexical(draft: Draft, ctx: VerifyContext) -> list[Violation]:
                 severity=(Severity.UNREPAIRABLE if rule["code"] == "investment_advice"
                           else Severity.REPAIRABLE),
                 message=rule["message"], actual=draft.text))
+    return out
+
+
+# Register, as opposed to the overclaim rules `_lexical` reads from
+# `policies.json`. Both are "tone"; they fail differently and are separated on
+# purpose — one is about what a sentence PROMISES, this one is about how it
+# sounds. Deliberately narrow: each pattern below is unambiguous, so the pass
+# cannot become a style opinion with a block attached.
+_EMOJI = re.compile(
+    "[\U0001F300-\U0001FAFF\U0001F1E6-\U0001F1FF\U00002600-\U000027BF\uFE0F]")
+_GREETING = re.compile(
+    r"^\s*(hi|hey|hello|yo|howdy|good (morning|afternoon|evening)|"
+    r"thanks for (asking|the))\b", re.I)
+_SIGNOFF = re.compile(
+    r"\b(cheers|best regards|kind regards|warm regards|all the best)\s*[.!]?\s*$",
+    re.I)
+
+
+def _tone(draft: Draft, ctx: VerifyContext) -> list[Violation]:
+    """DRAFT_SYSTEM's STYLE rules, enforced rather than requested.
+
+    The prompt already asks for this — *"one or two sentences. Plain, warm, no
+    exclamation marks, no emoji. Do not greet, do not sign off."* — and on the
+    181 recorded replies the model complies **completely**: zero exclamations,
+    zero emoji, zero greetings, zero sign-offs. So this pass does not fire
+    today, and that is the argument for it rather than against it. A style rule
+    that lives only in a prompt is a request that a model swap, a prompt edit or
+    a temperature change silently revokes; the same rule in the verifier holds
+    whoever is generating. It is the registry argument applied to register.
+
+    All REPAIRABLE by construction: register is exactly what a rewrite fixes,
+    so these cost one retry rather than a block (D-10b).
+
+    **What this deliberately does NOT enforce, and why.** The STYLE line also
+    says "one or two sentences". A sentence count is a length preference, not a
+    tone failure, and the single reply on the tape that exceeds it is a good
+    one — it declines an investment question, then cites the comps and the
+    current bid. Blocking that would be the verifier enforcing brevity over
+    substance, which is a worse failure than a long reply. "Plain, warm" is
+    likewise not mechanically checkable and is left to the prompt.
+    """
+    out: list[Violation] = []
+    text = draft.text
+    if not text.strip():
+        return out
+    checks = (
+        ("tone_exclamation", "!" in text,
+         "no exclamation marks — the seller is answering a question, not selling harder"),
+        ("tone_emoji", bool(_EMOJI.search(text)),
+         "no emoji in a seller reply"),
+        ("tone_greeting", bool(_GREETING.match(text)),
+         "do not greet — the reply lands mid-conversation"),
+        ("tone_signoff", bool(_SIGNOFF.search(text)),
+         "do not sign off — this is a chat message, not an email"),
+    )
+    for code, hit, message in checks:
+        if hit:
+            out.append(Violation(code=code, severity=Severity.REPAIRABLE,
+                                 message=message, actual=text))
     return out
 
 

@@ -38,6 +38,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from app.catalog import get_catalog
+from app.config import settings
 from app.entities import get_resolver
 from app.evidence import assemble
 from app.llm import RATES, FixtureMissing, ReplayClient, get_client
@@ -133,6 +134,30 @@ def bench_assemble(reps: int) -> Samples:
         t0 = time.perf_counter()
         assemble(intent=Intent.ATTRIBUTE_Q, resolution=r, catalog=cat, lot=lot)
         s.ms.append((time.perf_counter() - t0) * 1000)
+    return s
+
+
+def bench_research(reps: int) -> Samples:
+    """Brief requirement 4: on-demand product research under 2 s.
+
+    Measured through the ROUTE, not through `assemble`, because the budget is a
+    promise about what an operator waits for — serialisation and grouping
+    included. It is free of model calls by design (see the docstring on
+    `/api/research/{lot_id}`), which is why it can be in the `--paths free`
+    block at all: a research path that needed a credential could not be
+    measured on a reviewer's clone.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    s = Samples("research route (brief req 4)")
+    with TestClient(app) as c:
+        c.get("/api/research/lot_007")            # warm the catalog
+        for i in range(reps):
+            lot = ("lot_006", "lot_007", "lot_s01")[i % 3]
+            t0 = time.perf_counter()
+            c.get(f"/api/research/{lot}")
+            s.ms.append((time.perf_counter() - t0) * 1000)
     return s
 
 
@@ -263,7 +288,8 @@ def main() -> int:
     rows: list[tuple[Samples, int | None]] = [
             (bench_resolve(texts, a.reps), None),
             (bench_features(texts, a.reps), 50),
-            (bench_assemble(200 * a.reps), None)]
+            (bench_assemble(200 * a.reps), None),
+            (bench_research(30 * a.reps), settings.budget_research_ms)]
     rows += [(x, None) for x in bench_verify(200 * a.reps)]
     for s, b in rows:
         print(s.line(b))
