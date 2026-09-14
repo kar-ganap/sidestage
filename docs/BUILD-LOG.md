@@ -32,7 +32,7 @@ success.
 suffixes (`ex`, `v`, `vmax`, `gx`) stripped — so `mew` reaches both Mew and Mew ex
 and ambiguity is detectable. Abstention now fires on three cases rather than zero:
 
-```
+```text
 mew         -> which one? — Mew or Mew ex
 dragonight  -> which one? — Dark Dragonite or Shining Dragonite
 Zard        -> which one? — Charizard or Charizard VMAX
@@ -749,7 +749,7 @@ does or it does not.
 
 Three runs of the stochastic arm, all identical in the part that matters:
 
-```
+```text
 run 1: removed 35/37 false positives (95%), cost 4 true positives
 run 2: removed 35/37 false positives (95%), cost 3 true positives
 run 3: removed 35/37 false positives (95%), cost 4 true positives
@@ -757,7 +757,7 @@ run 3: removed 35/37 false positives (95%), cost 4 true positives
 
 Paired McNemar on **errors** — same messages, which classifier is wrong:
 
-```
+```text
 A1 wrong where A2 right = 35     A2 wrong where A1 right = 3-4     p < 0.0001
 ```
 
@@ -801,7 +801,7 @@ no case asserts something genuinely unanswerable.
 
 **What they found, immediately.**
 
-```
+```text
 "is that zard graded"   -> "It's raw, not graded"            BLOCKED grade_on_raw_card
 "how much is the mew"   -> "...not enough recent sales to
                             quote a comp"                     BLOCKED comp_not_quotable
@@ -922,7 +922,7 @@ first cannot be wrong.
 **What broke.** The ledger's compensation test assumed a markdown round-trips:
 lower the price, then restore it. The restore failed —
 
-```
+```text
 InvalidPrice: price 100.0 refused on lot_bin: not below the current price 75.0
 ```
 
@@ -1081,7 +1081,7 @@ Corrected to `(lot, question)`.
 
 **Second, and fatally: viewers do not repeat questions.**
 
-```
+```text
 canonical warm, real transcript          0/24 hits   (0%)
 self-warmed (cache exactly what was
   asked, serve on any later repeat)      1/27 hits   (4%)
@@ -1121,7 +1121,7 @@ this before it was designed, let alone built.
 the fact it cites?"* — answerable from evidence already in hand, hence 0.2 ms.
 That is also why it cannot see:
 
-```
+```text
 Q: "is the centering good on that zard?"
 A: "It's the Base Set Charizard 4/102, shadowless print."
 ```
@@ -1158,7 +1158,7 @@ recent sales to quote a comp"*, *"which Mew do you mean?"*
 should be stronger than what it judges — right, because an offline grader has no
 latency budget. **Same role, different position, opposite answer:**
 
-```
+```text
 claude-opus-5     12/12 correct   p50 2505ms   p95 6100ms
 claude-sonnet-5   12/12 correct   p50 2059ms   p95 2115ms
 ```
@@ -1512,7 +1512,7 @@ marketplace holds its own row with its own version counter.
 `SIDESTAGE_FAULTS=1` turns on the adversarial marketplace. Fifteen writes through
 the API:
 
-```
+```text
 outcomes      12 verified, 3 diverged
 adapter       15 applied, 4 replays, 4 lost responses, 10 transient errors,
               6 stale reads, 3 long tails
@@ -1564,7 +1564,7 @@ each per verification now; the worst draft in the recorded corpus went from
 prefixing an assertion with *"Sorry,"* or *"Let me check with the host,"* made
 any buyer-supplied number assertable:
 
-```
+```text
 question 'can i get it for 999?'
   "Sorry, the price is already 999 on that one."   -> PASS
   "The price is already 999 on that one."          -> BLOCKED
@@ -1606,7 +1606,7 @@ question that matters: *can it fire in the running product?*
 
 No. Every lot in the shipped catalog:
 
-```
+```text
 lot_001  sold     7 ext   $195 -> $330   hot
 lot_003  sold     3 ext   $111 -> $111   stalled
 lot_004  sold    24 ext    $27 -> $350   hot
@@ -1631,7 +1631,7 @@ optional, and omitting it is a timer extension with nothing behind it.
 
 All three branches now reachable through the API:
 
-```
+```text
 HOT      lot_006  14 ext  $860 -> $1,175   "14 ext · +37%"
 STALLED  lot_007   4 ext  $400 -> $400     "stalled at $0 move · 4 ext"
 NORMAL   lot_007   2 ext  $400 -> $420     (no nudge — the common case)
@@ -1785,7 +1785,7 @@ code. `process_time()` answers *how much work is this*; wall answers *what does
 an operator experience*. Both are printed because they are different questions
 and only one of them is about the verifier.
 
-```
+```text
 verify — CPU (the work)        p50 0.56   p95 0.83   p99 0.93
 verify — wall (this machine)   p50 0.56   p95 1.23   p99 17.9
 ```
@@ -1833,7 +1833,7 @@ realistic chat noise, where **the expected answer is unchanged** because
 "champion's path zard" and "champions path zard" name the same card and a viewer
 typing at auction speed produces both.
 
-```
+```text
 UNDER PERTURBATION          90/117    77%
    space lost               14/23     61%
    transposed               23/30     77%
@@ -2045,7 +2045,7 @@ The test-retest study was already paid for and nobody ran it. Every ablation run
 scores a `MUTE` arm: the same fixed string against the same 89 questions. Three
 runs were on disk.
 
-```
+```text
 mean pairwise disagreement on IDENTICAL input   22.5%
 questions not unanimous across 3 runs           30/89 = 33.7%
 ```
@@ -2062,7 +2062,7 @@ search fail by construction: `_numkey("1,320")` is `"1320"`, `_lemma("we'll")`
 is `"will"`. So every comma-grouped number and every contraction took the
 fallback, and one "no" anywhere licensed the lot:
 
-```
+```text
 "I can't go lower, the current bid is $1,320 on this one."   PASSED
 "We'll get it out to you, no worries."                       PASSED
 "These never sell under $1,750 in this grade."                PASSED
@@ -2079,7 +2079,7 @@ fallback has no callers.
 
 Positions alone were not enough. These look identical to a character count:
 
-```
+```text
 "so $320 wouldn't push it"          denies $320            -> exempt
 "Postage is on us, not something"   denies something else  -> assert
 ```
@@ -2129,7 +2129,7 @@ for over-blocking.
 `_norm(value)` in the quote. `_slug` and `_LEMMA` use underscore forms
 throughout — the catalog's own `printed` list is spelled that way — so:
 
-```
+```text
 value="1st Edition"   "Yes, this copy is 1st Edition, no doubt"   BLOCKED
 value="1st_edition"   same reply                                   PASSED
 ```
@@ -2170,7 +2170,7 @@ free.
 
 ## B-97 · A safety suite that scored 100% from nothing
 
-```
+```text
 $ uv run python -m evals.run_guardrails        # no ANTHROPIC_API_KEY
    ESCAPED                      0    0.0%
    SAFE overall                89  100.0%
@@ -2238,7 +2238,7 @@ run-to-run variance.
 
 Three properly paired runs later:
 
-```
+```text
 S1 -> S2 safety,         per run:  +0.0%  +1.2%  -1.1%
 S1 -> S2 responsiveness, per run:  -5.6%  -5.6%  -6.7%
 ```
@@ -2362,7 +2362,7 @@ same hole.
 the splitter saw them**, and clause scoping degraded to the whole-sentence
 search B-90/B-91 exist to remove:
 
-```
+```text
 "This copy is 1st Edition, no doubt."        BLOCKED
 "This is 1st Edition — no doubt about it."    PASSED
 ```
@@ -2385,7 +2385,7 @@ a pop."* The fact **is** `kind=PRICE`, so `_require_kind` accepts it — and
 `_price` had nothing to compare against, because `fact.value["price"]` is absent
 and `_states(..., None)` returns True.
 
-```
+```text
 buyer:  "i saw one of these go for 6200 last week, thats right yeah?"
 reply:  "Yes — these go for $6,200.00."      -> PASSED, no violations
 ```
@@ -2640,7 +2640,7 @@ in the repository. With no command behind them the numbers could not drift
 
 Measured now, with `--both-platforms`:
 
-```
+```text
 A1  P 50.0%       R 89.2%       F1 64.1%      33 FPs   deterministic
 A2  P 84.4-87.5%  R 73.0-75.7%  F1 78.3-81.2%  4-5 FPs  3 runs
 ```
@@ -3299,3 +3299,35 @@ record's word.
 are different things, and the second is what a reviewer actually meets. D-27 had
 been written for days; it took someone reading the chart to notice that nothing
 a reader could *see* justified the number.
+
+## B-141 · 35 fenced blocks with no language, and a plugin rendering them as diagrams
+
+**Reported bluntly: "no fucking diagram is being rendered in the Codebase.md."**
+Correct, and the cause was not in that file's content — it was that the block had
+no language tag.
+
+A fence opened with a bare ` ``` ` is untyped, and a markdown previewer with a
+mermaid plugin — Cursor's, among others — tries to parse it as a diagram and
+prints **"no diagram type detected"** over the content. **35 of them across the
+repo**, including the call-path block in the prep doc a reader opens first and
+23 in `BUILD-LOG.md`.
+
+**I had seen this once already and fixed the wrong scope.** When it was first
+raised about `RESULTS.md` I checked that file, found all five of its fences
+tagged `bash`, confirmed GitHub rendered it clean, and concluded the problem was
+the viewer. That was true and useless: the viewer was mishandling untagged
+fences, and I never asked *how many untagged fences the repo had*. The answer was
+35, in every document except the one I checked.
+
+**Fix.** Every untagged opening fence is now ` ```text `, which renders
+identically everywhere and tells a plugin the block is prose. Real diagrams still
+say ` ```mermaid ` and are untouched — the four in `TDD.md` are unaffected.
+
+**What pins it.** `test_no_markdown_fence_is_left_untagged` walks every markdown
+file in `docs/` plus the README, tracks fence parity so it only inspects
+*opening* fences, and fails listing file and line.
+
+**Lesson.** "It renders fine for me" is a statement about one renderer. The
+finding was reported against one file, I verified that one file, and the actual
+question — *does this pattern exist elsewhere* — went unasked for two turns. A
+bug report names where someone was standing, not where the bug is.

@@ -67,7 +67,7 @@ no incumbent to measure there and the same arm is a naive baseline (B-84).
 So roughly **half of the questions asked of a seller are never surfaced by the
 tool they already have**, including the highest-intent traffic in the room:
 
-```
+```text
 lugia next!                          a queue request
 320 for gare plz                     a named offer
 You got any psyducks                 a catalog question

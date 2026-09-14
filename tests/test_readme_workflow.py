@@ -193,3 +193,31 @@ def test_no_chart_label_is_drawn_outside_its_viewbox():
                                  f"{left:.0f}..{left + width:.0f}, y={y}")
     assert not offenders, "chart labels drawn outside the canvas:\n  " + \
         "\n  ".join(offenders)
+
+
+def test_no_markdown_fence_is_left_untagged():
+    """B-141. A fenced block with no language is what a markdown previewer with
+    a mermaid plugin tries to render as a diagram — and then prints "no diagram
+    type detected" over the content. There were 35 of them across the repo,
+    including the call-path block in the docs a reader is most likely to open.
+
+    `text` is the fix and it costs nothing: it renders identically everywhere
+    and tells every renderer the block is plain. Real diagrams still say
+    `mermaid` and are untouched.
+    """
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent
+    files = sorted(list((root / "docs").glob("*.md")) + [root / "README.md"])
+    assert files, "no markdown to check"
+    offenders = []
+    for f in files:
+        inside = False
+        for n, line in enumerate(f.read_text(encoding="utf-8").split("\n"), 1):
+            if line.startswith("```"):
+                if not inside and line.strip() == "```":
+                    offenders.append(f"{f.relative_to(root)}:{n}")
+                inside = not inside
+    assert not offenders, (
+        "untagged opening fences — a mermaid plugin will try to render these "
+        "as diagrams:\n  " + "\n  ".join(offenders))

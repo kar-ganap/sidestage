@@ -24,7 +24,7 @@ hit.
 
 ## 2. How a card is identified
 
-```
+```text
 (game, set, card_number, name, variant, finish, language, grade)
 ```
 

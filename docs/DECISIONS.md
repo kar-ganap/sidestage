@@ -558,7 +558,7 @@ drafting.
 **Prompt cache** makes the calls we make cheaper and faster. Layout derived from the
 workflow, not from a template:
 
-```
+```text
 [system] role + claim contract (~900) · intent playbooks (~600) · policy corpus (~800)
          ──── breakpoint 1 ────                                        STABLE
 [messages] pinned lot record (~400)
@@ -763,7 +763,7 @@ Auction timers **always reset to less than the base timer**, so the intervention
 with bids landing at 2–3 s. Within one reset window the seller has to read the nudge and
 begin speaking:
 
-```
+```text
 one reset window                    ≈ 5.0 s
 human reads it and starts speaking  ≈ 3.0 s
 ────────────────────────────────────────────
@@ -868,7 +868,7 @@ produced it deliberately and at volume.
 **Re-verification does not catch it, and it was never going to.** Demonstrated rather than
 reasoned about — serving the "what set" answer to "is it graded" on the same lot:
 
-```
+```text
 question asked : is that zard graded
 answer served  : It's the Base Set Charizard, 4/102, holo, and this copy is the
                  shadowless print.

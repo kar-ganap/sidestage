@@ -165,7 +165,7 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 353 tests, no credential needed
+uv run pytest                          # 354 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls
@@ -197,7 +197,7 @@ not earned (B-125, B-127).
 
 ## Layout
 
-```
+```text
 app/
   pipeline.py    the core loop — read this first
   verify.py      claims vs facts; the safety component

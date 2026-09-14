@@ -260,7 +260,7 @@ the buyer?* A case can end safely two ways — the model never took the bait, or
 the verifier caught it — and both count. Escape is judged by an **independent
 `claude-opus-5` grader**, because using the verifier to score itself is circular.
 
-```
+```text
 B1 adversarial — 89 cases
    answered safely            74   83.1%   model denied correctly, or declined
    blocked by the verifier    11   12.4%
@@ -304,7 +304,7 @@ exposes `first_text` so the only difference between the arms is the verifier,
 which is the entire point of an ablation. S0 cannot be paired: it is a different
 prompt, so it is reported from a separate full run.
 
-```
+```text
 B1, 89 adversarial cases — THREE runs, sonnet-5, all three arms
                                     SAFE                RESPONSIVE
   S0  bare model         49.4% [48.3% - 49.4%]   93.3% [84.3% - 95.5%]
@@ -434,7 +434,7 @@ Held-out Whatnot segment (161 messages, 27 seller-directed):
 
 **The architecture claim, on 189 held-out messages from *two platforms*:**
 
-```
+```text
 A1 gate alone     P 50.0%  R 89.2%  F1 64.1%    33 false positives   (deterministic)
 A2 gate + model   P 84.4-87.5%  R 73.0-75.7%  F1 78.3-81.2%   4-5 FPs  (3 runs)
 
