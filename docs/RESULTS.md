@@ -207,6 +207,29 @@ The repair round is the whole tail — it fired on 3 of 12 and those three ran
 11.6 s p50. D-35 is the decision that splits the budget at the first token, and
 it is explicit that a truer metric is not a pass.
 
+### Three ways to make it faster, all measured, all rejected
+
+The obvious question is *"why not just…"*, and each answer is an experiment
+rather than an opinion.
+
+| lever | what it measured | why it was rejected |
+|---|---|---|
+| **Precompute drafts** for upcoming lots | **4% hit rate** (B-31) | the premise was false. The cache key had to be `(lot, question)` rather than `(lot, intent)` — `is that 1st edition?` and `is it shadowless?` are the same intent about the same lot with different correct answers — and keyed that tightly it hits on genuine repeats only |
+| **Turn off adaptive thinking** | **−520 ms** median, over-blocking **9.2% → 13.3%** (B-15) | costs four points of over-blocking to buy half a second, and half a second does not close a 1.2 s gap. What thinking buys is not safety but *citation precision*: with it off, the new over-blocks are `grade_on_raw_card`, `variant_not_on_copy`, `comp_not_quotable` — all cases where the model cited a fact that does not establish the sentence |
+| **A cheaper model** | Haiku 4.5 at **1963 ms** vs Sonnet at **1841 ms**, and **2.8× the cost** (D-17b) | the cheap model was the expensive one. Haiku's minimum cacheable prefix sits above this 2,229-token prompt, so it is ineligible for prompt caching and pays full list every call; Sonnet pays 10% of a larger list |
+
+**So the honest position is that the reply path misses its budget and every
+route out of it has been priced.** Two of the three cost more than they save and
+the third saves too little to matter. The remaining route is architectural —
+fewer or cheaper claims to verify, not a faster model — and it is not something
+to attempt in the last day of a build.
+
+**One framing that is true and worth stating.** The operator is not watching a
+spinner. A drafted reply arrives in a queue they are already scanning, and D-35
+splits the budget at the first readable token precisely because the seller's
+reading time starts before generation ends. That does not turn 2.7 s into a
+pass — it is why the two numbers are reported separately instead of summed.
+
 **Read the CPU row, not the wall row.** The wall p99 is ~16× the CPU p99 because
 this is a shared laptop; the CPU figure is the work the code actually does. The
 number moves between machines, which is why the doc check carries a tolerance
