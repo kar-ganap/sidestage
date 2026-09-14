@@ -8,3 +8,6 @@ __pycache__/
 *.db
 *.db-journal
 .DS_Store
+
+# Interview prep — deliberately not part of the submission.
+prep/
