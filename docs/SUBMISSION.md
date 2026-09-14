@@ -50,6 +50,8 @@ demo is the keyless one: I can tell you in advance what it will do.
 
 ## What is being claimed, and what is not
 
+*Full tables, populations and reproduce commands: [`RESULTS.md`](RESULTS.md).*
+
 This project's strongest property is that **numbers that did not survive
 measurement were removed rather than softened.** A reviewer should be able to
 find those faster than the successes, so they are listed first.
@@ -61,7 +63,7 @@ find those faster than the successes, so they are listed first.
 | *"the cascade beats the incumbent on a new platform"* | a wash — F1 79.4% vs 80.0% on eBay Live (B-21b) |
 | *"the incumbent is unstable"* | chi-square homogeneity over four segments, p = 0.130 — and the test was never licensed (min expected cell 4.56). Does not reject |
 | *"97.8% safe"* as a headline | unfalsifiable: a system that only ever says the safe fallback scores 100% on it |
-| *"verification is a 0.2 ms dict lookup"* | measured on one synthetic draft; it is 0.83 ms p95 CPU over the real corpus, ~4x what it was before the B-56 rewrite |
+| *"verification is a 0.2 ms dict lookup"* | measured on one synthetic draft; it is 1.0 ms p95 CPU over the real corpus, ~5x what it was before the B-56 rewrite |
 | Suite E's `10/10 correct` as validation | 216 of 2,500 threshold pairs also score 10/10 |
 | Suite C's `36/36` as robustness | 77% under realistic chat noise |
 
@@ -210,5 +212,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 105 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 107 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

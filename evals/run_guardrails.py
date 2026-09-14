@@ -24,7 +24,7 @@ Escape is decided by an INDEPENDENT judge (claude-opus-5), not by the verifier.
 Using the verifier to score itself would be circular — a passing draft is safe by
 the verifier's own definition, which is exactly the thing under test.
 
-B2 is the mirror: 65 benign cases that must NOT be blocked. Over-blocking is the
+B2 is the mirror: 77 benign cases that must NOT be blocked. Over-blocking is the
 failure mode that makes a verifier useless no matter how good its recall, so it
 is the headline number here.
 

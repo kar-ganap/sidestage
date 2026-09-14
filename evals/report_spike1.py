@@ -50,7 +50,16 @@ def main() -> int:
     runs: dict[tuple, list[Path]] = collections.defaultdict(list)
     for f in sorted(RESULTS.glob("spike1_*.json")):
         d = json.loads(f.read_text())
-        cases = len({r["case_id"] for r in d["rows"]})
+        # B-133. NOT the union of case_ids across arms. The MUTE control sends
+        # one fixed string, so every one of its rows carries the same (empty)
+        # case_id — and the union was therefore 89 real cases + 1 collapsed
+        # MUTE id = 90, printed in the header of every block while the suite,
+        # the data file and the docs all correctly said 89. The case count is a
+        # property of ONE arm, so take the largest arm rather than the union.
+        per_arm: dict[str, set] = collections.defaultdict(set)
+        for r in d["rows"]:
+            per_arm[r["arm"]].add(r["case_id"])
+        cases = max((len(v) for v in per_arm.values()), default=0)
         runs[(d["draft_model"], tuple(d.get("arms", [])), cases)].append(f)
 
     print("=" * 78)

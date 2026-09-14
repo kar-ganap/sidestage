@@ -25,6 +25,7 @@ changed when. A log is not a claim about the present.
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import re
 import subprocess
@@ -181,7 +182,15 @@ def _spike1_spread(model: str, arm: str, axis: str, which: str,
             # was missing the third, so the two-case smoke run B-113 names as
             # the hazard still polluted the checker — which then reported the
             # published range as stale and told a reader to write 0.0%.
-            cases = len({r["case_id"] for r in d["rows"]})
+            # B-133: count per ARM, not the union. The MUTE control sends one
+            # fixed string so all its rows share an empty case_id, and the
+            # union was 89 real cases + 1 collapsed MUTE id. Harmless against
+            # a `< 50` guard, but this comment claims to group the way
+            # `report_spike1` groups and it has to keep being true.
+            per_arm: dict[str, set] = collections.defaultdict(set)
+            for r in d["rows"]:
+                per_arm[r["arm"]].add(r["case_id"])
+            cases = max((len(v) for v in per_arm.values()), default=0)
             if (d["draft_model"] != model or tuple(d.get("arms", [])) != arms
                     or cases < 50):
                 continue
@@ -285,7 +294,8 @@ FACTS = [
           ("docs/PRD.md", r"Measured false: (\d\.\d) ms p95 of CPU"),
           ("docs/DECISIONS.md", r"`verify` at (\d\.\d) ms p95 of CPU"),
           ("app/precompute.py", r"verification costs (\d\.\d) ms p95 of CPU"),
-          ("docs/SUBMISSION.md", r"it is (\d\.\d+) ms p95 CPU over the real")],
+          ("docs/SUBMISSION.md", r"it is (\d\.\d+) ms p95 CPU over the real"),
+          ("docs/RESULTS.md", r"verify — CPU \(the work\)\*\* \| 1188 \| 0\.638 \| \*\*(\d\.\d+)\*\*")],
          tolerance=0.35),
     Fact("observed messages", _observed("n"),
          [("docs/PRD.md", r"pooled 69/(\d+)"),
@@ -314,11 +324,13 @@ FACTS = [
           ("docs/TDD.md", r"\| A1 \+ stage-1 gate \| 88\.9% \| 46\.2% \| (\d+\.\d)% \|")],
          tolerance=0.05),
     Fact("A1 precision, 189 two-platform", _triage("A1", "p", 189),
-         [("docs/TDD.md", r"A1 gate alone\s+P (\d+\.\d)%")], tolerance=0.05),
+         [("docs/TDD.md", r"A1 gate alone\s+P (\d+\.\d)%"),
+          ("docs/RESULTS.md", r"\| A1 \| `[█░]+` (\d+\.\d)%")], tolerance=0.05),
     Fact("A1 false positives, 189", _triage("A1", "fp", 189),
          [("README.md", r"the gate emits \*\*(\d+)\*\* false positives"),
           ("docs/SUBMISSION.md", r"gate emits\s*\n?\s*\*\*(\d+)\*\* false positives"),
-          ("docs/TDD.md", r"A1 gate alone\s+P 50\.0%\s+R 89\.2%\s+F1 64\.1%\s+(\d+) false")]),
+          ("docs/TDD.md", r"A1 gate alone\s+P 50\.0%\s+R 89\.2%\s+F1 64\.1%\s+(\d+) false"),
+          ("docs/RESULTS.md", r"\| A1 \|[^|]+\|[^|]+\| 64\.1% \| 33 \| (\d+) \|")]),
     Fact("A0 recall", _triage("A0", "r"),
          [("docs/TDD.md", r"question-mark regex \*\(the incumbent\)\* \| (\d+\.\d)%")],
          tolerance=0.05),
@@ -333,6 +345,15 @@ FACTS = [
     Fact("spike1 sonnet S0 safe, high", _spike1_spread("claude-sonnet-5", "S0", "safe", "hi"),
          [("docs/TDD.md", r"S0  bare model\s+49\.4% \[\d+\.\d% - (\d+\.\d)%\]")],
          tolerance=0.05),
+    # B-134. RESULTS.md restates every headline figure, so it is pinned the
+    # same way the others are. A results page that can drift is the next stale
+    # document by construction.
+    Fact("spike1 S0 safe high, RESULTS", _spike1_spread("claude-sonnet-5", "S0", "safe", "hi"),
+         [("docs/RESULTS.md", r"\| S0 \| `[█░]+` (\d+\.\d)%")], tolerance=0.05),
+    Fact("spike1 S1 safe low, RESULTS", _spike1_spread("claude-sonnet-5", "S1", "safe", "lo"),
+         [("docs/RESULTS.md", r"\| S1 \|[^|]+\| (\d+\.\d)–")], tolerance=0.05),
+    Fact("spike1 S2 safe low, RESULTS", _spike1_spread("claude-sonnet-5", "S2", "safe", "lo"),
+         [("docs/RESULTS.md", r"\| S2 \|[^|]+\| (\d+\.\d)–")], tolerance=0.05),
     Fact("decisions", _decisions,
          [("docs/TDD.md", r"`DECISIONS\.md` holds (\d+) decisions"),
           ("docs/SUBMISSION.md", r"\| (\d+) decisions, each with the alternative")]),
@@ -348,14 +369,18 @@ FACTS = [
           # kept saying 288. Pinning the count is not enough; every place it is
           # WRITTEN has to be pinned, which is what --audit exists to find.
           ("docs/SUBMISSION.md", r"replays (\d+) recorded"),
-          ("docs/TDD.md", r"\| (\d+) fixtures; the tape raises")]),
+          ("docs/TDD.md", r"\| (\d+) fixtures; the tape raises"),
+          ("docs/RESULTS.md", r"\| recorded fixtures \| \*\*(\d+)\*\*"),
+          ("docs/RESULTS.md", r"\| \*\*D\*\* unit \+ golden replay \|[^|]+\| (\d+) fixtures")]),
     # B-130. The mutant count is derived from the harness, so adding a rule
     # without a mutant for it cannot quietly leave the README claiming the old
     # number — which is how "41/41" would have outlived the 41.
     Fact("mutants", _mutants,
-         [("README.md", r"mutate\.py\s+# (\d+) mutants")]),
+         [("README.md", r"mutate\.py\s+# (\d+) mutants"),
+          ("docs/RESULTS.md", r"\| mutation \| \*\*(\d+) / \d+\*\* mutants killed")]),
     Fact("tests", _tests,
          [("README.md", r"uv run pytest\s+# (\d+) tests"),
+          ("docs/RESULTS.md", r"\| tests \| \*\*(\d+)\*\*"),
           ("docs/SUBMISSION.md", r"\*\*(\d+) tests\*\*, no credential")]),
 
 ]

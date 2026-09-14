@@ -2955,3 +2955,57 @@ clean pass), B-128 (a fixture miss indistinguishable from caution), and now a
 reply that was journalled correctly and shown nowhere. The pipeline was right
 every time. What was missing was the surface, and only using the product finds
 that.
+
+## B-133 · The report counted 90 cases in an 89-case suite
+
+**Found while gathering numbers for `RESULTS.md`,** by refusing to transcribe
+from memory. `report_spike1` printed *"90 cases"* in the header of every block,
+while the data file, the suite and every document correctly said **89**.
+
+**Cause.** The case count was the union of `case_id` across arms. Three arms have
+89 distinct ids each; the **MUTE control sends one fixed string every run**, so
+all 89 of its rows share the same (empty) id. Union = 89 real + 1 collapsed MUTE
+id = 90. The count is a property of ONE arm, so it now takes the largest arm
+rather than the union.
+
+**The same expression was in `check_docs.py`**, in a block whose comment says it
+groups *"the way `report_spike1` groups"*. Harmless there — it only feeds a
+`cases < 50` guard — but a comment claiming two things agree has to keep being
+true, so it was fixed alongside.
+
+**Two more numbers did not survive the same check.** `evals/run_guardrails.py`
+said B2 is *"65 benign cases"*; the file holds **77**, which is what the PRD
+says. And verification latency was stated as **0.9 ms** in four places and
+**0.83 ms** in a fifth, against a measured **1.016**. All five passed, because
+that fact carries `tolerance=0.35` — justified for a machine-dependent p95, but
+wide enough that two documents could disagree with each other *and* with the
+measurement while the check stayed green. Now all say 1.0, and the derived
+"~4× the pre-rewrite figure" became ~5×.
+
+**Lesson.** A tolerance is a statement that a number moves, not permission for
+documents to disagree. The check was doing its job; the docs had drifted inside
+its slack, and only recomputing from the recorded runs found it.
+
+---
+
+## B-134 · A results page is the next stale document unless it is pinned
+
+`docs/RESULTS.md` collects every measured figure in one place, which makes it
+the single most attractive document to let rot: it restates numbers that live in
+five other files, and nothing about being a summary makes it self-updating.
+
+So it is pinned like everything else — ten of its cells are now derived facts in
+`check_docs.py`, including the ablation bounds, the gate's precision and false
+positives, the latency p95, and the four scoreboard counts. Verified by
+rewriting two cells with wrong values and watching both report stale.
+
+The regexes match through the unicode bars in the tables (`` `█████░░░░░` 49.4% ``),
+which is deliberate: the bar is decoration and the number beside it is the
+claim, so the pattern anchors on the row label and reads the figure.
+
+**What this page is for.** Two audiences that turn out to want the same
+document: a reviewer who wants the evidence without reading four files, and me,
+under interview conditions, needing the population that goes with a number
+before quoting it. Both are served by the same rule — **no figure without its
+denominator** — which is stated at the top of the page and is the discipline
+this build log spent a hundred entries learning.

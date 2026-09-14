@@ -67,7 +67,7 @@ flowchart TD
     subgraph LOOP ["app/pipeline.py — the core loop"]
         R1["1 · resolve<br/>what is this about?"] --> R2["2 · assemble<br/><b>everything assertable,<br/>before a word is generated</b>"]
         R2 --> R3["3 · draft<br/>reply + claims citing fact ids"]
-        R3 --> R4["4 · verify<br/><b>each claim vs THE FACT IT CITED</b><br/><i>0.9 ms p95 CPU</i>"]
+        R3 --> R4["4 · verify<br/><b>each claim vs THE FACT IT CITED</b><br/><i>1.0 ms p95 CPU</i>"]
         R4 -->|"all violations repairable<br/>and no retry spent"| R5["5 · repair<br/>one bounded retry"] --> R3
         R4 --> R6["6 · settle"]
     end
@@ -136,7 +136,7 @@ sequenceDiagram
     M-->>P: reply + claims, each naming a fact id
     Note over P,V: no network call, the facts are already in hand
     P->>V: verify(draft, evidence)
-    V-->>P: verdict + violations, 0.9 ms p95 CPU
+    V-->>P: verdict + violations, 1.0 ms p95 CPU
     alt every violation repairable
         P->>M: one bounded retry with the feedback
     end
@@ -149,7 +149,7 @@ generate first, then go and check — and verification costs a round trip per cl
 and cannot sit on the critical path at all.
 
 **Because the fetch already happened, verification is a dict lookup.** Measured
-at **0.9 ms p95 of CPU** (`evals/bench.py`, over all 18 recorded drafts rather
+at **1.0 ms p95 of CPU** (`evals/bench.py`, over all 18 recorded drafts rather
 than one synthetic reply). That is not an optimisation detail — it is
 what makes verification affordable on the critical path at all, and it is what
 makes D-36's precomputation design safe (a cached draft can be re-verified
@@ -531,6 +531,10 @@ the regex misses and the regex catches **0** the gate misses, p = 3.05e-05.
 
 Five suites (D-26). A, B and the bench are built; C, D and E are specified with
 data ready.
+
+> **Every measured figure, with its population and its reproduce command, is
+> collected in [`RESULTS.md`](RESULTS.md)** — including the ablation tables, the
+> paired tests, the latency percentiles, and the claims that were withdrawn.
 
 | suite | what it proves | result |
 |---|---|---|

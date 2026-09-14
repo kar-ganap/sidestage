@@ -167,6 +167,7 @@ not earned (B-125, B-127).
 | [`docs/SUBMISSION.md`](docs/SUBMISSION.md) | **Start here.** The reviewer packet: ten-minute path, what is claimed and what was withdrawn, and the AI-use disclosure. |
 | [`docs/PRD.md`](docs/PRD.md) | What it is for, who it is for, and what it refuses to do. |
 | [`docs/TDD.md`](docs/TDD.md) | Architecture, the spikes, and the measured results. |
+| [`docs/RESULTS.md`](docs/RESULTS.md) | **Every number in one place** — both spikes, latency, the suites, and what did not survive measurement, each with its population and the command that reproduces it. |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every architectural decision, the alternative rejected, and why. |
 | [`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) | Every bug worth remembering, including two adversarial passes over the verifier that found 30 defects. |
 | [`docs/DOMAIN_PRIMER.md`](docs/DOMAIN_PRIMER.md) | How trading cards work, and what makes a claim about one verifiable. §7 is the verifier registry. |

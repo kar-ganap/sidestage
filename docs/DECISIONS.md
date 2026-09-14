@@ -714,7 +714,7 @@ how this goes wrong.
 | Draft → sendable (verified) | 3897 | **9954** | 9954 | p95 ≤ 3000 ms ❌ | operator review cadence |
 | — of which repaired | 7202 | 9954 | 9954 | — | fires 31% on these probes |
 
-**`verify` at 0.9 ms p95 of CPU is the one that matters.** *(Was 0.2 ms. The
+**`verify` at 1.0 ms p95 of CPU is the one that matters.** *(Was 0.2 ms. The
 coverage rewrite of B-56 — numeric canonicalisation, a lemma table, per-sentence
 scoping — costs roughly 4x what the string-matching version did. It buys the
 correctness that version did not have, and it is still sub-millisecond, which is
