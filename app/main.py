@@ -342,11 +342,51 @@ def research(lot_id: str) -> JSONResponse:
             "value": f.value if isinstance(f.value, dict) else str(f.value),
         })
 
+    # The seller's own commercial position, which is NOT in `Evidence` and
+    # should not be: evidence is what a reply may be grounded in, and none of
+    # this may ever be said to a buyer. But it is the first thing a seller wants
+    # when they research their own lot mid-show — "what is my floor, what did I
+    # pay, where is it in the queue" — and leaving it out made this an evidence
+    # dump rather than research.
+    #
+    # Safe by construction rather than by discipline: these are read straight
+    # off the catalog record and never minted as `Fact`s, so there is no fact id
+    # for a claim to cite and `assemble` cannot surface them to a draft. The
+    # separation is the same one D-12 draws for authority — a different question
+    # (what may I say?) from this one (what should I decide?).
+    commercial = {
+        "floor_price": lot.floor_price,
+        "cost_basis": lot.cost_basis,
+        "reserve": lot.reserve,
+        "starting_bid": lot.starting_bid,
+        "current_bid": lot.current_bid,
+        "price": lot.price,
+        "quantity": lot.quantity,
+        "position": lot.position,
+        "status": lot.status,
+    }
+    # Margin is derived here rather than stored, so it cannot go stale against a
+    # markdown the ledger applied. None when either side is unknown — a margin
+    # computed from a missing cost basis is a made-up number.
+    asking = lot.price if lot.price is not None else lot.current_bid
+    if lot.cost_basis is not None and asking is not None:
+        commercial["margin_abs"] = round(asking - lot.cost_basis, 2)
+        commercial["margin_pct"] = (round(100 * (asking - lot.cost_basis) / lot.cost_basis, 1)
+                                    if lot.cost_basis else None)
+        commercial["at_floor"] = (lot.floor_price is not None
+                                  and asking <= lot.floor_price)
+    else:
+        commercial["margin_abs"] = commercial["margin_pct"] = None
+        commercial["at_floor"] = None
+
     ms = (time.perf_counter() - t0) * 1000
     return JSONResponse({
         "lot": _lot(lot),
         "facts": groups,
         "fact_count": len(ev.facts),
+        # OPERATOR ONLY, all of it. Never minted as facts, so no draft can cite
+        # it; the console renders it behind a visible operator-only marker.
+        "commercial": commercial,
         # Reported, not asserted. A budget a route cannot show it meets is a
         # target, and this project does not publish targets as results.
         "latency_ms": round(ms, 3),

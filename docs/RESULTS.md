@@ -19,6 +19,12 @@ Numbers here are pinned by `tools/check_docs.py`, which reads the recorded run
 files and fails when a document drifts from them. Run it: `uv run python
 tools/check_docs.py`.
 
+**Prefer it rendered?** [`static/results.html`](../static/results.html) is the
+same results with charts, generated from `evals/results/*.json` by
+`tools/render_results.py` — served by the app at `/results.html`, and verified
+against the runs by the test suite. It also has no code fences, which some
+markdown previewers try to render as diagrams.
+
 ---
 
 ## What did not survive measurement
@@ -173,7 +179,7 @@ paths.
 | entity resolve | 966 | 3.893 | 35.042 | 66.388 |
 | triage stage 1 (gate) | 966 | 3.747 | 36.931 | 67.871 |
 | evidence assemble | 1200 | 0.096 | 0.129 | 2.657 |
-| **research route** (brief req 4) | 90 | 9.0 | 22.7 | 54.6 |
+| **research route** (brief req 4) | 90 | 9.3 | 30.2 | 47.5 |
 | **verify — CPU (the work)** | 1188 | 0.638 | **1.016** | 1.201 |
 | verify — wall (this machine) | 1188 | 0.668 | 5.695 | 19.556 |
 
@@ -190,7 +196,7 @@ reason "just call the model twice to check it" was rejected (D-09).
 
 **The research row is the same dividend, collected twice.** The brief asks for
 on-demand product research under **2 seconds**. `GET /api/research/{lot_id}`
-comes back at **p99 55 ms** — about 36× under budget — because it returns the
+comes back at **p99 48 ms** — about 42× under budget — because it returns the
 assembled *record* (identity, variant, grade, comps with their quotable flag,
 pop report, policy, and the operator-only reserve, each with its authority and
 as-of) rather than a generated paragraph. No model call, so nothing to stream
@@ -235,7 +241,7 @@ answer is unchanged — dropped it to **77%** (B-82).
 
 | | |
 |---|---|
-| tests | **346**, no credential needed |
+| tests | **351**, no credential needed |
 | mutation | **44 / 43** mutants killed |
 | pinned doc claims | **40**, zero stale |
 | recorded fixtures | **335** |

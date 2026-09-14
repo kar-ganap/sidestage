@@ -368,3 +368,35 @@ input[type=text]:focus-visible { outline: 2px solid var(--accent); outline-offse
 /* Only the one that changes behaviour gets a colour: an observational fact is
    the one the copilot will never assert (D-12). The rest are informational. */
 .auth.a-observational { border-color: var(--warn); color: var(--warn); }
+
+/* The seller's own position. Bordered in the warn colour because every value in
+   it is operator-only: the border IS the marker, so the distinction survives a
+   glance rather than needing the label to be read. */
+.comm {
+  margin: 2px 0 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--warn) 7%, transparent);
+}
+.comm-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--warn);
+  margin-bottom: 6px;
+}
+.comm-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+.comm-grid > div { display: flex; flex-direction: column; }
+.comm-grid span {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--ink-faint);
+}
+.comm-grid b { font-size: 13px; font-variant-numeric: tabular-nums; }
+.comm-grid .at-floor b { color: var(--warn); }

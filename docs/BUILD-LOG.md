@@ -3131,3 +3131,43 @@ level the brief asks for, and *implemented* one level short — tone as a prompt
 instruction, research as a config value. Documentation checks cannot catch that,
 because the doc and the code agree at the level either one states. Only reading
 the requirement against the implementation does.
+
+## B-137 · The research endpoint was an evidence dump until someone pushed on it
+
+**Asked directly: "have you stress tested it? is it bare-bones?"** The honest
+answers were no and yes, and the second is the useful one.
+
+**Stress, done properly.** All 15 lots: 0.8–9.1 ms, every one inside the 2,000 ms
+budget, thinnest 15 facts and widest 28 (the apparel lot, which carries more
+attributes). Under `SIDESTAGE_FAULTS=1`, with two marketplace rows unreadable,
+research answered **30 of 30** at p50 6.9 ms — because it reads the *catalog*,
+not the marketplace adapter. A marketplace outage cannot take it down, and that
+is a property of where the data lives rather than luck.
+
+**Bare-bones, and specifically so.** The payload returned the buyer-facing
+evidence — what may be *said* — and nothing about the seller's own position. But
+the first thing a seller researching their own lot wants is the commercial
+frame: what is my floor, what did I pay, what is the margin, where is it in the
+queue. None of it was there, because none of it is in `Evidence`, and `Evidence`
+was the only thing the route knew how to return.
+
+**So `commercial` was added**, and the interesting part is why it is safe.
+`floor_price` and `cost_basis` are read straight off the catalog record and
+**never minted as `Fact`s** — so no fact id exists for a claim to cite, and
+`assemble` cannot put them in front of the model under any intent.
+`test_the_commercial_position_can_never_be_cited_by_a_draft` asserts exactly
+that, looping over all 14 intents and failing if 96.0 is reachable through any
+fact's value or note. The operator-only border in the console is the second line
+of defence; un-mintability is the first.
+
+**Margin is derived at read time and `None` when the cost basis is unknown.**
+Stored margin goes stale against a markdown the ledger applied; a margin
+computed from a missing cost basis is a made-up number on the one panel a seller
+would price against. Auction lots therefore show `null`, not zero, and
+`at_floor` is `null` rather than `False` when it cannot know.
+
+**Lesson.** "Does it meet the spec" and "is it any good" are different
+questions, and the endpoint passed the first while failing the second. The spec
+said *product research under two seconds*; returning the evidence block met it
+literally, in 9 ms, and was still the wrong product. It took someone asking
+"is it bare-bones?" — a question no test in this repo asks — to find that.

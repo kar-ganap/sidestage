@@ -213,3 +213,55 @@ def test_research_flags_the_operator_only_reserve(client):
 
 def test_research_404s_on_an_unknown_lot(client):
     assert client.get("/api/research/not_a_lot").status_code == 404
+
+
+def test_research_returns_the_sellers_own_position(client):
+    """B-137. Research that returns only buyer-facing evidence is an evidence
+    dump. The first thing a seller wants about their own lot is the commercial
+    position — floor, cost, margin — and none of it is in `Evidence`."""
+    d = client.get("/api/research/lot_s01").json()
+    c = d["commercial"]
+    assert c["floor_price"] == 150.0
+    assert c["cost_basis"] == 96.0
+    assert c["price"] == 185.0
+    # Derived here rather than stored, so a markdown cannot leave it stale.
+    assert c["margin_abs"] == 89.0
+    assert c["margin_pct"] == 92.7
+    assert c["at_floor"] is False
+
+
+def test_margin_is_none_rather_than_invented_when_the_cost_is_unknown(client):
+    """An auction lot has no cost basis. A margin computed from a missing number
+    is a made-up number, and this is the panel a seller would price against."""
+    c = client.get("/api/research/lot_007").json()["commercial"]
+    assert c["cost_basis"] is None
+    assert c["margin_abs"] is None and c["margin_pct"] is None
+    assert c["at_floor"] is None, "at_floor must not claim False when it cannot know"
+
+
+def test_the_commercial_position_can_never_be_cited_by_a_draft(client):
+    """The safety property the whole section rests on, asserted rather than
+    assumed. Cost basis and floor price are read off the catalog record and are
+    never minted as `Fact`s — so no fact id exists for a claim to point at, and
+    `assemble` cannot put them in front of the model at all. The operator-only
+    marker in the console is the second line of defence; this is the first.
+    """
+    from app.evidence import assemble
+    from app.entities import get_resolver
+    from app.catalog import get_catalog
+    from app.models import Intent
+
+    cat = get_catalog()
+    lot = cat.lots["lot_s01"]
+    assert lot.cost_basis == 96.0 and lot.floor_price is not None
+
+    for intent in Intent:
+        ev = assemble(intent=intent, resolution=get_resolver().resolve(lot.title),
+                      catalog=cat, lot=lot)
+        for f in ev.facts:
+            blob = f"{f.value} {f.note}"
+            assert "96.0" not in blob and "96.00" not in blob, (
+                f"cost basis reachable as a fact under {intent.value}: {f.id} {f.note!r}")
+            if isinstance(f.value, dict):
+                assert "cost_basis" not in f.value, f"cost_basis minted under {intent.value}"
+                assert "floor_price" not in f.value, f"floor_price minted under {intent.value}"

@@ -36,6 +36,9 @@ boot, and the Reset button in the console puts it back for the next person.
 > Reset clears it for both. If the state looks strange, press Reset — or run it
 > locally, which is the deterministic path anyway.
 
+**<https://sidestage.fly.dev/results.html>** — the measured results, rendered, generated
+from the recorded runs.
+
 That instance runs against **live models**, so it generates fresh rather than replaying:
 the same question can land on a different verdict run to run, which is the honest
 behaviour of the system and is measured (B-21b: one input scored F1 75.0%–82.4% across
@@ -162,7 +165,7 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 346 tests, no credential needed
+uv run pytest                          # 351 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls
@@ -185,6 +188,7 @@ not earned (B-125, B-127).
 | [`docs/SUBMISSION.md`](docs/SUBMISSION.md) | **Start here.** The reviewer packet: ten-minute path, what is claimed and what was withdrawn, and the AI-use disclosure. |
 | [`docs/PRD.md`](docs/PRD.md) | What it is for, who it is for, and what it refuses to do. |
 | [`docs/TDD.md`](docs/TDD.md) | Architecture, the spikes, and the measured results. |
+| [`static/results.html`](static/results.html) | The same results **rendered** — bars, charts, no code fences. Served by the app at `/results.html`, generated from the recorded runs by `tools/render_results.py`, so it cannot drift from them. |
 | [`docs/RESULTS.md`](docs/RESULTS.md) | **Every number in one place** — both spikes, latency, the suites, and what did not survive measurement, each with its population and the command that reproduces it. |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every architectural decision, the alternative rejected, and why. |
 | [`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) | Every bug worth remembering, including two adversarial passes over the verifier that found 30 defects. |

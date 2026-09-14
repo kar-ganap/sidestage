@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideStage — Results</title>
+<style>
+:root {
+  --bg:#f7f8fa; --panel:#fff; --line:#dde1e7; --ink:#1a1d21; --ink-soft:#4a5158;
+  --ink-faint:#8b939c; --ok:#0f8a72; --warn:#b7791f; --slate:#8b939c;
+  --track:#e6e9ee; --neg:#b03a2e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0e1116; --panel:#151a21; --line:#262e39; --ink:#e6e9ee; --ink-soft:#b3bcc6;
+    --ink-faint:#79838e; --ok:#4db6a0; --warn:#d9a441; --slate:#79838e;
+    --track:#222a34; --neg:#e0705f;
+  }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink);
+  font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+.wrap { max-width:920px; margin:0 auto; padding-block:34px; padding-left:18px; padding-right:18px; }
+h1 { font-size:26px; margin:0 0 4px; letter-spacing:-.01em; }
+h2 { font-size:17px; margin:34px 0 10px; padding-top:16px; border-top:1px solid var(--line); }
+h3 { font-size:13.5px; margin:20px 0 8px; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.05em; }
+p { color:var(--ink-soft); margin:9px 0; }
+.lede { font-size:15px; }
+table { width:100%; border-collapse:collapse; margin:10px 0 4px; }
+td,th { padding:5px 8px; text-align:left; vertical-align:middle; }
+th { font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--ink-faint); font-weight:600; border-bottom:1px solid var(--line); }
+td.k { color:var(--ink); white-space:nowrap; }
+td.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+td.b { width:1%; }
+td.s { color:var(--ink-faint); font-size:12px; white-space:nowrap; }
+.sp { font-variant-numeric:tabular-nums; }
+.bar { display:block; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; margin:12px 0; }
+.chip { display:inline-block; font-variant-numeric:tabular-nums; font-size:12px;
+  padding:1px 7px; margin-right:5px; border-radius:11px; border:1px solid var(--line); }
+.chip.neg { color:var(--neg); border-color:var(--neg); }
+.chip.pos { color:var(--ok); border-color:var(--ok); }
+.chip.zero { color:var(--ink-faint); }
+.ok-chip { font-size:11px; color:var(--ok); border:1px solid var(--ok);
+  border-radius:11px; padding:1px 7px; }
+.verdict { border-left:3px solid var(--warn); padding:2px 0 2px 13px; margin:14px 0;
+  color:var(--ink); }
+code { font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:var(--track); padding:1px 5px; border-radius:4px; }
+.foot { margin-top:34px; padding-top:14px; border-top:1px solid var(--line);
+  font-size:12px; color:var(--ink-faint); }
+.scroll { overflow-x:auto; }
+</style></head><body><div class="wrap">
+
+<h1>SideStage — Results</h1>
+<p class="lede">Every measured figure, generated directly from the recorded runs in
+<code>evals/results/</code>. Nothing on this page was typed by hand, so it cannot
+drift from the runs it reports.</p>
+<p>Three rules, each one a bug this project actually had: <b>every number carries its
+population</b>; <b>a range beats a point</b> wherever a model is in the loop; and
+<b>what did not survive measurement is stated</b>, not quietly dropped.</p>
+
+<h2>1 · Does verification actually help?</h2>
+<p>Four arms over the same <b>89 adversarial cases</b>, same model
+(<code>claude-sonnet-5</code>), <b>3 runs</b>. Safety = the reply was blocked,
+or asserted nothing false. Responsiveness = it actually answered.</p>
+
+<h3>Safe</h3>
+<div class="scroll"><table><tr><td class="k">S0 · bare model</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="49.4 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="83.0" height="6" rx="3" fill="var(--warn)"/></svg></td><td class="n">49.4%</td><td class="s"><span class="sp">48.3–49.4</span></td></tr>
+<tr><td class="k">S1 · + evidence contract</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="96.6 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="162.3" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">96.6%</td><td class="s"><span class="sp">95.5–97.8</span></td></tr>
+<tr><td class="k">S2 · + verification</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="96.6 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="162.3" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">96.6%</td><td class="s"><span class="sp">95.5–97.8</span></td></tr>
+<tr><td class="k">MUTE · fixed safe string</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="100.0 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="168.0" height="6" rx="3" fill="var(--slate)"/></svg></td><td class="n">100.0%</td><td class="s"></td></tr></table></div>
+<h3>Responsive</h3>
+<div class="scroll"><table><tr><td class="k">S0 · bare model</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="93.3 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="156.7" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">93.3%</td><td class="s"><span class="sp">84.3–95.5</span></td></tr>
+<tr><td class="k">S1 · + evidence contract</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="97.8 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="164.2" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">97.8%</td><td class="s"><span class="sp">94.4–97.8</span></td></tr>
+<tr><td class="k">S2 · + verification</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="92.1 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="154.8" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">92.1%</td><td class="s"><span class="sp">87.6–92.1</span></td></tr>
+<tr><td class="k">MUTE · fixed safe string</td><td class="b"><svg class="bar" width="168" height="10" viewBox="0 0 168 10" role="img" aria-label="59.6 percent"><rect x="0" y="2" width="168" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="100.0" height="6" rx="3" fill="var(--slate)"/></svg></td><td class="n">59.6%</td><td class="s"><span class="sp">58.4–61.8</span></td></tr></table></div>
+
+<div class="card">
+  <h3 style="margin-top:0">S1 → S2, per run</h3>
+  <p style="margin:4px 0">safety <span class="chip zero">+0.0</span><span class="chip pos">+1.2</span><span class="chip neg">-1.1</span> &nbsp; — the sign is not stable</p>
+  <p style="margin:4px 0">responsiveness <span class="chip neg">-5.6</span><span class="chip neg">-5.6</span><span class="chip neg">-6.7</span> &nbsp; — consistently negative</p>
+  <p style="margin:10px 0 0">Paired exact McNemar over all runs:
+     <b>safety</b> b=2, c=2, p = 1.0000 ·
+     <b>responsiveness</b> b=19, c=3, p = 0.0009</p>
+</div>
+
+<div class="verdict"><b>Grounding is the whole effect.</b> S0 → S1 moves safety from
+~49% to ~97%. S1 → S2 is inside the noise on
+safety and costs ~6 points of responsiveness. The component stays for reasons argued in
+<code>docs/RESULTS.md</code> §1 — none of which is "the eval said so".</div>
+
+<p><b>MUTE is the control that makes the point.</b> A system answering everything with one
+fixed safe string is 100% safe and 59.6%
+responsive. Any safety number quoted without a responsiveness number beside it is
+achievable by saying nothing.</p>
+
+<h2>2 · Triage cascade</h2>
+<p>Same <b>189 held-out messages</b> from two platforms, gate threshold
+<code>0.23</code>, fit on 609 training rows never
+tested against.</p>
+<div class="scroll"><table>
+<tr><th>arm</th><th colspan="2">precision</th><th colspan="2">recall</th><th>F1</th><th>tp/fp/fn</th></tr>
+<tr><td class="k">A0 · regex baseline (incumbent-style)</td><td class="b"><svg class="bar" width="96" height="10" viewBox="0 0 96 10" role="img" aria-label="77.3 percent"><rect x="0" y="2" width="96" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="74.2" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">77.3%</td><td class="b"><svg class="bar" width="96" height="10" viewBox="0 0 96 10" role="img" aria-label="45.9 percent"><rect x="0" y="2" width="96" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="44.1" height="6" rx="3" fill="var(--warn)"/></svg></td><td class="n">45.9%</td><td class="n">57.6%</td><td class="s">17/5/20</td></tr>
+<tr><td class="k">A1 · logistic gate, 15 features</td><td class="b"><svg class="bar" width="96" height="10" viewBox="0 0 96 10" role="img" aria-label="50.0 percent"><rect x="0" y="2" width="96" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="48.0" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">50.0%</td><td class="b"><svg class="bar" width="96" height="10" viewBox="0 0 96 10" role="img" aria-label="89.2 percent"><rect x="0" y="2" width="96" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="85.6" height="6" rx="3" fill="var(--warn)"/></svg></td><td class="n">89.2%</td><td class="n">64.1%</td><td class="s">33/33/4</td></tr>
+<tr><td class="k">A2 · full cascade (gate → model)</td><td class="b"><svg class="bar" width="96" height="10" viewBox="0 0 96 10" role="img" aria-label="87.5 percent"><rect x="0" y="2" width="96" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="84.0" height="6" rx="3" fill="var(--ok)"/></svg></td><td class="n">87.5%</td><td class="b"><svg class="bar" width="96" height="10" viewBox="0 0 96 10" role="img" aria-label="75.7 percent"><rect x="0" y="2" width="96" height="6" rx="3" fill="var(--track)"/><rect x="0" y="2" width="72.6" height="6" rx="3" fill="var(--warn)"/></svg></td><td class="n">75.7%</td><td class="n">81.2%</td><td class="s">28/4/9</td></tr>
+</table></div>
+<p>A2 has a model in it, so it moves: precision
+<b>84.8–87.5%</b>, false positives
+<b>5–4</b>. A0 and A1 are deterministic.</p>
+<p><b>The gate's job is recall, not precision.</b> A1 at 50% precision
+looks bad alone; it is a filter feeding a model, and 33 false positives is
+the price of missing only 4. Stage 2 removes most of them.</p>
+<p><b>Populations differ and it matters.</b> On the 161-row single-platform segment A0
+recall is <b>40.7%</b>; pooled over all observed messages it is
+<b>53.6%</b>. Same arm, different denominators.</p>
+
+<h2>3 · Latency</h2>
+<p>Milliseconds. No model calls in any of these paths, which is why a reviewer can
+reproduce them on a clone with no credential.</p>
+<div class="scroll"><table>
+<tr><th>path</th><th>n</th><th>p50</th><th>p95</th><th>p99</th><th></th></tr>
+<tr><td class="k">entity resolve</td><td class="n">483</td><td class="n">3.646</td><td class="n">33.281</td><td class="n">61.402</td><td class="s"></td></tr>
+<tr><td class="k">triage stage 1 (gate)</td><td class="n">483</td><td class="n">3.358</td><td class="n">37.684</td><td class="n">64.260</td><td class="s"></td></tr>
+<tr><td class="k">evidence assemble</td><td class="n">600</td><td class="n">0.094</td><td class="n">0.212</td><td class="n">0.709</td><td class="s"></td></tr>
+<tr><td class="k"><b>research route (brief req 4)</b></td><td class="n">90</td><td class="n">9.342</td><td class="n">30.161</td><td class="n">47.524</td><td class="s"><span class="ok-chip">within 2 s</span></td></tr>
+<tr><td class="k"><b>verify — CPU (the work)</b></td><td class="n">594</td><td class="n">0.691</td><td class="n">1.143</td><td class="n">1.320</td><td class="s"></td></tr>
+<tr><td class="k">verify — wall (this machine)</td><td class="n">594</td><td class="n">0.722</td><td class="n">7.604</td><td class="n">18.177</td><td class="s"></td></tr>
+</table></div>
+<p><b>Read the CPU row, not the wall row</b> — the wall p99 is ~16× the CPU p99 because
+this is a shared laptop. And <b>research returns records, not prose</b>: the brief's
+sub-2-second target is met by not making the model call, not by making it faster. The path
+that <i>does</i> generate is p50 ~4,240 ms end to end on the adversarial suite.</p>
+
+<h2>What did not survive measurement</h2>
+<div class="card">
+<p style="margin-top:0"><b>“verification makes the system safer”</b> — not demonstrated; see §1.</p>
+<p><b>“the cascade beats the incumbent on a new platform”</b> — a wash, F1 79.4% vs 80.0%.</p>
+<p><b>“the incumbent is unstable”</b> — chi-square p = 0.130, and the test was never
+licensed (min expected cell 4.56 &lt; 5).</p>
+<p><b>“97.8% safe” as a headline</b> — unfalsifiable; the MUTE row scores 100%.</p>
+<p><b>“verification is a 0.2 ms dict lookup”</b> — measured on one synthetic draft; it is
+1.143 ms p95 CPU over the real corpus.</p>
+<p style="margin-bottom:0"><b>Suite E's 10/10, Suite C's 36/36</b> — 216 of 2,500 threshold
+pairs also score 10/10; C drops to 77% under realistic chat noise.</p>
+</div>
+
+<div class="foot">
+Generated by <code>tools/render_results.py</code> from <code>evals/results/*.json</code>.
+Regenerate with <code>uv run python tools/render_results.py</code>; CI-check with
+<code>--check</code>. Prose version, pinned by <code>tools/check_docs.py</code>:
+<code>docs/RESULTS.md</code>.
+</div>
+</div></body></html>

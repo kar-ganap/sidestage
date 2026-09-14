@@ -92,3 +92,37 @@ def test_the_replay_source_names_in_the_readme_exist(client):
     assert r.status_code == 200
     bad = client.post("/api/replay", json={"n": 1, "source": "../../../etc/passwd"})
     assert bad.status_code == 404 and "available" in bad.json()
+
+
+def test_the_generated_results_page_matches_the_recorded_runs():
+    """B-137. `static/results.html` is generated from `evals/results/*.json`, so
+    a committed copy that no longer matches them is a results page telling a
+    reviewer something the runs do not say.
+
+    This is the same guarantee `check_docs.py` gives the prose version, applied
+    to the one document that would otherwise be exempt because nothing in it was
+    typed by hand.
+    """
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent
+    r = subprocess.run(
+        [sys.executable, "tools/render_results.py", "--check"],
+        cwd=root, capture_output=True, text=True)
+    assert r.returncode == 0, (
+        f"static/results.html is stale — run "
+        f"`uv run python tools/render_results.py`\n{r.stdout}{r.stderr}")
+
+
+def test_the_results_page_is_actually_served(client):
+    """A results page the app does not serve is a file, not a link. It sits in
+    `static/` so `https://<host>/results.html` works for a reviewer who never
+    clones anything."""
+    r = client.get("/results.html")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    body = r.text
+    assert "SideStage — Results" in body
+    assert "<svg" in body, "the charts are inline SVG; no CDN, per D-07"

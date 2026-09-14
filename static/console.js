@@ -485,6 +485,47 @@ function Actions({ lots, busy, onAct }) {
  * withholding their own reserve from them would be absurd. `_operator_only` in
  * app/verify.py is what stops it reaching a buyer through a draft.
  */
+/* The seller's own position on this lot. OPERATOR ONLY, all of it.
+ *
+ * Kept out of `Evidence` deliberately and therefore un-citable: no fact id
+ * exists for a cost basis, so no claim can point at one and no draft can leak
+ * it. The visible marker is the second line of defence, not the first.
+ *
+ * Margin is null rather than zero when the cost basis is unknown. A margin
+ * computed from a missing number is a made-up number, and this panel is the one
+ * a seller would price against. */
+function Commercial({ c }) {
+  if (!c) return null;
+  const money = v => v == null ? "—" : "$" + Number(v).toLocaleString();
+  const cells = [
+    ["floor", money(c.floor_price)],
+    ["cost", money(c.cost_basis)],
+    ["reserve", money(c.reserve)],
+    c.price != null ? ["price", money(c.price)] : ["bid", money(c.current_bid)],
+    ["qty", c.quantity ?? "—"],
+  ];
+  return html`
+    <div class="comm">
+      <div class="comm-head">
+        your position <span class="ov">· operator only, never citable</span>
+      </div>
+      <div class="comm-grid">
+        ${cells.map(([k, v]) => html`
+          <div key=${k}><span>${k}</span><b>${v}</b></div>`)}
+        ${c.margin_abs != null && html`
+          <div key="margin" class=${c.at_floor ? "at-floor" : ""}>
+            <span>margin</span>
+            <b>${money(c.margin_abs)}${c.margin_pct != null
+                 ? ` · ${c.margin_pct}%` : ""}</b>
+          </div>`}
+      </div>
+      ${c.at_floor && html`<div class="hint" style="margin-top:4px">
+        at or below the floor — a markdown here is refused by
+        <code>FloorPriceViolation</code>.
+      </div>`}
+    </div>`;
+}
+
 function Research({ lotId, busy }) {
   const [data, setData] = useState(null);
   const [open, setOpen] = useState(false);
@@ -515,6 +556,7 @@ function Research({ lotId, busy }) {
           <b>${data.latency_ms} ms</b> against a ${data.budget_ms} ms budget ·
           ${data.within_budget ? "within" : "OVER"}
         </div>
+        <${Commercial} c=${data.commercial} />
         ${Object.entries(data.facts).sort().map(([kind, fs]) => html`
           <div class="rfact" key=${kind}>
             <div class="rkind">${kind}</div>

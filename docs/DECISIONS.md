@@ -614,7 +614,7 @@ policy, and the operator-only reserve, each carrying its authority and as-of. No
 call, nothing generated, therefore nothing to stream and nothing to verify.
 
 That is D-09 paying a second dividend. Evidence is assembled before generation anyway, so
-handing it back directly costs **p50 9 ms, p99 55 ms against a 2 s budget**
+handing it back directly costs **p50 9 ms, p99 48 ms against a 2 s budget**
 (`evals/bench.py`, `--paths free`) — roughly two orders under. The brief's sub-2-second
 research target is met by not making the expensive call, not by making it faster.
 
