@@ -2912,3 +2912,46 @@ served by `_safe_draft` is not being demonstrated at all (B-129).
 a tool for pinning claims that only understood numbers. The fix is not more
 proofreading — it is making the behavioural claims executable, so the doc and
 the tape fail together.
+
+## B-132 · The seller's replies never appeared in the chat
+
+**Found by being asked.** "Are the replies of the seller supposed to show up in
+the chat? Right now I don't see it." They were not, and they should.
+
+`Session.send` journals a `send_reply` entry to the ledger and sets
+`card.status = "sent"`. It never touches `self.log`, which is the buyer-side
+stream the left column renders. Measured: 30 log entries before the send and 30
+after, with the reply present only in the ledger. So the chat showed every
+question and none of the answers — **for a copilot whose entire job is replying
+in a live chat, the reply was invisible in the one place it means anything.**
+
+**Where the fix went, and why not the obvious place.** The tempting change is an
+`author` field on `LoggedMessage` and a second copy of the reply appended to the
+log. Two reasons not to:
+
+- `LoggedMessage` means *one buyer message and what triage decided about it* —
+  `route`, `score`, `reasons`, `intent`, `escalated`. A seller reply has none of
+  those. Giving it sentinel values puts an untyped hole in the one structure the
+  left column exists to explain.
+- A second copy can drift. The ledger is the record that something went to a
+  buyer; a chat rendering its own copy could show a reply the ledger does not
+  record, or the reverse.
+
+So the console renders sent replies **from the ledger**, which makes that
+divergence impossible by construction. Placement is by `card_id` rather than by
+timestamp — `at` has second resolution and would tie — so each reply sits under
+the message that prompted it. A card can be several buyers asking the same thing
+(`count` > 1), so it anchors after the LAST message feeding that card.
+
+**What pins it.** `test_a_sent_reply_reaches_the_chat` asserts the invariant the
+rendering rests on: a `send_reply` entry carries a `card_id` and some logged
+message carries the same one. Verified to bite by dropping `card_id` from the
+entry and watching it fail. Without it, the replies stop appearing and every
+other test stays green, because nothing else reads that pairing.
+
+**Lesson.** This is the third time in two days that the gap was between a thing
+working and a thing being *visible* — B-98 (a degraded reply rendering as a
+clean pass), B-128 (a fixture miss indistinguishable from caution), and now a
+reply that was journalled correctly and shown nowhere. The pipeline was right
+every time. What was missing was the surface, and only using the product finds
+that.

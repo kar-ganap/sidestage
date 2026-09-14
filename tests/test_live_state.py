@@ -113,3 +113,47 @@ def test_the_nudge_reaches_the_console(client):
     state = client.get("/api/state").json()
     assert state["nudge"]["moment"] == "hot"
     assert state["lot"]["current_bid"] == 1175.0
+
+
+def test_a_sent_reply_reaches_the_chat(client):
+    """B-132. The operator sends a reply and it appeared nowhere in the chat.
+
+    `send` journals to the ledger and sets `card.status`; it never touched
+    `log`, which is the buyer-side stream. So the left column showed the
+    question and never the answer — for a copilot whose whole job is replying in
+    a live chat, the reply was invisible in the only place it means anything.
+
+    The console now renders sent replies from the LEDGER rather than from a
+    second copy in the log, so the chat and the ledger cannot disagree about
+    what went to a buyer. That rendering depends on one backend invariant, which
+    is what this pins: a `send_reply` entry carries a `card_id`, and some
+    message in the log carries the same one. Drop either and the replies
+    silently stop appearing — with every other test still green, because
+    nothing else reads that pairing.
+
+    `LoggedMessage` is deliberately NOT given an `author` field: it means one
+    buyer message and what triage decided about it, and a seller reply has no
+    route, no score and no intent. That would be an untyped hole in the one
+    structure the left column exists to explain.
+    """
+    client.post("/api/replay", json={"n": 30, "offset": 0})
+    queue = client.get("/api/state").json()["queue"]
+    assert queue, "replaying the transcript must surface something to reply to"
+
+    card_id = queue[0]["id"]
+    client.post(f"/api/cards/{card_id}/draft")
+    sent = client.post(f"/api/cards/{card_id}/send").json()
+    assert sent["text"].strip(), "a journalled reply must say what went out"
+
+    state = client.get("/api/state").json()
+    entries = [e for e in state["ledger"] if e.get("action") == "send_reply"]
+    assert entries, "the send must be journalled"
+    entry = entries[-1]
+
+    assert entry.get("card_id"), (
+        "a send_reply entry with no card_id cannot be placed in the chat")
+    anchors = [m for m in state["log"] if m.get("card_id") == entry["card_id"]]
+    assert anchors, (
+        f"no logged message carries card_id {entry['card_id']!r}, so the reply "
+        f"has nothing to sit under and the chat cannot show it")
+    assert entry["verdict"], "the chat shows the verdict beside a sent reply"

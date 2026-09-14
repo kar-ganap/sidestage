@@ -175,26 +175,71 @@ function Reason({ text }) {
   return html`<span class=${cls}>${text}</span>`;
 }
 
-function ChatLog({ log }) {
+/* The chat, both directions.
+ *
+ * The seller's sent replies are rendered from the LEDGER rather than from a
+ * second copy kept in the log. The ledger is the record that something went to
+ * a buyer (`send_reply`, with the verdict and whether the operator overrode a
+ * block), so sourcing the chat from it means the two can never disagree about
+ * what was said — a chat showing a reply the ledger does not record, or the
+ * reverse, is the kind of divergence this project spends its time removing.
+ *
+ * `LoggedMessage` stays what it is: one BUYER message and what triage decided
+ * about it. Giving it an `author` field would have meant a route, a score and
+ * an intent on a message triage never saw — an untyped hole in the one
+ * structure the left column exists to explain.
+ */
+function ChatLog({ log, ledger }) {
+  const sent = new Map();
+  for (const e of ledger || []) {
+    if (e.action !== "send_reply" || !e.card_id) continue;
+    if (!sent.has(e.card_id)) sent.set(e.card_id, []);
+    sent.get(e.card_id).push(e);
+  }
+  // A card can be several buyers asking the same thing (`count` > 1), so the
+  // reply is anchored after the LAST message that fed it, not the first.
+  const lastForCard = new Map();
+  log.forEach((m, i) => { if (m.card_id) lastForCard.set(m.card_id, i); });
+
+  const rows = [];
+  log.forEach((m, i) => {
+    rows.push(html`
+      <div class=${"msg " + (m.surfaced ? "surfaced" : "dropped")} key=${"m" + m.seq}>
+        <div class="t">${m.text}</div>
+        <div class="why">
+          <span>${m.score.toFixed(2)}</span>
+          ${m.reasons.map(r => html`<${Reason} text=${r} />`)}
+          ${m.escalated && html`<span>· model</span>`}
+        </div>
+      </div>`);
+    if (m.card_id && lastForCard.get(m.card_id) === i) {
+      for (const e of sent.get(m.card_id) || []) {
+        rows.push(html`
+          <div class="msg out" key=${"s" + e.id}>
+            <div class="t">${e.text}</div>
+            <div class="why">
+              <span>sent</span>
+              <span>· ${e.verdict}</span>
+              ${e.overridden && html`<span class="ov">· operator override</span>`}
+            </div>
+          </div>`);
+      }
+    }
+  });
+
+  const nSent = [...sent.values()].reduce((n, a) => n + a.length, 0);
   return html`
     <div class="col">
-      <h2>Chat <em>${log.length} messages · dropped shown with reasons</em></h2>
+      <h2>Chat <em>${log.length} in${nSent ? ` · ${nSent} sent` : ""} · dropped shown with reasons</em></h2>
       <div class="scroll">
         ${log.length === 0 && html`<div class="empty">
           Nothing yet. Replay the recorded show, or type a message below the queue.
         </div>`}
-        ${log.map(m => html`
-          <div class=${"msg " + (m.surfaced ? "surfaced" : "dropped")} key=${m.seq}>
-            <div class="t">${m.text}</div>
-            <div class="why">
-              <span>${m.score.toFixed(2)}</span>
-              ${m.reasons.map(r => html`<${Reason} text=${r} />`)}
-              ${m.escalated && html`<span>· model</span>`}
-            </div>
-          </div>`)}
+        ${rows}
       </div>
     </div>`;
 }
+
 
 /* ---------------------------------------------------------------- queue */
 
@@ -546,7 +591,7 @@ function App() {
                  busy=${busy} onBid=${bid} onExtend=${extend} onPickLot=${pickLot}
                  onReplay=${replay} onReset=${reset} />
       <div class="cols">
-        <${ChatLog} log=${st.log} />
+        <${ChatLog} log=${st.log} ledger=${st.ledger} />
         <${Queue} queue=${st.queue} activeId=${activeId} onPick=${setActive} onSay=${say} />
         <${Draft} card=${card} busy=${drafting} judged=${judged} onDraft=${doDraft}
                   onSend=${doSend} onDismiss=${doDismiss} ledger=${st.ledger}

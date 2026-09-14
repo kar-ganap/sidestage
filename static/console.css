@@ -324,3 +324,16 @@ input[type=text]:focus-visible { outline: 2px solid var(--accent); outline-offse
   border-radius: 5px;
 }
 .lotpick:disabled { opacity: .55; }
+
+/* The seller's own reply, in the buyer's stream.
+   Indented and tinted so the direction reads at a glance without a label on
+   every line — the operator is scanning a live chat, not reading a transcript.
+   It carries its verdict because a reply sent over a block is exactly the row
+   you want to find again later. */
+.msg.out {
+  margin-left: 22px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+}
+.msg.out .t { font-weight: 500; }
+.msg.out .why span { opacity: .85; }
