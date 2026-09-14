@@ -2790,3 +2790,85 @@ fixed.
 fallback is designed to be indistinguishable from success — which is what makes
 it a good fallback — something has to assert the fallback did NOT happen, and
 that assertion has to name the real thing it counts.
+
+## B-129 · The 22 curated demo cases were unreachable from the demo
+
+**Found by trying the first line of `docs/SUBMISSION.md`.** It opens by telling
+a reviewer to ask the console *"is that 1st edition?"* about the Champion's Path
+Charizard. Typed into the console, keyless, it returned *"Let me check that and
+come back to you."* — and so did every other curated case. All 22.
+
+**Why, and it is B-26's lesson at a third level.** `record_drafts` records the
+DEMO list by calling `draft_reply` with a **hand-specified** `Intent`, so it
+never invokes `classify`. `record_triage` records classifications, but only for
+messages drawn from the two transcripts. The DEMO strings are in neither, so no
+triage fixture existed for them. Type one in and triage misses, returns
+`unknown` (its documented miss behaviour, D-13), the evidence block is assembled
+under `unknown`, and the DRAFT key no longer matches the one recorded under
+`ATTRIBUTE_Q`. **Both halves miss.** The recorder meanwhile reported all 22
+recorded, because on its own path they were.
+
+So the cases chosen as *"the outcomes worth showing"* — every blocking case
+included — were reachable from the recorder and from no other path in the
+system.
+
+**Fix.** `record_demo_through_session` drives the real `Session`, recording
+classify and draft under the keys the console produces, and the coverage test
+from B-128 now covers the DEMO list too. One case, *"what have armored mewtwos
+been selling for?"*, is **not** reachable: the gate passes it at 0.963 and stage
+2 drops it as not seller-directed. That is the cascade working, and the recorder
+now says so out loud instead of silently recording something no one can reach.
+
+**And the doc was wrong in a second way.** The DEMO list had a section header
+reading *"must BLOCK: the demo is worthless without them"* directly above three
+cases, and a comment ten lines below it explaining that those three do **not**
+block — the model denies each false premise correctly, which is the right
+outcome. `MUST_BLOCK` names three different strings. The stale header is where
+SUBMISSION's *"the model says yes; the verifier blocks it"* came from. Both are
+corrected: SUBMISSION now shows the blocking case (`mis_citation` on a grade
+hypothetical) **and** the passing one, because blocking is the minority outcome
+and claiming otherwise oversells the system.
+
+**Lesson.** "Recorded" is a property of a path, not of a case. Every one of
+these three bugs — B-26, B-128, this — is the same sentence: the fixture was
+recorded through a path nobody walks.
+
+---
+
+## B-130 · The rule blocked the answer its own message prescribes — twice
+
+**Found while picking a demo case.** *"what do raw base set zards go for?"*
+blocked with `comp_not_quotable`, whose message reads *"Say we do not have
+enough recent sales rather than giving a number."* The reply said exactly that:
+*"Not enough recent sales in the last 90 days to give you a solid range."*
+
+**B-24 already fixed this once.** It added the exemption — a claim asserting
+absence is supported by the fact recording the absence — guarded by
+`not _numbers(claim.quote)`, so a decline carrying a number stayed a violation.
+The guard is what fired: the quote's only number is **90**, the comp window,
+which the fact itself names.
+
+**And the same function already knew better.** Two branches down sits B-52's
+lesson in a comment: *a comp's sample size and its window are numbers in the
+same sentence and are not prices* — fixed there with `_money`. One branch
+learned it; the neighbour did not.
+
+**`_money` is not the fix, and that is the trap.** A bare price is not
+money-shaped: `_money("these go for 890")` is `[]`. Swapping it in reopens
+precisely the hole `_numbers` was guarding.
+
+**Fix.** `_foreign_numbers` takes the licence from the fact, as everything else
+in this file does: a decline may name **why** it cannot quote — sample size,
+window, threshold — and nothing else. Deliberately NOT `low`/`high`/`median`,
+which a non-quotable comp still carries: exempting every number *in the fact*
+would license *"not enough sales, but they ran $1,150–$1,310"* against the fact
+that forbids it. Three tests, one per direction, including that one.
+
+**Consequence worth stating.** This removed the only `MUST_BLOCK` case that had
+a fixture on the tape's block-guard path, so `test_the_tape_contains_at_least_one_block`
+went red — correctly. It is green again on a genuine block
+(`mis_citation`), not on the false positive it had been resting on.
+
+**Lesson.** A guard written as "no numbers at all" is a guard that has not
+decided what it is protecting. Both times, the rule's own violation message
+described the reply it rejected.

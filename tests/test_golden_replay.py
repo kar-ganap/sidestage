@@ -202,6 +202,29 @@ def _console_cards_without_a_fixture() -> list[tuple[str, str, str, str]]:
 
     data = Path(__file__).parent.parent / "evals" / "data"
     out = []
+
+    # B-129. The curated DEMO cases are reached the same way — by typing them —
+    # so they need the same check. `record_drafts` records them with a
+    # HAND-SPECIFIED intent and never calls `classify`, so triage missed, said
+    # `unknown`, and the draft assembled under `unknown` hashed to a key no
+    # fixture had. All 22 curated cases were unreachable from the product they
+    # were curated for, while the recorder reported them all recorded.
+    from evals.record_fixtures import DEMO
+
+    for msg, _intent, lot_id in DEMO:
+        client = ReplayClient(strict=False)
+        sess = Session(client=client)
+        if lot_id:
+            sess.set_active_lot(lot_id)
+        sess.ingest(msg)
+        cards = [c for c in sess.cards.values() if c.text == msg]
+        if not cards:
+            continue          # the gate dropped it; the console cannot show it
+        client.misses.clear()
+        sess.draft(cards[0].id)
+        if client.misses:
+            out.append(("DEMO", str(cards[0].intent), msg, client.misses[0]))
+
     for name in ("triage_test", "triage_show2"):
         p = data / f"{name}.jsonl"
         if not p.exists():

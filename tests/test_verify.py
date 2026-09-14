@@ -1114,3 +1114,51 @@ def test_semicolon_and_colon_also_end_a_clause():
     for punct in (";", ":"):
         d, e = _variant_case(f"This is 1st Edition{punct} no doubt about it.")
         assert "variant_not_printed" in codes(run(d, e)), punct
+
+
+# --- B-130: a decline blocked by the window it was told to cite --------------
+
+
+def _unquotable_comp(fid: str = "f1") -> Fact:
+    """The shape `assemble` mints for a comp with too small a sample. It still
+    carries `low`/`high`/`median` — the figures being WITHHELD — which is what
+    makes the exemption below narrow rather than "numbers in the fact"."""
+    return fact(fid, ClaimType.COMP, {
+        "n": 3, "low": 1150.0, "high": 1310.0, "median": 1275.0,
+        "window_days": 90, "quotable": False,
+        "reason": "only 3 sales in 90d; need 5 to quote a range", "phrase": ""})
+
+
+def test_a_decline_may_name_the_window_it_is_declining_over():
+    """B-130. Found by running the demo: the model declined correctly, citing
+    the non-quotable comp, and was blocked — because its quote said "the last
+    90 days" and the B-24 exemption required NO number at all. The violation
+    message prescribes this exact answer, so the rule made its own instruction
+    unsendable for the second time.
+    """
+    e = ev(_unquotable_comp())
+    q = ("Not enough recent sales in the last 90 days to give you a solid "
+         "range on raw Base Set Charizards right now")
+    d = draft(q + ".", claim(ClaimType.COMP, "insufficient sample, cannot quote", "f1", q))
+    assert "comp_not_quotable" not in codes(run(d, e))
+
+
+def test_a_decline_may_not_smuggle_a_bare_price():
+    """The hole B-24's `_numbers` was guarding, and the reason `_money` is not
+    the fix: a bare price is not money-shaped, so `_money("go for 890")` is
+    empty. 890 is in neither the reason nor the sample size, so it stays a
+    violation."""
+    e = ev(_unquotable_comp())
+    q = "Not enough recent sales to quote a range, but these go for 890"
+    d = draft(q + ".", claim(ClaimType.COMP, "insufficient sample", "f1", q))
+    assert "comp_not_quotable" in codes(run(d, e))
+
+
+def test_a_decline_may_not_quote_the_range_it_is_withholding():
+    """The narrowness that matters. A non-quotable comp still carries `low`,
+    `high` and `median`; exempting every number IN THE FACT would license
+    exactly the figures the rule exists to withhold."""
+    e = ev(_unquotable_comp())
+    q = "Not enough recent sales to quote, though they ran $1,150 to $1,310"
+    d = draft(q + ".", claim(ClaimType.COMP, "insufficient sample", "f1", q))
+    assert "comp_not_quotable" in codes(run(d, e))

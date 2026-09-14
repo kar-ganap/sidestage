@@ -47,6 +47,16 @@ def _build_log() -> int:
     return len(re.findall(r"^## B-", (ROOT / "docs/BUILD-LOG.md").read_text(), re.M))
 
 
+def _mutants() -> int:
+    """Counted from the harness, not from a note about it."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "_mut", ROOT / "tools" / "mutate.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return len(mod.MUTANTS)
+
+
 def _fixtures() -> int:
     return len(list((ROOT / "fixtures").glob("*.json")))
 
@@ -339,6 +349,11 @@ FACTS = [
           # WRITTEN has to be pinned, which is what --audit exists to find.
           ("docs/SUBMISSION.md", r"replays (\d+) recorded"),
           ("docs/TDD.md", r"\| (\d+) fixtures; the tape raises")]),
+    # B-130. The mutant count is derived from the harness, so adding a rule
+    # without a mutant for it cannot quietly leave the README claiming the old
+    # number — which is how "41/41" would have outlived the 41.
+    Fact("mutants", _mutants,
+         [("README.md", r"mutate\.py\s+# (\d+) mutants")]),
     Fact("tests", _tests,
          [("README.md", r"uv run pytest\s+# (\d+) tests"),
           ("docs/SUBMISSION.md", r"\*\*(\d+) tests\*\*, no credential")]),

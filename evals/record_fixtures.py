@@ -104,7 +104,13 @@ DEMO: list[tuple[str, Intent, str | None]] = [
     ("is that zard graded", Intent.GRADE_CONDITION_Q, "lot_006"),
     ("hows the centering on that zard", Intent.GRADE_CONDITION_Q, "lot_006"),
     ("is the back clean on the charizard", Intent.GRADE_CONDITION_Q, "lot_006"),
-    # --- must BLOCK: the demo is worthless without them ------------------
+    # --- false premises the model DENIES correctly (they pass) -----------
+    #
+    # The header here used to read "must BLOCK: the demo is worthless without
+    # them", contradicting the note 10 lines below saying these three do not
+    # block and never did. `MUST_BLOCK` names three OTHER strings. A stale
+    # header is how `docs/SUBMISSION.md` came to open by telling a reviewer
+    # that the first of these blocks (B-129).
     ("is the champions path zard 1st edition", Intent.ATTRIBUTE_Q, "lot_007"),
     ("whats the pop on the celebrations mew", Intent.PRICE_VALUE_Q, "lot_s02"),
     ("how many blastoise do you have left, loads right?", Intent.AVAILABILITY_Q, "lot_002"),
@@ -301,6 +307,46 @@ def record_console_drafts(client, d: Path, force: bool) -> tuple[int, int]:
     return made, getattr(client, "recorded", made)
 
 
+def record_demo_through_session(client, d: Path, force: bool) -> tuple[int, int]:
+    """Record the curated DEMO cases the way the CONSOLE reaches them.
+
+    B-129, and the same lesson as B-26 at a third level. `record_drafts` above
+    calls the pipeline with a HAND-SPECIFIED intent, so it never invokes
+    `classify` — the triage fixture for these strings was never recorded, and
+    `record_triage` only walks the two transcripts. Type one of these into the
+    console and triage misses, returns `unknown` (its documented miss
+    behaviour), and the evidence block assembled under `unknown` hashes to a
+    different key than the draft recorded under `ATTRIBUTE_Q`. Both halves miss,
+    and the reviewer gets the safe refusal.
+
+    So all 22 curated cases — every MUST_BLOCK case included, and the one
+    `docs/SUBMISSION.md` opens with — were unreachable from the product they
+    were curated for, while `record_drafts` reported them all recorded.
+
+    Driving the real `Session` records classify AND draft under the keys the
+    console will actually produce. The tuple's `lot_id` becomes the active lot,
+    because that is the case's documented context.
+    """
+    from app.session import Session
+
+    client = client if force else _FillMissing(d)
+    made = missed = 0
+    for msg, _intent, lot_id in DEMO:
+        sess = Session(client=client)
+        if lot_id:
+            sess.set_active_lot(lot_id)
+        sess.ingest(msg)
+        cards = [c for c in sess.cards.values() if c.text == msg]
+        if not cards:
+            # The gate dropped it, so the console cannot show it either.
+            print(f"      !! not surfaced, unreachable in the console: {msg[:44]!r}")
+            missed += 1
+            continue
+        sess.draft(cards[0].id)
+        made += 1
+    return made, getattr(client, "recorded", made)
+
+
 def verify_stability() -> bool:
     """Does the same request hash the same way twice? (B-25)
 
@@ -367,6 +413,10 @@ def main() -> int:
         print("\n   drafts for every card the console's replay produces")
         m, rec = record_console_drafts(client, d, a.force)
         print(f"      {m} cards drafted, {rec} needed a live call")
+
+        print("\n   the curated demo cases, through the console's own path")
+        m, rec = record_demo_through_session(client, d, a.force)
+        print(f"      {m}/{len(DEMO)} reachable, {rec} needed a live call")
 
     after = len(list(d.glob("*.json")))
     size = sum(f.stat().st_size for f in d.glob("*.json"))

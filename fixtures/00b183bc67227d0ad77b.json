@@ -1,0 +1,35 @@
+{
+  "key": "00b183bc67227d0ad77b",
+  "latency_ms": 4011,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "This Base Set Charizard is live now",
+        "source_fact_id": "f4",
+        "type": "availability",
+        "value": "live"
+      },
+      {
+        "quote": "at $890",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "890.00"
+      },
+      {
+        "quote": "up next at position 7 we have the Charizard VMAX Champion's Path PSA 10",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "queued, position 7"
+      },
+      {
+        "quote": "opening at $400",
+        "source_fact_id": "f6",
+        "type": "bid",
+        "value": "400.00"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "This Base Set Charizard is live now at $890, and up next at position 7 we have the Charizard VMAX Champion's Path PSA 10 opening at $400."
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "key": "111fe323e468f7c0ef43",
+  "latency_ms": 6018,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "011/025",
+        "source_fact_id": "f1",
+        "type": "identity",
+        "value": "011/025"
+      },
+      {
+        "quote": "Mew ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f5",
+        "type": "identity",
+        "value": "Mew ex FireRed & LeafGreen PSA 9"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "Quick check - do you mean the Celebrations holo Mew 011/025 or the Mew ex FireRed & LeafGreen PSA 9?"
+  }
+}

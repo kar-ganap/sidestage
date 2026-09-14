@@ -1,0 +1,23 @@
+{
+  "key": "853ef8601b05447c92a2",
+  "latency_ms": 6613,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "Celebrations 011/025 raw NM",
+        "source_fact_id": "f5",
+        "type": "availability",
+        "value": "Mew Celebrations 011/025 raw NM, 3 available"
+      },
+      {
+        "quote": "Mew ex FireRed & LeafGreen PSA 9",
+        "source_fact_id": "f7",
+        "type": "availability",
+        "value": "Mew ex FireRed & LeafGreen PSA 9, 1 available"
+      }
+    ],
+    "needs_clarification": true,
+    "reply_text": "We have two Mew cards in the shop, the Celebrations 011/025 raw NM and the Mew ex FireRed & LeafGreen PSA 9 \u2014 which one did you mean?"
+  }
+}

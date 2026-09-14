@@ -1,0 +1,23 @@
+{
+  "key": "d346abc000205a599ecd",
+  "latency_ms": 8673,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "last 5 sold $305\u2013$370, past 90d",
+        "source_fact_id": "f7",
+        "type": "comp",
+        "value": "last 5 sold $305\u2013$370, past 90d"
+      },
+      {
+        "quote": "PSA reports pop 2,967 with 0 graded higher as of 2026-09-01",
+        "source_fact_id": "f8",
+        "type": "pop",
+        "value": "pop 2,967, 0 higher (read 2026-09-01)"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "I can't tell you if it's a good investment, but for reference, last 5 sold $305\u2013$370, past 90d, and PSA reports pop 2,967 with 0 graded higher as of 2026-09-01."
+  }
+}

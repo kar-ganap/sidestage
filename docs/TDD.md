@@ -538,7 +538,7 @@ data ready.
 | **B1** adversarial guardrails | nothing unsafe reaches the buyer | 96.6% safe against **49.4%** for a bare model (ablated, §4) |
 | **B2** false-positive control | the verifier is calibrated, not paranoid | 9.1% over-blocked; **7.9-point responsiveness cost, p = 0.016** |
 | **C** grounding & abstention | asks "which Mew?" exactly when it should | 36/36 curated; **77% under chat noise, and every loss is a silence, not a wrong card** |
-| **D** unit + golden replay | deterministic, CI-safe, no key | 294 fixtures; the tape raises on prompt drift |
+| **D** unit + golden replay | deterministic, CI-safe, no key | 335 fixtures; the tape raises on prompt drift |
 | **E** moment detection | hot/stalled/normal on 10 real labelled lots | 10/10 — **and so do 215 other threshold pairs** |
 
 **Train on synthetic, test on real**, with `triage_test.jsonl` never fit or tuned

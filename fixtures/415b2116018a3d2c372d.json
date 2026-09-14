@@ -1,0 +1,29 @@
+{
+  "key": "415b2116018a3d2c372d",
+  "latency_ms": 4374,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "recent sales have run $305\u2013$370 (last 5 sold, past 90d)",
+        "source_fact_id": "f3",
+        "type": "comp",
+        "value": "last 5 sold $305\u2013$370, past 90d"
+      },
+      {
+        "quote": "current bid is $330",
+        "source_fact_id": "f2",
+        "type": "bid",
+        "value": "330.00"
+      },
+      {
+        "quote": "PSA pop is 2,967 with 0 higher as of 2026-09-01",
+        "source_fact_id": "f4",
+        "type": "pop",
+        "value": "2967 pop, 0 higher, as of 2026-09-01"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "Can't say if it's a good investment, but recent sales have run $305\u2013$370 (last 5 sold, past 90d), current bid is $330, and PSA pop is 2,967 with 0 higher as of 2026-09-01."
+  }
+}

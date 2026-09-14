@@ -1,0 +1,23 @@
+{
+  "key": "05d82d9f07643c431bed",
+  "latency_ms": 3681,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "It's raw and listed as NM, not graded",
+        "source_fact_id": "f2",
+        "type": "grade",
+        "value": "raw, condition NM"
+      },
+      {
+        "quote": "centering and surface would need the host to check on camera",
+        "source_fact_id": "f3",
+        "type": "condition",
+        "value": "centering_raw, surface_scratches"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "It's raw and listed as NM, not graded, so I can't call a PSA grade - centering and surface would need the host to check on camera."
+  }
+}

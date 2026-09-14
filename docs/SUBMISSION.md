@@ -16,13 +16,23 @@ with no API key.
 uv sync && uv run uvicorn app.main:app --reload     # → http://127.0.0.1:8000
 ```
 
-No credential needed — with `ANTHROPIC_API_KEY` unset it replays 294 recorded
+No credential needed — with `ANTHROPIC_API_KEY` unset it replays 335 recorded
 fixtures and the whole workflow still works, deterministically.
 
-1. **The demo case.** Ask the console *"is that 1st edition?"* about the
-   Champion's Path Charizard. The model says yes; the verifier blocks it,
-   because the set catalog records that no English card in that set was ever
-   printed with a 1st Edition stamp. Domain logic, not a tone filter.
+1. **The demo case**, both halves of it. Put the **Champion's Path Charizard**
+   up with the lot selector in the header — the evidence block is built around
+   the active lot, so it decides what the answer is about.
+   - Ask *"what would the vmax do if it were a psa 9?"* The model answers the
+     hypothetical with the PSA 10 comps, and the verifier **blocks** it:
+     `mis_citation — f5 is a pop fact, a grade claim must cite a grade fact`.
+     The claim cited the wrong *kind* of record, which the per-type registry
+     catches by construction rather than by recognising the wording. The
+     operator sees the fallback; the draft never reaches the buyer.
+   - Ask *"is the champions path zard 1st edition"* for the other half. The
+     model denies the false premise correctly and cites the set catalog, and it
+     **passes**. Blocking is the minority outcome by design — B1 answers safely
+     far more often than it blocks — and a copilot that only ever blocked would
+     be useless. Domain logic, not a tone filter.
 2. **The workflow**, five calls, all keyless — README §*Exercise the core
    workflow*. Replay real recorded chat, see what was dropped **and why**,
    draft, write with a read-back, drive an auction into a nudge.
@@ -98,7 +108,7 @@ superlatives and an enumerated list of commitment verbs, so its recall is the
 size of that list; every adversarial finding in this project landed there, and
 `_coverage`'s docstring states the bound.
 
-**Focused tests and evals.** **330 tests**, no credential. Five eval suites, each
+**Focused tests and evals.** **333 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.
@@ -193,5 +203,5 @@ was mine.
 | [`PRD.md`](PRD.md) | who it is for, what it refuses to do, the metrics |
 | [`TDD.md`](TDD.md) | architecture, the spikes, the measured results |
 | [`DECISIONS.md`](DECISIONS.md) | 44 decisions, each with the alternative rejected |
-| [`BUILD-LOG.md`](BUILD-LOG.md) | 101 entries. Every bug worth remembering |
+| [`BUILD-LOG.md`](BUILD-LOG.md) | 103 entries. Every bug worth remembering |
 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | how trading cards work; §7 is the verifier spec |

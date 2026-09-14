@@ -127,6 +127,15 @@ MUTANTS: dict[str, object] = {
     "near_quote_whole":   lambda: setattr(V, "_near_quote",
                                           lambda r, q, lookahead=1: r),
     "asserts_absence_true": lambda: setattr(V, "_asserts_absence", lambda c: True),
+    # B-130's two failure directions, one mutant each. `_none` is the
+    # over-permissive one — every decline exempt, so a price smuggled into a
+    # denial passes. `_all` is the over-strict one B-24 and B-130 both hit:
+    # any number at all, including the window the fact itself names, blocks the
+    # reply the rule's own message prescribes.
+    "foreign_numbers_none": lambda: setattr(
+        V, "_foreign_numbers", lambda q, f: set()),
+    "foreign_numbers_all": lambda: setattr(
+        V, "_foreign_numbers", lambda q, f: set(V._numbers(q))),
     "is_deferral_true":   lambda: setattr(V, "_is_deferral", lambda q: True),
     # per-type rules, reduced to their kind guard
     **{f"{k.value}_kindonly": (lambda kk=k: V.REGISTRY.__setitem__(kk, _kind_only(kk)))

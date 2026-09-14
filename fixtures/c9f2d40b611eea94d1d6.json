@@ -1,0 +1,17 @@
+{
+  "key": "c9f2d40b611eea94d1d6",
+  "latency_ms": 3329,
+  "model": "claude-sonnet-5",
+  "output": {
+    "claims": [
+      {
+        "quote": "last 5 sold $305\u2013$370, past 90d",
+        "source_fact_id": "f3",
+        "type": "comp",
+        "value": "last 5 sold $305\u2013$370, past 90d"
+      }
+    ],
+    "needs_clarification": false,
+    "reply_text": "We've got 5 recent sales on record, not 8 - last 5 sold $305\u2013$370, past 90d."
+  }
+}

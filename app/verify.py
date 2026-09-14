@@ -338,6 +338,43 @@ def _variant(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     return [_miscite(claim, fact, "a variant claim needs a record or catalog fact")]
 
 
+def _foreign_numbers(quote: str, fact: Fact) -> set[float]:
+    """Numbers in a decline that the fact declining does NOT account for.
+
+    B-130. `_comp`'s absence exemption (B-24) required the decline to contain no
+    number at all, so the system's own prescribed answer — *"not enough recent
+    sales in the last 90 days"* — blocked on the window it was told to cite.
+    The same function already carries B-52's lesson two branches down: a comp's
+    sample size and its window are numbers in the same sentence and are not
+    prices. One branch learned it and the neighbour did not.
+
+    `_money` is NOT the fix, and this is the trap: a bare price is not
+    money-shaped, so `_money("these go for 890")` is empty and swapping it in
+    would reopen exactly the hole B-24's `_numbers` was guarding.
+
+    So the licence comes from the fact, as everywhere else in this file: a
+    decline may name **why** it cannot quote — the sample size, the window, the
+    threshold — and nothing else. Deliberately NOT `low`/`high`/`median`, which
+    a non-quotable comp still carries: those are the very figures being withheld,
+    and exempting them would let *"not enough sales, but they ran $1,150-$1,310"*
+    pass on the fact that forbids it.
+
+    The exemption is bounded because `reason` is not free text: `app/catalog.py`
+    mints exactly three of them, and each carries only a count, a window in days
+    and a threshold. No price can reach this set through prose.
+    """
+    said = set(_numbers(quote))
+    if not said:
+        return set()
+    own = set(_numbers(fact.value.get("reason", "") if isinstance(fact.value, dict) else ""))
+    if isinstance(fact.value, dict):
+        for k in ("n", "window_days"):
+            v = fact.value.get(k)
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                own.add(float(v))
+    return said - own
+
+
 def _comp(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     """Never a bare number. Primer §5.
 
@@ -349,8 +386,10 @@ def _comp(claim: Claim, fact: Fact, ctx: VerifyContext) -> list[Violation]:
     if not fact.value.get("quotable"):
         # The message below prescribes declining. A reply that declines is
         # therefore correct, and blocking it made the instruction impossible to
-        # follow (B-24). A *number* alongside the denial is still a violation.
-        if _asserts_absence(claim) and not _numbers(claim.quote):
+        # follow (B-24). A number the FACT does not account for is still a
+        # violation — B-130 narrowed this from "any number", which blocked the
+        # prescribed answer whenever it named the window.
+        if _asserts_absence(claim) and not _foreign_numbers(claim.quote, fact):
             return []
         return [Violation(
             code="comp_not_quotable", severity=Severity.UNREPAIRABLE,

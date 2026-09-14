@@ -21,7 +21,7 @@ uv run uvicorn app.main:app --reload       # → http://127.0.0.1:8000
 ```
 
 **No credential is required.** With `ANTHROPIC_API_KEY` unset the app runs in replay mode
-against 294 recorded fixtures and the full workflow still works, deterministically. Set a
+against 335 recorded fixtures and the full workflow still works, deterministically. Set a
 key in `.env` (copy `.env.example`) to run against live models. `GET /healthz` reports
 which mode you are in, the models, and the latency budgets — never the key.
 
@@ -122,12 +122,21 @@ show**: on this suite verification adds no detectable safety over grounding alon
 ## Test and evaluate
 
 ```bash
-uv run pytest                          # 330 tests, no credential needed
+uv run pytest                          # 333 tests, no credential needed
 uv run python -m evals.run_guardrails  # Suite B: adversarial + benign
 uv run python -m evals.run_triage      # Suite A: the cascade ablation
 uv run python -m evals.bench --paths free   # latency, no model calls
 uv run python tools/check_buildlog.py  # every B-NN cited in code is written up
+uv run python tools/check_docs.py      # every pinned number, against the code
+uv run python tools/mutate.py          # 43 mutants: delete a rule, see if a test notices
 ```
+
+`tools/mutate.py` is the answer to *"how do you know the tests are any good?"* —
+it deletes one rule from `app/verify.py` at a time and re-runs the suite. A
+mutant that SURVIVES means no test constrains that rule. It also reports
+`unverified` — the suite is green and the probe could not confirm the mutant
+bit — because a harness that cannot say "I don't know" reports a score it has
+not earned (B-125, B-127).
 
 ## Documentation
 
@@ -155,7 +164,7 @@ app/
   main.py        FastAPI: REST, static console
 data/            seeded catalog, set records, comps, policies (modeled)
 static/          the operator console — no build step (DECISIONS.md D-07)
-fixtures/        294 recorded LLM responses for replay mode
+fixtures/        335 recorded LLM responses for replay mode
 evals/           the suites; `run_spike1.py` is the Spike 1 ablation
 ```
 

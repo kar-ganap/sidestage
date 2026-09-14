@@ -306,3 +306,21 @@ input[type=text]:focus-visible { outline: 2px solid var(--accent); outline-offse
   border-radius: 3px;
   background: var(--line);
 }
+
+/* The active-lot selector. Sits in the header beside the lot line, because the
+   active lot is what the evidence block is built around — changing it changes
+   every answer, so it belongs where the lot is named, not in a settings pane.
+   Themed through the same tokens as the panels so it reads as part of the bar
+   rather than as a browser default dropped on top of it. */
+.lotpick {
+  margin-left: 10px;
+  max-width: 260px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-soft, inherit);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.lotpick:disabled { opacity: .55; }

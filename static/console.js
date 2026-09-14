@@ -110,7 +110,30 @@ function Auction({ lot, busy, onBid, onExtend }) {
     </div>`;
 }
 
-function Header({ stats, lot, nudge, busy, onReplay, onReset, onBid, onExtend }) {
+/* Which lot is on screen.
+ *
+ * Not cosmetic: `assemble` builds the evidence block around the ACTIVE lot, so
+ * the same question against a different lot is a different set of facts and a
+ * different answer. The curated demo cases each have a lot they are about — ask
+ * "is that 1st edition?" with the Base Set Charizard up and you are asking
+ * about a different card than the doc means. Without this control the operator
+ * could drive the auction but never change what the copilot was looking at.
+ */
+function LotPicker({ lots, lotId, busy, onPick }) {
+  if (!lots || !lots.length) return null;
+  return html`
+    <select class="lotpick" disabled=${busy} value=${lotId || ""}
+            onChange=${e => onPick(e.target.value)}
+            title="the active lot — the evidence block is built around it">
+      ${lots.map(l => html`
+        <option key=${l.id} value=${l.id} selected=${l.id === lotId}>
+          ${l.status === "live" ? "● " : ""}${l.title.slice(0, 42)}
+        </option>`)}
+    </select>`;
+}
+
+function Header({ stats, lot, lots, nudge, busy, onReplay, onReset,
+                  onBid, onExtend, onPickLot }) {
   return html`
     <header>
       <div class="brand">Side<span>Stage</span></div>
@@ -123,6 +146,8 @@ function Header({ stats, lot, nudge, busy, onReplay, onReset, onBid, onExtend })
               : lot.price != null ? `$${lot.price}` : "—"}
           </span>
         </div>`}
+      <${LotPicker} lots=${lots} lotId=${lot && lot.id} busy=${busy}
+                    onPick=${onPickLot} />
       <${Nudge} nudge=${nudge} />
       <${Auction} lot=${lot} busy=${busy} onBid=${onBid} onExtend=${onExtend} />
       <div class="spacer"></div>
@@ -486,6 +511,12 @@ function App() {
       await refresh();
     } finally { setBusy(false); }
   };
+  const pickLot = async (id) => {
+    if (!id) return;
+    setBusy(true);
+    try { await api(`/api/lot/${id}`, {}); await refresh(); }
+    finally { setBusy(false); }
+  };
   const extend = async () => {
     if (!st.lot) return;
     setBusy(true);
@@ -511,8 +542,8 @@ function App() {
 
   return html`
     <div class="shell">
-      <${Header} stats=${st.stats} lot=${st.lot} nudge=${st.nudge} busy=${busy}
-                 onBid=${bid} onExtend=${extend}
+      <${Header} stats=${st.stats} lot=${st.lot} lots=${st.lots} nudge=${st.nudge}
+                 busy=${busy} onBid=${bid} onExtend=${extend} onPickLot=${pickLot}
                  onReplay=${replay} onReset=${reset} />
       <div class="cols">
         <${ChatLog} log=${st.log} />
