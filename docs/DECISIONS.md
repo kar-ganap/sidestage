@@ -804,10 +804,22 @@ the wire while claims are still decoding.
 counted. The gap between them is time the operator spends reading rather than waiting, and
 reporting only the second number charges that time twice.
 
-**What this does not license.** It is a truer metric, not a pass. Time-to-sendable is still
-2.4 s and the route below it is precomputation, not a cheaper model — B-15 measured what
-happens when you buy latency out of the model's reasoning budget: over-blocking rose from
-9.2% to 13.3% while safety stayed flat.
+**What this does not license, and the numbers are worse than this entry used to say.**
+It is a truer metric, not a pass. **Neither budget is met.** Measured `--paths all`
+(`evals/results/bench_live.json`, sonnet-5, adaptive thinking): time to first readable
+token is **2.7 s** p50 against a 1500 ms target, and time-to-sendable is **3.7 s** p50
+against 3000 ms. The repair round is the tail — it fired on 3 of 12 and those three ran
+11.6 s p50.
+
+This entry previously said *"time-to-sendable is still 2.4 s"*, and it had drifted to
+3.7 s with nothing able to notice: `bench.json` persisted only the paths that need no
+credential, which are exactly the paths that meet their budgets. **Every latency figure a
+checker could read was one that passed.** B-138 persists the model paths too, and
+`check_docs.py` now pins both of these.
+
+The route below it is precomputation, not a cheaper model — B-15 measured what happens
+when you buy latency out of the model's reasoning budget: over-blocking rose from 9.2% to
+13.3% while safety stayed flat.
 
 ---
 

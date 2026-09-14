@@ -121,12 +121,12 @@ recall is <b>40.7%</b>; pooled over all observed messages it is
 reproduce them on a clone with no credential.</p>
 <div class="scroll"><table>
 <tr><th>path</th><th>n</th><th>p50</th><th>p95</th><th>p99</th><th></th></tr>
-<tr><td class="k">entity resolve</td><td class="n">483</td><td class="n">3.646</td><td class="n">33.281</td><td class="n">61.402</td><td class="s"></td></tr>
-<tr><td class="k">triage stage 1 (gate)</td><td class="n">483</td><td class="n">3.358</td><td class="n">37.684</td><td class="n">64.260</td><td class="s"></td></tr>
-<tr><td class="k">evidence assemble</td><td class="n">600</td><td class="n">0.094</td><td class="n">0.212</td><td class="n">0.709</td><td class="s"></td></tr>
-<tr><td class="k"><b>research route (brief req 4)</b></td><td class="n">90</td><td class="n">9.342</td><td class="n">30.161</td><td class="n">47.524</td><td class="s"><span class="ok-chip">within 2 s</span></td></tr>
-<tr><td class="k"><b>verify — CPU (the work)</b></td><td class="n">594</td><td class="n">0.691</td><td class="n">1.143</td><td class="n">1.320</td><td class="s"></td></tr>
-<tr><td class="k">verify — wall (this machine)</td><td class="n">594</td><td class="n">0.722</td><td class="n">7.604</td><td class="n">18.177</td><td class="s"></td></tr>
+<tr><td class="k">entity resolve</td><td class="n">483</td><td class="n">3.442</td><td class="n">34.624</td><td class="n">48.715</td><td class="s"></td></tr>
+<tr><td class="k">triage stage 1 (gate)</td><td class="n">483</td><td class="n">3.781</td><td class="n">42.192</td><td class="n">91.717</td><td class="s"></td></tr>
+<tr><td class="k">evidence assemble</td><td class="n">600</td><td class="n">0.098</td><td class="n">0.252</td><td class="n">5.452</td><td class="s"></td></tr>
+<tr><td class="k"><b>research route (brief req 4)</b></td><td class="n">90</td><td class="n">9.318</td><td class="n">37.980</td><td class="n">49.289</td><td class="s"><span class="ok-chip">within 2 s</span></td></tr>
+<tr><td class="k"><b>verify — CPU (the work)</b></td><td class="n">594</td><td class="n">0.715</td><td class="n">1.185</td><td class="n">1.268</td><td class="s"></td></tr>
+<tr><td class="k">verify — wall (this machine)</td><td class="n">594</td><td class="n">0.729</td><td class="n">9.549</td><td class="n">16.902</td><td class="s"></td></tr>
 </table></div>
 <p><b>Read the CPU row, not the wall row</b> — the wall p99 is ~16× the CPU p99 because
 this is a shared laptop. And <b>research returns records, not prose</b>: the brief's
@@ -141,7 +141,7 @@ that <i>does</i> generate is p50 ~4,240 ms end to end on the adversarial suite.<
 licensed (min expected cell 4.56 &lt; 5).</p>
 <p><b>“97.8% safe” as a headline</b> — unfalsifiable; the MUTE row scores 100%.</p>
 <p><b>“verification is a 0.2 ms dict lookup”</b> — measured on one synthetic draft; it is
-1.143 ms p95 CPU over the real corpus.</p>
+1.185 ms p95 CPU over the real corpus.</p>
 <p style="margin-bottom:0"><b>Suite E's 10/10, Suite C's 36/36</b> — 216 of 2,500 threshold
 pairs also score 10/10; C drops to 77% under realistic chat noise.</p>
 </div>

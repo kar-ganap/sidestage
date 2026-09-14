@@ -227,6 +227,27 @@ def _chi_p() -> float:
         [(4, 10), (11, 27), (22, 32), (6, 10)]).p, 3)
 
 
+def _bench_live(path: str, stat: str) -> Callable[[], object]:
+    """A percentile from the MODEL-path bench (`--paths all`).
+
+    B-138. Kept separate from `_bench` because this file needs a credential to
+    regenerate, so a reviewer cloning cold cannot produce it. Absence therefore
+    returns `None`, which the checker treats as "cannot verify" rather than
+    "stale" — but a file that IS present must agree with the docs. The asymmetry
+    is deliberate: the point is to stop a number that misses its budget from
+    drifting quietly, not to make a cold clone fail.
+    """
+    def go() -> object:
+        f = ROOT / "evals/results/bench_live.json"
+        if not f.exists():
+            return None
+        d = json.loads(f.read_text())
+        if path not in d:
+            return None
+        return round(d[path][stat] / 1000, 1)      # seconds, one decimal
+    return go
+
+
 def _bench(path: str, stat: str) -> Callable[[], float]:
     """A latency percentile from the recorded bench run."""
     def go() -> float:
@@ -300,6 +321,17 @@ FACTS = [
           ("docs/SUBMISSION.md", r"it is (\d\.\d+) ms p95 CPU over the real"),
           ("docs/RESULTS.md", r"verify — CPU \(the work\)\*\* \| 1188 \| 0\.638 \| \*\*(\d\.\d+)\*\*")],
          tolerance=0.35),
+    # B-138. The three paths that MISS their budget, pinned in seconds. Until
+    # now only the passing paths were persisted, so every latency figure a
+    # checker could read was one that met its target.
+    Fact("draft to first token, seconds", _bench_live("draft: to first token", "p50"),
+         [("docs/DECISIONS.md", r"time to first readable\s+token is \*\*([\d.]+) s\*\* p50"),
+          ("docs/RESULTS.md", r"draft . to first token \| \*\*([\d.]+) s\*\*")],
+         tolerance=1.0),
+    Fact("draft to sendable, seconds", _bench_live("draft: to sendable", "p50"),
+         [("docs/DECISIONS.md", r"time-to-sendable is \*\*([\d.]+) s\*\* p50"),
+          ("docs/RESULTS.md", r"draft . to sendable \| \*\*([\d.]+) s\*\*")],
+         tolerance=1.0),
     Fact("observed messages", _observed("n"),
          [("docs/PRD.md", r"pooled 69/(\d+)"),
           ("app/triage.py", r"across (\d+) observed messages"),
@@ -445,11 +477,23 @@ def main() -> int:
                          "someone look at what moved.")
     a = ap.parse_args()
     problems, checked, unmatched, fixed = [], 0, [], 0
+    unverifiable: list[str] = []
     for fact in FACTS:
         try:
             truth = fact.truth()
         except Exception as exc:                     # noqa: BLE001
             problems.append(f"  CANNOT DERIVE  {fact.name}: {exc}")
+            continue
+        # B-138. `None` means the source is absent rather than wrong — the
+        # model-path bench needs a credential, so a reviewer cloning cold
+        # cannot regenerate it. That is "cannot verify", a third outcome
+        # alongside ok and stale, and it must not fail the run or crash it.
+        # Reported rather than silent: a check that skips quietly is a check
+        # that can be disabled by deleting a file.
+        if truth is None:
+            unverifiable.append(
+                f"  not verifiable  {fact.name} — its source file is absent "
+                f"(regenerate: uv run python -m evals.bench --paths all)")
             continue
         for rel, pattern in fact.claims:
             p = ROOT / rel
@@ -500,8 +544,11 @@ def main() -> int:
 
     for line in problems + unmatched:
         print(line)
+    for line in unverifiable:
+        print(line)
     print(f"\n  {checked} claims checked · {len(problems)} stale · "
           f"{len(unmatched)} not found"
+          + (f" · {len(unverifiable)} not verifiable here" if unverifiable else "")
           + (f" · {fixed} counts updated" if fixed else ""))
     # B-107. `unmatched` used to be a warning and the exit code ignored it, so
     # a reworded sentence silently stopped being checked — and the docstring

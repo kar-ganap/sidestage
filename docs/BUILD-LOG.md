@@ -3171,3 +3171,55 @@ questions, and the endpoint passed the first while failing the second. The spec
 said *product research under two seconds*; returning the evidence block met it
 literally, in 9 ms, and was still the wrong product. It took someone asking
 "is it bare-bones?" — a question no test in this repo asks — to find that.
+
+## B-138 · Only the latency numbers that passed were ever persisted
+
+**Found by being asked "do we meet the latency spec?"** — a question the repo
+could answer for half its paths and had quietly stopped answering for the other
+half.
+
+**The mechanism.** `evals/bench.py` writes `bench.json` for `--paths free` and
+prints the model paths to stdout. So the six paths needing no credential are
+persisted and pinned by `check_docs.py`; the three that call a model are printed
+and thrown away. **Those three are exactly the three that miss their budget.**
+
+| path | measured p50 | budget | |
+|---|---|---|---|
+| research route | 9.9 ms | 2,000 ms | met, ~200x under |
+| triage stage 1 | 4.6 ms | 50 ms | met |
+| triage stage 2 | 1.9 s | 600 ms | **over** |
+| draft, to first token | 2.7 s | 1,500 ms | **over** |
+| draft, to sendable | 3.7 s | 3,000 ms | **over** |
+
+**Every latency figure a checker could read was one that passed.** Not by
+design — the free paths are persisted because they are reproducible on a cold
+clone — but the effect is one-directional and it bit: D-35 said *"time-to-sendable
+is still 2.4 s"* and it had drifted to **3.7 s** with nothing able to notice.
+
+**Fix.** `_save_live` persists the model paths to `bench_live.json` with the
+model id, thinking mode and timestamp beside them, because a latency figure
+without the model that produced it is not a measurement. `check_docs.py` pins
+both draft figures in seconds.
+
+**The absent-source case needed a third outcome.** `bench_live.json` needs a
+credential to regenerate, so a reviewer cloning cold cannot produce it. The
+first version returned `None` and the checker crashed with a `TypeError` on
+`float(None)` — a doc checker that dies on a clean clone is worse than one that
+skips. There are now three outcomes rather than two: ok, stale, and **not
+verifiable here**, the last printed by name and exiting 0. Reported rather than
+silent, because a check that skips quietly is a check anyone can disable by
+deleting a file.
+
+**The answer to the question, stated plainly.** The brief's sub-2-second target
+is **met for research and missed for replies.** Research returns records and
+lands at p50 9.9 ms. A drafted reply needs a model: 2.7 s to first readable
+token, 3.7 s to sendable, and the repair round is the tail — it fired on 3 of 12
+and those three ran 11.6 s p50. Both figures are now in `RESULTS.md`, adjacent,
+because quoting the research number as though it covered drafting is the
+population error that page's opening rule exists to prevent.
+
+**Lesson.** A measurement that is expensive to reproduce is a measurement that
+stops being reproduced, and then stops being true. The split here was between
+"free to verify" and "costs a credential", and it accidentally sorted the
+results into "pinned" and "unpinned" along exactly the same line as "passes" and
+"fails".

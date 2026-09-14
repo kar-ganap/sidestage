@@ -1,0 +1,32 @@
+{
+ "_meta": {
+  "at": "2026-09-14T04:46:58+00:00",
+  "draft_model": "claude-sonnet-5",
+  "triage_model": "claude-sonnet-5",
+  "thinking": "adaptive"
+ },
+ "triage stage 2 (escalated)": {
+  "n": 8,
+  "p50": 1866.845,
+  "p95": 2225.326,
+  "p99": 2225.326
+ },
+ "draft: to first token": {
+  "n": 12,
+  "p50": 2682.0,
+  "p95": 5185.0,
+  "p99": 5185.0
+ },
+ "draft: to sendable": {
+  "n": 12,
+  "p50": 3719.0,
+  "p95": 14628.0,
+  "p99": 14628.0
+ },
+ "draft: to sendable (repaired only)": {
+  "n": 3,
+  "p50": 11642.0,
+  "p95": 14628.0,
+  "p99": 14628.0
+ }
+}

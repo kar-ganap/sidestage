@@ -183,6 +183,30 @@ paths.
 | **verify — CPU (the work)** | 1188 | 0.638 | **1.016** | 1.201 |
 | verify — wall (this machine) | 1188 | 0.668 | 5.695 | 19.556 |
 
+### The paths with a model in them — and these miss
+
+Regenerate with `uv run python -m evals.bench --paths all` (needs a credential).
+Recorded in `evals/results/bench_live.json` with the model and timestamp beside
+them, because a latency figure without the model that produced it is not a
+measurement.
+
+| path | p50 | p95 | budget | |
+|---|---|---|---|---|
+| triage stage 2 (escalated) | 1.9 s | 2.2 s | 600 ms | **over** |
+| draft — to first token | **2.7 s** | 5.2 s | 1500 ms | **over** |
+| draft — to sendable | **3.7 s** | 14.6 s | 3000 ms | **over** |
+| draft — to sendable, repaired only | 11.6 s | 14.6 s | — | the tail |
+
+**So: the brief's sub-2-second target is met for research and missed for
+replies.** Research returns records and lands at p50 9.9 ms; a drafted reply
+needs a model and lands at p50 2.7 s to first readable token. Both are in this
+table because quoting the first as though it covered the second is the
+population error this page's opening rule exists to prevent.
+
+The repair round is the whole tail — it fired on 3 of 12 and those three ran
+11.6 s p50. D-35 is the decision that splits the budget at the first token, and
+it is explicit that a truer metric is not a pass.
+
 **Read the CPU row, not the wall row.** The wall p99 is ~16× the CPU p99 because
 this is a shared laptop; the CPU figure is the work the code actually does. The
 number moves between machines, which is why the doc check carries a tolerance

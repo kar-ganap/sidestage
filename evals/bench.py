@@ -34,6 +34,7 @@ import argparse
 import json
 import statistics
 import time
+from datetime import UTC, datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -254,16 +255,46 @@ def bench_draft(n: int) -> tuple[Samples, Samples, Samples]:
     return ttft, send, repaired
 
 
+def _dist(s: Samples) -> dict:
+    return {"n": len(s.ms), "p50": round(s.pct(0.50), 3),
+            "p95": round(s.pct(0.95), 3), "p99": round(s.pct(0.99), 3)}
+
+
 def _save(rows: list[tuple[Samples, int | None]]) -> None:
     """Write the distributions so `tools/check_docs.py` can verify a quoted
     number without re-running anything. A doc check nobody runs is not a check.
     """
     out = Path(__file__).parent / "results"
     out.mkdir(exist_ok=True)
-    (out / "bench.json").write_text(json.dumps({
-        s.name: {"n": len(s.ms), "p50": round(s.pct(0.50), 3),
-                 "p95": round(s.pct(0.95), 3), "p99": round(s.pct(0.99), 3)}
-        for s, _ in rows if s.ms}, indent=1), encoding="utf-8")
+    (out / "bench.json").write_text(json.dumps(
+        {s.name: _dist(s) for s, _ in rows if s.ms}, indent=1), encoding="utf-8")
+
+
+def _save_live(rows: list[tuple[Samples, int | None]]) -> None:
+    """The model paths, persisted separately — B-138.
+
+    These were printed and thrown away, and `bench.json` held only the free
+    paths. The effect was one-directional in the worst way: **every latency
+    number that meets its budget was pinned, and every one that misses it was
+    unpinnable.** D-35 quoted time-to-sendable at 2.4 s; it had drifted to
+    3.1 s and nothing in the repo could notice, because the only number a
+    checker could read was one that passed.
+
+    A separate file because these need a credential and a reviewer cloning
+    cold cannot regenerate them — so `check_docs` must tolerate the file being
+    absent, while refusing to let a *present* file disagree with the docs. The
+    model id and timestamp travel with the numbers: a latency figure without
+    the model that produced it is not a measurement.
+    """
+    out = Path(__file__).parent / "results"
+    out.mkdir(exist_ok=True)
+    payload = {"_meta": {"at": datetime.now(UTC).isoformat(timespec="seconds"),
+                         "draft_model": settings.draft_model,
+                         "triage_model": settings.triage_model,
+                         "thinking": settings.draft_thinking}}
+    payload.update({s.name: _dist(s) for s, _ in rows if s.ms})
+    (out / "bench_live.json").write_text(json.dumps(payload, indent=1),
+                                         encoding="utf-8")
 
 
 def main() -> int:
@@ -305,6 +336,7 @@ def main() -> int:
           f"   ${esc.cost/max(1,esc.calls):.5f}/call   ${esc.cost:.4f} total")
 
     if a.paths == "triage":
+        _save_live([(esc, 600)])
         print()
         return 0
 
@@ -317,6 +349,11 @@ def main() -> int:
               f"({len(rep.ms)/len(send.ms):.0%}) — this is the tail (B-16)")
     else:
         print("   draft: no repair fired in this sample")
+    # B-138. Persisted, not just printed. These are the three paths that miss
+    # their budget, and until now they were the three nothing could pin.
+    _save_live([(esc, 600), (ttft, 1500), (send, 3000), (rep, None)])
+    print("\n   model-path distributions written to "
+          "evals/results/bench_live.json")
     print()
     return 0
 
