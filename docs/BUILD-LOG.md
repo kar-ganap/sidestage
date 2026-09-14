@@ -3263,3 +3263,39 @@ disagree leave a reviewer no way to tell which is wrong.
 way prose cannot: the number was right, the drawing of it was not. Nothing in
 this repo checked drawings until a chart was looked at — the same gap as B-132,
 where a reply was journalled correctly and rendered nowhere.
+
+## B-140 · The operating point did not say what it was
+
+**Asked directly: "what does gate @ 0.23 mean?"** — which is the whole finding.
+The chart labelled its most important point with a bare threshold, and a
+threshold with no units beside it reads as a magic number. The explanation
+existed in the paragraph below the chart; the *point* did not carry it, and a
+reader looking at the mark had no way to know whether 0.23 was good.
+
+**Fix, and it is two things.** The marker now reads `gate @ 0.23 — P 50 / R 89`,
+so it states what the threshold buys rather than only where it sits. (The
+label-flip rule from B-139 absorbed the extra width with no change, which is the
+argument for having made it a rule rather than nudging one label.)
+
+**And the sweep table went in**, which is the real answer:
+
+| threshold | precision | recall | real questions missed |
+|---|---|---|---|
+| 0.10 | 20.6% | 100.0% | 0 of 37 |
+| **0.23 — shipped** | **50.0%** | **89.2%** | **4 of 37** |
+| 0.40 | 66.7% | 81.1% | 7 of 37 |
+| 0.60 | 76.9% | 54.1% | **17 of 37** |
+| 0.80 | 76.2% | 43.2% | 21 of 37 |
+
+**This is D-27 stated in numbers instead of prose.** That decision argues the
+threshold from cost asymmetry — a missed question costs a sale, a false positive
+costs about two seconds of operator attention — and the table is what the
+asymmetry looks like: moving to 0.60 nearly doubles precision and misses **17 of
+37** real questions instead of 4. The operating point should not sit where F1 is
+highest, and now a reader can see why rather than take it on the decision
+record's word.
+
+**Lesson.** A decision recorded in prose and a decision visible in the artifact
+are different things, and the second is what a reviewer actually meets. D-27 had
+been written for days; it took someone reading the chart to notice that nothing
+a reader could *see* justified the number.
