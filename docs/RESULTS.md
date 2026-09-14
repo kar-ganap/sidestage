@@ -288,7 +288,7 @@ answer is unchanged — dropped it to **77%** (B-82).
 
 | | |
 |---|---|
-| tests | **351**, no credential needed |
+| tests | **352**, no credential needed |
 | mutation | **44 / 43** mutants killed |
 | pinned doc claims | **40**, zero stale |
 | recorded fixtures | **335** |

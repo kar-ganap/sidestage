@@ -121,7 +121,7 @@ superlatives and an enumerated list of commitment verbs, so its recall is the
 size of that list; every adversarial finding in this project landed there, and
 `_coverage`'s docstring states the bound.
 
-**Focused tests and evals.** **351 tests**, no credential. Five eval suites, each
+**Focused tests and evals.** **352 tests**, no credential. Five eval suites, each
 reporting what it *cannot* establish. `tools/check_docs.py` fails if a number
 quoted in the docs no longer reproduces; `tools/check_buildlog.py` fails if a
 `B-NN` cited in the source has no write-up.

@@ -126,3 +126,30 @@ def test_the_results_page_is_actually_served(client):
     body = r.text
     assert "SideStage — Results" in body
     assert "<svg" in body, "the charts are inline SVG; no CDN, per D-07"
+
+
+def test_the_pr_sweep_agrees_with_the_recorded_eval():
+    """Two independent computations of the same thing must agree.
+
+    `tools/render_results.py` re-derives precision and recall by loading the
+    gate and sweeping every distinct score over the 189 labelled rows.
+    `evals/run_triage.py` computed A1 once and wrote `triage_189.json`. If the
+    chart and the table disagree, one of them is wrong and a reviewer has no way
+    to tell which — so this pins them to each other at the shipped threshold.
+    """
+    import importlib.util
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent
+    spec = importlib.util.spec_from_file_location(
+        "rr", root / "tools" / "render_results.py")
+    rr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rr)
+
+    op = rr.pr_curve_data()["op"]
+    rec = json.loads((root / "evals/results/triage_189.json").read_text())["arms"]["A1"]
+    assert abs(op["p"] - 100 * rec["p"]) < 0.05, (
+        f"swept precision {op['p']:.1f} vs recorded {100*rec['p']:.1f}")
+    assert abs(op["r"] - 100 * rec["r"]) < 0.05, (
+        f"swept recall {op['r']:.1f} vs recorded {100*rec['r']:.1f}")

@@ -124,6 +124,182 @@ def bench() -> dict:
 # ------------------------------------------------------------------ the page
 
 
+def pr_curve_data() -> dict:
+    """A real precision–recall curve, swept from the gate itself.
+
+    Not decoration and not simulated: `Model.load()` scores all 189 labelled
+    rows, and the threshold is swept across every distinct score. That is the
+    honest way to show what D-27 argues in prose — the operating point is
+    chosen from cost asymmetry (a missed question costs a sale; a false positive
+    costs two seconds of attention), and a curve makes the shape of that
+    trade-off visible in a way three numbers cannot.
+
+    A0 is a regex and A2 has a model in it, so neither sweeps. They are plotted
+    as single points, which is what they are.
+    """
+    from app.triage import Model, features, prefilter
+    from app.entities import get_resolver
+
+    m, res = Model.load(), get_resolver()
+    rows = []
+    for name in ("triage_test", "triage_show2"):
+        f = ROOT / f"evals/data/{name}.jsonl"
+        if not f.exists():
+            continue
+        for line in f.read_text(encoding="utf-8").splitlines():
+            if line.strip() and "_meta" not in line:
+                rows.append(json.loads(line))
+    scored = [(m.score(features(r["text"], res)), bool(r["seller_directed"]))
+              for r in rows]
+    pos = sum(1 for _, y in scored if y)
+
+    pts = []
+    for t in sorted({round(sc, 4) for sc, _ in scored} | {0.0, 1.0}):
+        tp = sum(1 for sc, y in scored if sc >= t and y)
+        fp = sum(1 for sc, y in scored if sc >= t and not y)
+        if tp + fp == 0:
+            continue
+        pts.append({"t": t, "p": 100 * tp / (tp + fp), "r": 100 * tp / pos})
+    pts.sort(key=lambda d: d["r"])
+    # where the shipped gate actually sits
+    op = dict(min(pts, key=lambda d: abs(d["t"] - m.threshold)))
+    op["shipped"] = m.threshold
+    return {"points": pts, "op": op, "threshold": m.threshold,
+            "n": len(scored), "pos": pos}
+
+
+def line_chart(pts: list[dict], op: dict, marks: list[dict]) -> str:
+    """Precision (y) against recall (x), 0–100 on both. One scale places the
+    curve, the ticks and every label."""
+    W, H = 520, 300
+    L, R, T, B = 46, 14, 14, 38          # room for the outermost tick labels
+    px = lambda r: L + (r / 100) * (W - L - R)
+    py = lambda p: T + (1 - p / 100) * (H - T - B)
+
+    grid = []
+    for v in (0, 25, 50, 75, 100):
+        grid.append(f'<line x1="{px(v):.1f}" y1="{T}" x2="{px(v):.1f}" y2="{H-B}" '
+                    f'stroke="var(--line)" stroke-width="1"/>')
+        grid.append(f'<line x1="{L}" y1="{py(v):.1f}" x2="{W-R}" y2="{py(v):.1f}" '
+                    f'stroke="var(--line)" stroke-width="1"/>')
+        grid.append(f'<text x="{px(v):.1f}" y="{H-B+15}" text-anchor="middle" '
+                    f'font-size="10" fill="var(--ink-faint)">{v}</text>')
+        grid.append(f'<text x="{L-7}" y="{py(v)+3.5:.1f}" text-anchor="end" '
+                    f'font-size="10" fill="var(--ink-faint)">{v}</text>')
+
+    path = " ".join(f"{px(d['r']):.1f},{py(d['p']):.1f}" for d in pts)
+    out = [f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" '
+           f'aria-label="precision against recall for the triage gate">']
+    out += grid
+    out.append(f'<polyline points="{path}" fill="none" stroke="var(--ok)" '
+               f'stroke-width="2"/>')
+    # the shipped operating point
+    out.append(f'<circle cx="{px(op["r"]):.1f}" cy="{py(op["p"]):.1f}" r="5" '
+               f'fill="var(--ok)" stroke="var(--panel)" stroke-width="2"/>')
+    # Label with the SHIPPED threshold, not the nearest distinct score the sweep
+    # happened to land on. The point is right either way; the label would
+    # otherwise read 0.22 for a gate that is configured at 0.23.
+    out.append(f'<text x="{px(op["r"])+9:.1f}" y="{py(op["p"])-7:.1f}" font-size="11" '
+               f'fill="var(--ink)">gate @ {op["shipped"]:.2f}</text>')
+    for mk in marks:
+        out.append(f'<rect x="{px(mk["r"])-4:.1f}" y="{py(mk["p"])-4:.1f}" width="8" '
+                   f'height="8" fill="{mk["hue"]}" stroke="var(--panel)" stroke-width="2"/>')
+        out.append(f'<text x="{px(mk["r"])+9:.1f}" y="{py(mk["p"])+4:.1f}" font-size="11" '
+                   f'fill="var(--ink)">{html.escape(mk["label"])}</text>')
+    out.append(f'<text x="{(L+W-R)/2:.0f}" y="{H-6}" text-anchor="middle" '
+               f'font-size="11" fill="var(--ink-soft)">recall %</text>')
+    out.append(f'<text x="12" y="{(T+H-B)/2:.0f}" text-anchor="middle" font-size="11" '
+               f'fill="var(--ink-soft)" transform="rotate(-90 12 {(T+H-B)/2:.0f})">precision %</text>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def dot_plot(arms: dict, axis: str, labels: list[tuple[str, str]]) -> str:
+    """Every run as its own dot, rather than a bar hiding three numbers.
+
+    A bar at the median of three runs asserts a point estimate the data does not
+    support; three dots and the span show what was actually observed. This is
+    the same argument the page's second rule makes in words."""
+    W, H = 520, 34 * len(labels) + 34
+    L, R = 168, 42
+    lo = min(min(arms[a][axis]) for a, _ in labels)
+    span_lo = max(0.0, lo - 8)
+    px = lambda v: L + (v - span_lo) / (100 - span_lo) * (W - L - R)
+
+    out = [f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" '
+           f'aria-label="{axis} per run, every run shown">']
+    for v in (25, 50, 75, 100):
+        if v <= span_lo:
+            continue
+        out.append(f'<line x1="{px(v):.1f}" y1="18" x2="{px(v):.1f}" y2="{H-20}" '
+                   f'stroke="var(--line)" stroke-width="1"/>')
+        out.append(f'<text x="{px(v):.1f}" y="{H-6}" text-anchor="middle" '
+                   f'font-size="10" fill="var(--ink-faint)">{v}</text>')
+    for i, (arm, label) in enumerate(labels):
+        y = 34 + i * 34
+        runs = arms[arm][axis]
+        hue = "var(--slate)" if arm == "MUTE" else (
+              "var(--warn)" if arm == "S0" else "var(--ok)")
+        out.append(f'<text x="{L-10}" y="{y+4}" text-anchor="end" font-size="11.5" '
+                   f'fill="var(--ink)">{html.escape(label)}</text>')
+        if max(runs) - min(runs) > 0.05:
+            out.append(f'<line x1="{px(min(runs)):.1f}" y1="{y}" '
+                       f'x2="{px(max(runs)):.1f}" y2="{y}" stroke="{hue}" '
+                       f'stroke-width="2" opacity=".45"/>')
+        for v in runs:
+            out.append(f'<circle cx="{px(v):.1f}" cy="{y}" r="4.5" fill="{hue}" '
+                       f'stroke="var(--panel)" stroke-width="1.5"/>')
+        out.append(f'<text x="{W-R+8}" y="{y+4}" font-size="11" '
+                   f'fill="var(--ink-soft)">{sorted(runs)[1]:.1f}%</text>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def latency_chart(free: dict, live: dict | None) -> str:
+    """Log scale, because the paths span five orders of magnitude — 0.1 ms to
+    15 s. A linear axis would render every free path as a zero-width bar and
+    hide the only comparison that matters."""
+    import math
+    rows = [(k, v["p50"], v["p95"], 2000 if "research" in k else None)
+            for k, v in free.items()]
+    if live:
+        for k, v in live.items():
+            if k.startswith("_"):
+                continue
+            budget = {"triage stage 2 (escalated)": 600,
+                      "draft: to first token": 1500,
+                      "draft: to sendable": 3000}.get(k)
+            rows.append((k, v["p50"], v["p95"], budget))
+    W = 520
+    H = 26 * len(rows) + 40
+    L, R = 210, 16
+    lo, hi = math.log10(0.05), math.log10(20000)
+    px = lambda ms: L + (math.log10(max(ms, 0.05)) - lo) / (hi - lo) * (W - L - R)
+
+    out = [f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" '
+           f'aria-label="latency per path, log scale, against budgets">']
+    for dec, lab in ((0.1, "0.1 ms"), (1, "1 ms"), (10, "10 ms"), (100, "100 ms"),
+                     (1000, "1 s"), (10000, "10 s")):
+        out.append(f'<line x1="{px(dec):.1f}" y1="14" x2="{px(dec):.1f}" y2="{H-22}" '
+                   f'stroke="var(--line)" stroke-width="1"/>')
+        out.append(f'<text x="{px(dec):.1f}" y="{H-8}" text-anchor="middle" '
+                   f'font-size="10" fill="var(--ink-faint)">{lab}</text>')
+    for i, (name, p50, p95, budget) in enumerate(rows):
+        y = 26 + i * 26
+        over = budget is not None and p50 > budget
+        hue = "var(--neg)" if over else "var(--ok)"
+        out.append(f'<text x="{L-10}" y="{y+4}" text-anchor="end" font-size="11" '
+                   f'fill="var(--ink)">{html.escape(name[:34])}</text>')
+        out.append(f'<line x1="{px(p50):.1f}" y1="{y}" x2="{px(p95):.1f}" y2="{y}" '
+                   f'stroke="{hue}" stroke-width="2" opacity=".4"/>')
+        out.append(f'<circle cx="{px(p50):.1f}" cy="{y}" r="4" fill="{hue}"/>')
+        if budget:
+            out.append(f'<line x1="{px(budget):.1f}" y1="{y-8}" x2="{px(budget):.1f}" '
+                       f'y2="{y+8}" stroke="var(--warn)" stroke-width="2"/>')
+    out.append("</svg>")
+    return "".join(out)
+
+
 def bar(pct: float, hue: str, w: int = 168) -> str:
     """One inline SVG bar. No library, no CDN — the page is served by the app
     under the same no-build-step rule as the console (D-07)."""
@@ -144,6 +320,9 @@ def row(label: str, lo: float, mid: float, hi: float, hue: str) -> str:
 
 def build() -> str:
     s1, s2, bn = spike1(), spike2(), bench()
+    live_f = RESULTS / "bench_live.json"
+    live = json.loads(live_f.read_text()) if live_f.exists() else None
+    pr = pr_curve_data()
     A, D, P = s1["arms"], s1["deltas"], s1["pairs"]
     GREEN, AMBER, SLATE = "var(--ok)", "var(--warn)", "var(--slate)"
 
@@ -167,6 +346,16 @@ def build() -> str:
     resp_delta_cells = "".join(f'<span class="chip neg">{d[1]:+.1f}</span>' for d in D)
 
     t189, best, t161 = s2["n189"]["arms"], s2["best"]["arms"], s2["n161"]["arms"]
+
+    # Built here rather than inside the page template: `{{` inside an f-string
+    # expression is a set literal, not an escaped brace, and a dict inside one
+    # is unhashable. Assembling it first is also just easier to read.
+    pr_svg = line_chart(pr["points"], pr["op"], [
+        {"r": 100 * t189["A0"]["r"], "p": 100 * t189["A0"]["p"],
+         "label": "A0 regex", "hue": "var(--slate)"},
+        {"r": 100 * best["A2"]["r"], "p": 100 * best["A2"]["p"],
+         "label": "A2 cascade", "hue": "var(--warn)"},
+    ])
 
     def triage_rows() -> str:
         names = {"A0": "A0 · regex baseline (incumbent-style)",
@@ -265,10 +454,16 @@ population</b>; <b>a range beats a point</b> wherever a model is in the loop; an
 (<code>claude-sonnet-5</code>), <b>{s1['runs']} runs</b>. Safety = the reply was blocked,
 or asserted nothing false. Responsiveness = it actually answered.</p>
 
-<h3>Safe</h3>
-<div class="scroll"><table>{safe_rows}</table></div>
+<h3>Safe — every run plotted, not a bar hiding three</h3>
+{dot_plot(A, "safe", [("S0", "S0 · bare model"), ("S1", "S1 · + evidence"),
+                      ("S2", "S2 · + verification"), ("MUTE", "MUTE · control")])}
 <h3>Responsive</h3>
-<div class="scroll"><table>{resp_rows}</table></div>
+{dot_plot(A, "resp", [("S0", "S0 · bare model"), ("S1", "S1 · + evidence"),
+                      ("S2", "S2 · + verification"), ("MUTE", "MUTE · control")])}
+<details><summary style="cursor:pointer;color:var(--ink-faint);font-size:12px">
+the same numbers as a table</summary>
+<div class="scroll"><table>{safe_rows}</table></div>
+<div class="scroll"><table>{resp_rows}</table></div></details>
 
 <div class="card">
   <h3 style="margin-top:0">S1 → S2, per run</h3>
@@ -297,6 +492,19 @@ tested against.</p>
 <tr><th>arm</th><th colspan="2">precision</th><th colspan="2">recall</th><th>F1</th><th>tp/fp/fn</th></tr>
 {triage_rows()}
 </table></div>
+
+<h3>Precision–recall, swept from the gate itself</h3>
+{pr_svg}
+<p>The curve is <b>A1 alone</b>, swept across every distinct score on
+{pr['n']} labelled rows ({pr['pos']} positive). A0 is a regex and A2 has a model
+in it, so neither sweeps — they are single points, which is what they are. The
+marked point is the shipped threshold, <code>{pr['threshold']}</code>: D-27
+chooses it from cost asymmetry, because a missed question costs a sale while a
+false positive costs two seconds of operator attention, and the curve is what
+that trade-off looks like rather than an assertion about it.</p>
+<p><b>A2 sits above the curve</b>, which is the cascade's whole argument: stage 2
+buys back precision at a recall the gate alone could only reach by accepting far
+more false positives.</p>
 <p>A2 has a model in it, so it moves: precision
 <b>{100*t189['A2']['p']:.1f}–{100*best['A2']['p']:.1f}%</b>, false positives
 <b>{t189['A2']['fp']}–{best['A2']['fp']}</b>. A0 and A1 are deterministic.</p>
@@ -310,6 +518,11 @@ recall is <b>{100*t161['A0']['r']:.1f}%</b>; pooled over all observed messages i
 <h2>3 · Latency</h2>
 <p>Milliseconds. No model calls in any of these paths, which is why a reviewer can
 reproduce them on a clone with no credential.</p>
+{latency_chart(bn, live)}
+<p style="font-size:12px;color:var(--ink-faint)">Log scale — the paths span five
+orders of magnitude, and a linear axis would render every free path as a
+zero-width bar. Dot is p50, the line runs to p95, the amber tick is the budget.
+Red means p50 is over it.</p>
 <div class="scroll"><table>
 <tr><th>path</th><th>n</th><th>p50</th><th>p95</th><th>p99</th><th></th></tr>
 {bench_rows()}
